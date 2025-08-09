@@ -24,8 +24,7 @@ class AccountBalances extends BaseWidget
                     ->where('is_active', true)
             )
             ->columns([
-                Tables\Columns\TextColumn::make('name')
-                    ->weight('bold'),
+                Tables\Columns\TextColumn::make('name'),
 
                 Tables\Columns\BadgeColumn::make('type')
                     ->colors([
@@ -38,7 +37,6 @@ class AccountBalances extends BaseWidget
 
                 Tables\Columns\TextColumn::make('balance')
                     ->money(fn (Account $record) => strtolower($record->currency))
-                    ->weight('bold')
                     ->color(fn (Account $record) => $record->balance >= 0 ? 'success' : 'danger'),
             ])
             ->actions([

@@ -90,8 +90,7 @@ class AccountResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('name')
                     ->searchable()
-                    ->sortable()
-                    ->weight('bold'),
+                    ->sortable(),
 
                 Tables\Columns\BadgeColumn::make('type')
                     ->colors([
@@ -105,7 +104,6 @@ class AccountResource extends Resource
                 Tables\Columns\TextColumn::make('balance')
                     ->money(fn (Account $record) => strtolower($record->currency))
                     ->sortable()
-                    ->weight('bold')
                     ->color(fn (Account $record) => $record->balance >= 0 ? 'success' : 'danger'),
 
                 Tables\Columns\TextColumn::make('currency')

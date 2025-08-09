@@ -181,7 +181,6 @@ class TransactionResource extends Resource
                 Tables\Columns\TextColumn::make('amount')
                     ->money('myr')
                     ->sortable()
-                    ->weight('bold')
                     ->color(fn (Transaction $record) => match ($record->type) {
                         'income' => 'success',
                         'expense' => 'danger',

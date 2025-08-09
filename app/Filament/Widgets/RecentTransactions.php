@@ -42,7 +42,6 @@ class RecentTransactions extends BaseWidget
 
                 Tables\Columns\TextColumn::make('amount')
                     ->money('myr')
-                    ->weight('bold')
                     ->color(fn (Transaction $record) => match ($record->type) {
                         'income' => 'success',
                         'expense' => 'danger',
