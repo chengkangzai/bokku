@@ -1,0 +1,91 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+
+class Account extends Model
+{
+    use HasFactory;
+
+    protected $fillable = [
+        'user_id',
+        'name',
+        'type',
+        'icon',
+        'color',
+        'balance',
+        'initial_balance',
+        'currency',
+        'account_number',
+        'notes',
+        'is_active',
+    ];
+
+    protected $casts = [
+        'balance' => 'decimal:2',
+        'initial_balance' => 'decimal:2',
+        'is_active' => 'boolean',
+    ];
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function transactions(): HasMany
+    {
+        return $this->hasMany(Transaction::class);
+    }
+
+    public function transfersFrom(): HasMany
+    {
+        return $this->hasMany(Transaction::class, 'from_account_id');
+    }
+
+    public function transfersTo(): HasMany
+    {
+        return $this->hasMany(Transaction::class, 'to_account_id');
+    }
+
+    public function updateBalance(): void
+    {
+        $income = $this->transactions()
+            ->where('type', 'income')
+            ->sum('amount');
+
+        $expenses = $this->transactions()
+            ->where('type', 'expense')
+            ->sum('amount');
+
+        $transfersOut = $this->transfersFrom()
+            ->where('type', 'transfer')
+            ->sum('amount');
+
+        $transfersIn = $this->transfersTo()
+            ->where('type', 'transfer')
+            ->sum('amount');
+
+        $this->balance = $this->initial_balance + $income - $expenses - $transfersOut + $transfersIn;
+        $this->save();
+    }
+
+    public function getTypeIconAttribute(): string
+    {
+        return match ($this->type) {
+            'bank' => 'heroicon-o-building-library',
+            'cash' => 'heroicon-o-banknotes',
+            'credit_card' => 'heroicon-o-credit-card',
+            'loan' => 'heroicon-o-document-text',
+            default => 'heroicon-o-wallet',
+        };
+    }
+
+    public function getFormattedBalanceAttribute(): string
+    {
+        return $this->currency.' '.number_format($this->balance, 2);
+    }
+}
