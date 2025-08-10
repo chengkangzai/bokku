@@ -107,6 +107,21 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | AI Provider Configuration
+    |--------------------------------------------------------------------------
+    |
+    | This value determines which AI provider will be used for transaction
+    | extraction and other AI-powered features. You can switch between
+    | providers based on your environment or requirements.
+    |
+    | Supported: "ollama", "openai"
+    |
+    */
+
+    'ai_provider' => env('AI_PROVIDER', 'ollama'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Maintenance Mode Driver
     |--------------------------------------------------------------------------
     |

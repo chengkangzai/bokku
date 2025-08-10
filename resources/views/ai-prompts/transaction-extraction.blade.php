@@ -6,7 +6,7 @@ Extract transaction data from the provided {{ $fileType }} content and return it
 **Malaysian Banking Context:**
 - Date format: DD/MM/YYYY (e.g., 15/01/2024)
 - Currency: RM (Ringgit Malaysia)  
-- Common banks: {{ implode(', ', array_values(config('ai.import.malaysian_banks.common_banks'))) }}
+- Common banks: Maybank, CIMB Bank, Public Bank, RHB Bank, Hong Leong Bank, AmBank, Bank Islam, OCBC Bank, HSBC, Standard Chartered
 
 **Required JSON Structure:**
 ```json
