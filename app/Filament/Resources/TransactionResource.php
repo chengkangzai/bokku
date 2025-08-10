@@ -66,17 +66,17 @@ class TransactionResource extends Resource
                                                 $accountId = $get('account_id');
                                                 $type = $get('type');
                                                 $amount = (float) $state;
-                                                
-                                                if (!$accountId || !$type || !$amount) {
+
+                                                if (! $accountId || ! $type || ! $amount) {
                                                     return null;
                                                 }
-                                                
+
                                                 $account = \App\Models\Account::find($accountId);
-                                                
-                                                if (!$account) {
+
+                                                if (! $account) {
                                                     return null;
                                                 }
-                                                
+
                                                 return $account->getBalanceWarningMessage($amount, $type);
                                             }),
 
@@ -141,17 +141,17 @@ class TransactionResource extends Resource
                                                 $categoryId = $state;
                                                 $amount = (float) $get('amount');
                                                 $type = $get('type');
-                                                
-                                                if (!$categoryId || !$amount || $type !== 'expense') {
+
+                                                if (! $categoryId || ! $amount || $type !== 'expense') {
                                                     return null;
                                                 }
-                                                
+
                                                 $category = \App\Models\Category::find($categoryId);
-                                                
-                                                if (!$category) {
+
+                                                if (! $category) {
                                                     return null;
                                                 }
-                                                
+
                                                 return $category->getBudgetWarning($amount);
                                             })
                                             ->createOptionForm(fn (Get $get) => [
@@ -223,6 +223,11 @@ class TransactionResource extends Resource
                                             ->maxLength(255)
                                             ->placeholder('Check number, invoice #, etc.'),
 
+                                        Forms\Components\TagsInput::make('tags')
+                                            ->separator(',')
+                                            ->placeholder('Add tags...')
+                                            ->helperText('Press Enter or comma to add tags'),
+
                                         Forms\Components\Textarea::make('notes')
                                             ->maxLength(65535)
                                             ->columnSpanFull(),
@@ -231,6 +236,56 @@ class TransactionResource extends Resource
                                             ->label('Reconciled')
                                             ->helperText('Mark as reconciled when verified against bank statement'),
                                     ]),
+
+                                Forms\Components\Section::make('Automation')
+                                    ->schema([
+                                        Forms\Components\Placeholder::make('matching_rules')
+                                            ->label('Matching Rules')
+                                            ->content(function ($get) {
+                                                $description = $get('description');
+                                                $amount = $get('amount');
+                                                $type = $get('type');
+
+                                                if (! $description && ! $amount) {
+                                                    return 'Enter description or amount to see matching rules';
+                                                }
+
+                                                // Find matching rules
+                                                $rules = \App\Models\TransactionRule::where('user_id', auth()->id())
+                                                    ->where('is_active', true)
+                                                    ->where(function ($query) use ($type) {
+                                                        $query->where('apply_to', 'all')
+                                                            ->orWhere('apply_to', $type);
+                                                    })
+                                                    ->orderBy('priority', 'desc')
+                                                    ->get();
+
+                                                $matchingRules = [];
+                                                foreach ($rules as $rule) {
+                                                    // Create a temporary transaction object for matching
+                                                    $tempTransaction = new \App\Models\Transaction([
+                                                        'description' => $description ?? '',
+                                                        'amount' => $amount ?? 0,
+                                                        'type' => $type ?? 'expense',
+                                                        'category_id' => $get('category_id'),
+                                                        'user_id' => auth()->id(),
+                                                    ]);
+
+                                                    if ($rule->matches($tempTransaction)) {
+                                                        $matchingRules[] = $rule->name;
+                                                    }
+                                                }
+
+                                                if (empty($matchingRules)) {
+                                                    return 'No matching rules found';
+                                                }
+
+                                                return '✓ Will apply: '.implode(', ', $matchingRules);
+                                            })
+                                            ->helperText('Rules will apply automatically when saving')
+                                            ->visible(fn ($operation) => $operation === 'create'),
+                                    ])
+                                    ->visible(fn ($operation) => $operation === 'create'),
                             ])
                             ->columnSpan([
                                 'default' => 1,
@@ -293,6 +348,18 @@ class TransactionResource extends Resource
                     ->placeholder('—')
                     ->toggleable(isToggledHiddenByDefault: true),
 
+                Tables\Columns\TextColumn::make('tags')
+                    ->badge()
+                    ->separator(',')
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+
+                Tables\Columns\TextColumn::make('appliedRule.name')
+                    ->label('Applied Rule')
+                    ->badge()
+                    ->color('info')
+                    ->toggleable(isToggledHiddenByDefault: true),
+
                 SpatieMediaLibraryImageColumn::make('receipts')
                     ->collection('receipts')
                     ->label('Attachments')
@@ -332,11 +399,70 @@ class TransactionResource extends Resource
                     ->falseLabel('Unreconciled only'),
             ])
             ->actions([
+                Tables\Actions\Action::make('apply_rules')
+                    ->label('Apply Rules')
+                    ->icon('heroicon-o-sparkles')
+                    ->color('info')
+                    ->requiresConfirmation()
+                    ->modalHeading('Apply Rules')
+                    ->modalDescription('This will apply matching automation rules to this transaction.')
+                    ->action(function ($record) {
+                        \App\Models\TransactionRule::applyRules($record);
+                        $record->refresh();
+
+                        if ($record->applied_rule_id) {
+                            \Filament\Notifications\Notification::make()
+                                ->title('Rules Applied')
+                                ->success()
+                                ->body("Applied rule: {$record->appliedRule->name}")
+                                ->send();
+                        } else {
+                            \Filament\Notifications\Notification::make()
+                                ->title('No Rules Applied')
+                                ->warning()
+                                ->body('No matching rules found for this transaction.')
+                                ->send();
+                        }
+                    })
+                    ->visible(fn ($record) => ! $record->applied_rule_id),
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
+                    Tables\Actions\BulkAction::make('apply_rules_bulk')
+                        ->label('Apply Rules')
+                        ->icon('heroicon-o-sparkles')
+                        ->color('info')
+                        ->requiresConfirmation()
+                        ->modalHeading('Apply Rules to Selected Transactions')
+                        ->modalDescription('This will apply matching automation rules to all selected transactions.')
+                        ->action(function ($records) {
+                            $applied = 0;
+                            $skipped = 0;
+
+                            foreach ($records as $transaction) {
+                                if (! $transaction->applied_rule_id) {
+                                    \App\Models\TransactionRule::applyRules($transaction);
+                                    $transaction->refresh();
+
+                                    if ($transaction->applied_rule_id) {
+                                        $applied++;
+                                    } else {
+                                        $skipped++;
+                                    }
+                                } else {
+                                    $skipped++;
+                                }
+                            }
+
+                            \Filament\Notifications\Notification::make()
+                                ->title('Rules Applied')
+                                ->success()
+                                ->body("Applied rules to {$applied} transaction(s). Skipped {$skipped}.")
+                                ->send();
+                        })
+                        ->deselectRecordsAfterCompletion(),
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ])
