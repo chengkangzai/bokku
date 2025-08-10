@@ -15,19 +15,19 @@ class StatsOverview extends BaseWidget
     {
         $userId = auth()->id();
 
-        $netWorth = Account::where('user_id', $userId)->sum('balance');
+        $netWorth = Account::where('user_id', $userId)->sum('balance') / 100;
 
         $monthlyIncome = Transaction::where('user_id', $userId)
             ->where('type', 'income')
             ->whereMonth('date', now()->month)
             ->whereYear('date', now()->year)
-            ->sum('amount');
+            ->sum('amount') / 100;
 
         $monthlyExpenses = Transaction::where('user_id', $userId)
             ->where('type', 'expense')
             ->whereMonth('date', now()->month)
             ->whereYear('date', now()->year)
-            ->sum('amount');
+            ->sum('amount') / 100;
 
         $monthlySavings = $monthlyIncome - $monthlyExpenses;
 
