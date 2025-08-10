@@ -96,6 +96,11 @@ class Category extends Model
         $totalSpent = $currentSpent + $additionalAmount;
         $budgetAmount = $budget->amount;
 
+        // Handle zero budget amount
+        if ($budgetAmount <= 0) {
+            return null;
+        }
+
         if ($totalSpent > $budgetAmount) {
             $overage = $totalSpent - $budgetAmount;
             return "⚠️ This will put you RM " . number_format($overage, 2) . " over your {$this->name} budget";
