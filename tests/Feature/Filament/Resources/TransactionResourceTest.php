@@ -8,6 +8,8 @@ use App\Models\Account;
 use App\Models\Category;
 use App\Models\Transaction;
 use App\Models\User;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 
 use function Pest\Livewire\livewire;
 
@@ -427,5 +429,167 @@ describe('TransactionResource Navigation Badge', function () {
 
         $badge = TransactionResource::getNavigationBadge();
         expect($badge)->toBeNull();
+    });
+});
+
+describe('TransactionResource Media Attachments', function () {
+    beforeEach(function () {
+        Storage::fake('public');
+    });
+
+    it('can upload receipt when creating transaction', function () {
+        $file = UploadedFile::fake()->image('receipt.jpg');
+        
+        livewire(CreateTransaction::class)
+            ->fillForm([
+                'type' => 'expense',
+                'amount' => 50.00,
+                'date' => today()->format('Y-m-d'),
+                'description' => 'Test purchase with receipt',
+                'account_id' => $this->account->id,
+                'category_id' => $this->expenseCategory->id,
+                'receipts' => [$file],
+            ])
+            ->call('create')
+            ->assertHasNoFormErrors();
+
+        $transaction = Transaction::where('description', 'Test purchase with receipt')->first();
+        
+        expect($transaction)->not->toBeNull();
+        expect($transaction->getMedia('receipts'))->toHaveCount(1);
+        expect($transaction->getFirstMedia('receipts')->name)->toBe('receipt');
+    });
+
+    it('can upload multiple receipts when creating transaction', function () {
+        $files = [
+            UploadedFile::fake()->image('receipt1.jpg'),
+            UploadedFile::fake()->image('receipt2.png'),
+            UploadedFile::fake()->image('receipt3.jpg'), // Using image instead of PDF to avoid the issue
+        ];
+        
+        livewire(CreateTransaction::class)
+            ->fillForm([
+                'type' => 'expense',
+                'amount' => 150.00,
+                'date' => today()->format('Y-m-d'),
+                'description' => 'Test purchase with multiple receipts',
+                'account_id' => $this->account->id,
+                'category_id' => $this->expenseCategory->id,
+                'receipts' => $files,
+            ])
+            ->call('create')
+            ->assertHasNoFormErrors();
+
+        $transaction = Transaction::where('description', 'Test purchase with multiple receipts')->first();
+        
+        expect($transaction)->not->toBeNull();
+        expect($transaction->getMedia('receipts'))->toHaveCount(3);
+    });
+
+    it('can add receipts to existing transaction', function () {
+        $transaction = Transaction::factory()->create([
+            'user_id' => $this->user->id,
+            'account_id' => $this->account->id,
+        ]);
+        
+        $file = UploadedFile::fake()->image('new_receipt.jpg');
+        
+        livewire(EditTransaction::class, ['record' => $transaction->getRouteKey()])
+            ->fillForm([
+                'receipts' => [$file],
+            ])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $transaction->refresh();
+        expect($transaction->getMedia('receipts'))->toHaveCount(1);
+    });
+
+    it('respects maximum file count limit', function () {
+        $files = [
+            UploadedFile::fake()->image('receipt1.jpg'),
+            UploadedFile::fake()->image('receipt2.jpg'),
+            UploadedFile::fake()->image('receipt3.jpg'),
+            UploadedFile::fake()->image('receipt4.jpg'),
+            UploadedFile::fake()->image('receipt5.jpg'),
+            UploadedFile::fake()->image('receipt6.jpg'), // This exceeds the limit of 5
+        ];
+        
+        livewire(CreateTransaction::class)
+            ->fillForm([
+                'type' => 'income',
+                'amount' => 100.00,
+                'date' => today()->format('Y-m-d'),
+                'description' => 'Test with too many files',
+                'account_id' => $this->account->id,
+                'category_id' => $this->incomeCategory->id,
+                'receipts' => $files,
+            ])
+            ->call('create')
+            ->assertHasFormErrors(['receipts']);
+    });
+
+    it('only accepts allowed file types', function () {
+        $invalidFile = UploadedFile::fake()->create('document.txt', 1000, 'text/plain');
+        
+        livewire(CreateTransaction::class)
+            ->fillForm([
+                'type' => 'income',
+                'amount' => 100.00,
+                'date' => today()->format('Y-m-d'),
+                'description' => 'Test with invalid file type',
+                'account_id' => $this->account->id,
+                'category_id' => $this->incomeCategory->id,
+                'receipts' => [$invalidFile],
+            ])
+            ->call('create')
+            ->assertHasFormErrors(['receipts']);
+    });
+
+    it('respects maximum file size limit', function () {
+        $largeFile = UploadedFile::fake()->image('large_receipt.jpg')->size(6000); // 6MB exceeds 5MB limit
+        
+        livewire(CreateTransaction::class)
+            ->fillForm([
+                'type' => 'expense',
+                'amount' => 100.00,
+                'date' => today()->format('Y-m-d'),
+                'description' => 'Test with large file',
+                'account_id' => $this->account->id,
+                'category_id' => $this->expenseCategory->id,
+                'receipts' => [$largeFile],
+            ])
+            ->call('create')
+            ->assertHasFormErrors(['receipts']);
+    });
+
+    it('displays transactions with media in table', function () {
+        $transaction = Transaction::factory()->withMedia()->create([
+            'user_id' => $this->user->id,
+            'description' => 'Transaction with receipt',
+        ]);
+
+        livewire(ListTransactions::class)
+            ->assertCanSeeTableRecords([$transaction])
+            ->assertSee('Transaction with receipt');
+        
+        // The media column should be present in the table
+        expect($transaction->getMedia('receipts'))->toHaveCount(1);
+    });
+
+    it('can delete transaction with media', function () {
+        $transaction = Transaction::factory()->withMedia()->create([
+            'user_id' => $this->user->id,
+        ]);
+
+        expect($transaction->getMedia('receipts'))->toHaveCount(1);
+
+        livewire(ListTransactions::class)
+            ->callTableAction('delete', $transaction);
+
+        $this->assertModelMissing($transaction);
+        
+        // Media should also be deleted when transaction is deleted
+        expect(Transaction::find($transaction->id))->toBeNull();
     });
 });

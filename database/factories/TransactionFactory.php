@@ -130,4 +130,63 @@ class TransactionFactory extends Factory
             ),
         ]);
     }
+
+    /**
+     * Configure the model factory to attach media files after creation.
+     * This is used for testing media attachment functionality.
+     */
+    public function withMedia(): static
+    {
+        return $this->afterCreating(function (Transaction $transaction) {
+            // Create a temporary test image file
+            $tempFile = tempnam(sys_get_temp_dir(), 'test_receipt_');
+            
+            // Create a simple 1x1 pixel PNG image
+            $imageData = base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==');
+            file_put_contents($tempFile, $imageData);
+            
+            // Rename to have proper extension
+            $imageFile = $tempFile . '.png';
+            rename($tempFile, $imageFile);
+            
+            // Attach the file to the transaction
+            $transaction->addMedia($imageFile)
+                ->usingName('Test Receipt')
+                ->usingFileName('test_receipt_' . fake()->uuid() . '.png')
+                ->toMediaCollection('receipts');
+            
+            // Clean up temp file (media library copies it)
+            @unlink($imageFile);
+        });
+    }
+
+    /**
+     * Configure the model factory to attach multiple media files.
+     */
+    public function withMultipleMedia(int $count = 3): static
+    {
+        return $this->afterCreating(function (Transaction $transaction) use ($count) {
+            for ($i = 1; $i <= $count; $i++) {
+                // Create a temporary test image file
+                $tempFile = tempnam(sys_get_temp_dir(), 'test_receipt_');
+                
+                // Create a simple 1x1 pixel PNG image
+                $imageData = base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==');
+                file_put_contents($tempFile, $imageData);
+                
+                // Rename to have proper extension
+                $imageFile = $tempFile . '.png';
+                rename($tempFile, $imageFile);
+                
+                // Attach the file to the transaction
+                $transaction->addMedia($imageFile)
+                    ->usingName("Test Receipt {$i}")
+                    ->usingFileName("test_receipt_{$i}_" . fake()->uuid() . '.png')
+                    ->toMediaCollection('receipts');
+                
+                // Clean up temp file
+                @unlink($imageFile);
+            }
+        });
+    }
 }

@@ -5,10 +5,13 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
-class Transaction extends Model
+class Transaction extends Model implements HasMedia
 {
-    use HasFactory;
+    use HasFactory, InteractsWithMedia;
 
     protected $fillable = [
         'user_id',
@@ -118,5 +121,27 @@ class Transaction extends Model
         $currency = $this->account?->currency ?? 'USD';
 
         return $prefix.$currency.' '.number_format($this->amount, 2);
+    }
+
+    public function registerMediaCollections(): void
+    {
+        $this->addMediaCollection('receipts')
+            ->acceptsMimeTypes([
+                'image/jpeg',
+                'image/png',
+                'image/gif',
+                'image/webp',
+                'application/pdf',
+            ])
+            ->useDisk('public');
+    }
+
+    public function registerMediaConversions(?Media $media = null): void
+    {
+        $this->addMediaConversion('thumb')
+            ->width(150)
+            ->height(150)
+            ->sharpen(10)
+            ->nonQueued();
     }
 }
