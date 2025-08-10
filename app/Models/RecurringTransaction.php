@@ -132,8 +132,11 @@ class RecurringTransaction extends Model
             case 'weekly':
                 $nextDate = $baseDate->addWeeks($this->interval);
                 if ($this->day_of_week) {
-                    // Set to the specific day of week
-                    $nextDate->next($this->day_of_week);
+                    // Convert our 1-7 (Mon-Sun) to Carbon's 0-6 (Sun-Sat)
+                    // Our system: 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat, 7=Sun
+                    // Carbon: 0=Sun, 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat
+                    $carbonDay = $this->day_of_week % 7; // 7 becomes 0 (Sunday)
+                    $nextDate->next($carbonDay);
                 }
                 return $nextDate;
                 
@@ -215,8 +218,12 @@ class RecurringTransaction extends Model
 
         // Add specific day information
         if ($this->frequency === 'weekly' && $this->day_of_week) {
-            $dayName = Carbon::create()->next($this->day_of_week)->format('l');
-            $label .= " on {$dayName}";
+            // Convert our 1-7 system to day names
+            $days = [1 => 'Monday', 2 => 'Tuesday', 3 => 'Wednesday', 4 => 'Thursday', 5 => 'Friday', 6 => 'Saturday', 7 => 'Sunday'];
+            $dayName = $days[$this->day_of_week] ?? '';
+            if ($dayName) {
+                $label .= " on {$dayName}";
+            }
         } elseif ($this->frequency === 'monthly' && $this->day_of_month) {
             $label .= " on day {$this->day_of_month}";
         } elseif ($this->frequency === 'annual' && $this->month_of_year) {
@@ -233,6 +240,7 @@ class RecurringTransaction extends Model
     public function getNextOccurrencesAttribute(): array
     {
         $occurrences = [];
+        $tempRecurring = clone $this;
         $date = $this->next_date->copy();
         
         for ($i = 0; $i < 5; $i++) {
@@ -240,7 +248,10 @@ class RecurringTransaction extends Model
                 break;
             }
             $occurrences[] = $date->copy();
-            $date = $this->calculateNextDate();
+            
+            // Calculate the next date based on the current temp date
+            $tempRecurring->next_date = $date;
+            $date = $tempRecurring->calculateNextDate();
         }
         
         return $occurrences;
