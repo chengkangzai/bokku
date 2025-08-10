@@ -32,13 +32,13 @@ class UnifiedImportHandler
 
             // Format and validate the extracted data
             $transactions = $this->formatTransactions($extracted['transactions'] ?? []);
-            $bankName = $this->detectBankName($extracted, $content);
+            $bankName = $this->detectBankName([], $content);
 
             return [
                 'bank_name' => $bankName,
-                'account_number' => $this->maskAccountNumber($extracted['account_number'] ?? ''),
-                'statement_period' => $extracted['statement_period'] ?? null,
-                'currency' => $extracted['currency'] ?? 'RM',
+                'account_number' => null,
+                'statement_period' => null,
+                'currency' => 'RM',
                 'transactions' => $transactions,
                 'metadata' => [
                     'total_transactions' => count($transactions),
@@ -275,18 +275,6 @@ class UnifiedImportHandler
         }
 
         return 'Unknown Bank';
-    }
-
-    /**
-     * Mask account number for privacy
-     */
-    protected function maskAccountNumber(string $accountNumber): string
-    {
-        if (strlen($accountNumber) <= 4) {
-            return $accountNumber;
-        }
-
-        return str_repeat('*', strlen($accountNumber) - 4).substr($accountNumber, -4);
     }
 
     /**

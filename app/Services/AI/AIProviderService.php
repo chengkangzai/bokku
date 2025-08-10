@@ -64,7 +64,6 @@ class AIProviderService
     public function extractTransactions(string $content, string $fileType, ?string $userInstructions = null): array
     {
         $schema = $this->getTransactionExtractionSchema();
-        $systemPrompt = $this->renderTransactionExtractionPrompt($fileType, $userInstructions);
 
         $prism = $this->configurePrism(
             Prism::structured()->withSchema($schema)
@@ -77,7 +76,10 @@ class AIProviderService
             : Document::fromRawContent($content);
 
         try {
-            $response = $prism->withSystemPrompt($systemPrompt)
+            $response = $prism->withSystemPrompt(view('ai-prompts.transaction-extraction', [
+                'fileType' => $fileType,
+                'userInstructions' => $userInstructions,
+            ]))
                 ->withMessages([
                     new UserMessage(
                         'Extract all transactions from the attached file',
@@ -115,9 +117,6 @@ class AIProviderService
             'transaction_data',
             'Extracted transaction data from bank statements',
             [
-                new StringSchema('bank_name', 'Name of the bank', nullable: true),
-                new StringSchema('account_number', 'Account number (masked for security)', nullable: true),
-                new StringSchema('statement_period', 'Statement period (e.g., "Jan 2024")', nullable: true),
                 new ArraySchema(
                     'transactions',
                     'List of extracted transactions',
@@ -138,17 +137,8 @@ class AIProviderService
                     )
                 ),
             ],
-            // OpenAI strict mode requires ALL properties in required array
-            ['bank_name', 'account_number', 'statement_period', 'transactions']
+            ['transactions']
         );
-    }
-
-    protected function renderTransactionExtractionPrompt(string $fileType, ?string $userInstructions = null): string
-    {
-        return view('ai-prompts.transaction-extraction', [
-            'fileType' => $fileType,
-            'userInstructions' => $userInstructions,
-        ])->render();
     }
 
     /**
