@@ -119,7 +119,7 @@ class RecurringTransactionResource extends Resource
                             ->default(1)
                             ->minValue(1)
                             ->maxValue(365)
-                            ->suffix(fn (callable $get) => match($get('frequency')) {
+                            ->suffix(fn (callable $get) => match ($get('frequency')) {
                                 'daily' => 'day(s)',
                                 'weekly' => 'week(s)',
                                 'monthly' => 'month(s)',
@@ -236,7 +236,7 @@ class RecurringTransactionResource extends Resource
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('amount')
-                    ->formatStateUsing(fn ($state) => 'RM ' . number_format($state, 2))
+                    ->formatStateUsing(fn ($state) => 'RM '.number_format($state, 2))
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('frequency_label')
@@ -351,7 +351,7 @@ class RecurringTransactionResource extends Resource
                     ->action(function ($records) {
                         $processed = 0;
                         $skipped = 0;
-                        
+
                         foreach ($records as $record) {
                             if ($record->is_active) {
                                 $transaction = $record->generateTransaction();
@@ -364,7 +364,7 @@ class RecurringTransactionResource extends Resource
                                 $skipped++;
                             }
                         }
-                        
+
                         if ($processed > 0) {
                             \Filament\Notifications\Notification::make()
                                 ->title('Transactions Created')
@@ -375,7 +375,7 @@ class RecurringTransactionResource extends Resource
                             \Filament\Notifications\Notification::make()
                                 ->title('No Transactions Created')
                                 ->warning()
-                                ->body("All selected recurring transactions were either not due or inactive.")
+                                ->body('All selected recurring transactions were either not due or inactive.')
                                 ->send();
                         }
                     })
@@ -386,7 +386,7 @@ class RecurringTransactionResource extends Resource
                     ->icon('heroicon-o-arrow-path')
                     ->action(function ($records) {
                         foreach ($records as $record) {
-                            $record->update(['is_active' => !$record->is_active]);
+                            $record->update(['is_active' => ! $record->is_active]);
                         }
                     })
                     ->deselectRecordsAfterCompletion(),
