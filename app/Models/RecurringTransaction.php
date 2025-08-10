@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Casts\MoneyCast;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -206,75 +207,87 @@ class RecurringTransaction extends Model
         $this->update(['is_active' => true]);
     }
 
-    public function getFrequencyLabelAttribute(): string
+    protected function frequencyLabel(): Attribute
     {
-        $label = match ($this->frequency) {
-            'daily' => $this->interval === 1 ? 'Daily' : "Every {$this->interval} days",
-            'weekly' => $this->interval === 1 ? 'Weekly' : "Every {$this->interval} weeks",
-            'monthly' => $this->interval === 1 ? 'Monthly' : "Every {$this->interval} months",
-            'annual' => $this->interval === 1 ? 'Annually' : "Every {$this->interval} years",
-            default => $this->frequency,
-        };
+        return Attribute::make(
+            get: function () {
+                $label = match ($this->frequency) {
+                    'daily' => $this->interval === 1 ? 'Daily' : "Every {$this->interval} days",
+                    'weekly' => $this->interval === 1 ? 'Weekly' : "Every {$this->interval} weeks",
+                    'monthly' => $this->interval === 1 ? 'Monthly' : "Every {$this->interval} months",
+                    'annual' => $this->interval === 1 ? 'Annually' : "Every {$this->interval} years",
+                    default => $this->frequency,
+                };
 
-        // Add specific day information
-        if ($this->frequency === 'weekly' && $this->day_of_week) {
-            // Convert our 1-7 system to day names
-            $days = [1 => 'Monday', 2 => 'Tuesday', 3 => 'Wednesday', 4 => 'Thursday', 5 => 'Friday', 6 => 'Saturday', 7 => 'Sunday'];
-            $dayName = $days[$this->day_of_week] ?? '';
-            if ($dayName) {
-                $label .= " on {$dayName}";
-            }
-        } elseif ($this->frequency === 'monthly' && $this->day_of_month) {
-            $label .= " on day {$this->day_of_month}";
-        } elseif ($this->frequency === 'annual' && $this->month_of_year) {
-            $monthName = Carbon::create()->month($this->month_of_year)->format('F');
-            $label .= " in {$monthName}";
-            if ($this->day_of_month) {
-                $label .= " on day {$this->day_of_month}";
-            }
-        }
+                // Add specific day information
+                if ($this->frequency === 'weekly' && $this->day_of_week) {
+                    // Convert our 1-7 system to day names
+                    $days = [1 => 'Monday', 2 => 'Tuesday', 3 => 'Wednesday', 4 => 'Thursday', 5 => 'Friday', 6 => 'Saturday', 7 => 'Sunday'];
+                    $dayName = $days[$this->day_of_week] ?? '';
+                    if ($dayName) {
+                        $label .= " on {$dayName}";
+                    }
+                } elseif ($this->frequency === 'monthly' && $this->day_of_month) {
+                    $label .= " on day {$this->day_of_month}";
+                } elseif ($this->frequency === 'annual' && $this->month_of_year) {
+                    $monthName = Carbon::create()->month($this->month_of_year)->format('F');
+                    $label .= " in {$monthName}";
+                    if ($this->day_of_month) {
+                        $label .= " on day {$this->day_of_month}";
+                    }
+                }
 
-        return $label;
+                return $label;
+            }
+        );
     }
 
-    public function getNextOccurrencesAttribute(): array
+    protected function nextOccurrences(): Attribute
     {
-        $occurrences = [];
-        $tempRecurring = clone $this;
-        $date = $this->next_date->copy();
-        
-        for ($i = 0; $i < 5; $i++) {
-            if ($this->end_date && $date->greaterThan($this->end_date)) {
-                break;
+        return Attribute::make(
+            get: function () {
+                $occurrences = [];
+                $tempRecurring = clone $this;
+                $date = $this->next_date->copy();
+                
+                for ($i = 0; $i < 5; $i++) {
+                    if ($this->end_date && $date->greaterThan($this->end_date)) {
+                        break;
+                    }
+                    $occurrences[] = $date->copy();
+                    
+                    // Calculate the next date based on the current temp date
+                    $tempRecurring->next_date = $date;
+                    $date = $tempRecurring->calculateNextDate();
+                }
+                
+                return $occurrences;
             }
-            $occurrences[] = $date->copy();
-            
-            // Calculate the next date based on the current temp date
-            $tempRecurring->next_date = $date;
-            $date = $tempRecurring->calculateNextDate();
-        }
-        
-        return $occurrences;
+        );
     }
 
-    public function getTypeColorAttribute(): string
+    protected function typeColor(): Attribute
     {
-        return match ($this->type) {
-            'income' => 'success',
-            'expense' => 'danger',
-            'transfer' => 'info',
-            default => 'gray',
-        };
+        return Attribute::make(
+            get: fn () => match ($this->type) {
+                'income' => 'success',
+                'expense' => 'danger',
+                'transfer' => 'info',
+                default => 'gray',
+            }
+        );
     }
 
-    public function getTypeIconAttribute(): string
+    protected function typeIcon(): Attribute
     {
-        return match ($this->type) {
-            'income' => 'heroicon-o-arrow-down-circle',
-            'expense' => 'heroicon-o-arrow-up-circle',
-            'transfer' => 'heroicon-o-arrow-right-circle',
-            default => 'heroicon-o-circle-stack',
-        };
+        return Attribute::make(
+            get: fn () => match ($this->type) {
+                'income' => 'heroicon-o-arrow-down-circle',
+                'expense' => 'heroicon-o-arrow-up-circle',
+                'transfer' => 'heroicon-o-arrow-right-circle',
+                default => 'heroicon-o-circle-stack',
+            }
+        );
     }
 
     public function scopeActive($query)

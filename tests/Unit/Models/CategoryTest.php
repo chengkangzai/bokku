@@ -96,19 +96,19 @@ describe('Category Model', function () {
     it('returns correct default icon for income category', function () {
         $incomeCategory = Category::factory()->income()->create();
 
-        expect($incomeCategory->getDefaultIconAttribute())->toBe('heroicon-o-arrow-trending-up');
+        expect($incomeCategory->default_icon)->toBe('heroicon-o-arrow-trending-up');
     });
 
     it('returns correct default icon for expense category', function () {
         $expenseCategory = Category::factory()->expense()->create();
 
-        expect($expenseCategory->getDefaultIconAttribute())->toBe('heroicon-o-arrow-trending-down');
+        expect($expenseCategory->default_icon)->toBe('heroicon-o-arrow-trending-down');
     });
 
     it('returns default icon for unknown type', function () {
         $category = Category::factory()->make(['type' => 'unknown']);
 
-        expect($category->getDefaultIconAttribute())->toBe('heroicon-o-tag');
+        expect($category->default_icon)->toBe('heroicon-o-tag');
     });
 
     it('can be created with specific type from factory', function () {

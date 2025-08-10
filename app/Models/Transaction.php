@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Casts\MoneyCast;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -97,37 +98,45 @@ class Transaction extends Model implements HasMedia
         }
     }
 
-    public function getTypeColorAttribute(): string
+    protected function typeColor(): Attribute
     {
-        return match ($this->type) {
-            'income' => 'success',
-            'expense' => 'danger',
-            'transfer' => 'info',
-            default => 'gray',
-        };
+        return Attribute::make(
+            get: fn () => match ($this->type) {
+                'income' => 'success',
+                'expense' => 'danger',
+                'transfer' => 'info',
+                default => 'gray',
+            }
+        );
     }
 
-    public function getTypeIconAttribute(): string
+    protected function typeIcon(): Attribute
     {
-        return match ($this->type) {
-            'income' => 'heroicon-o-arrow-down-circle',
-            'expense' => 'heroicon-o-arrow-up-circle',
-            'transfer' => 'heroicon-o-arrow-right-circle',
-            default => 'heroicon-o-circle-stack',
-        };
+        return Attribute::make(
+            get: fn () => match ($this->type) {
+                'income' => 'heroicon-o-arrow-down-circle',
+                'expense' => 'heroicon-o-arrow-up-circle',
+                'transfer' => 'heroicon-o-arrow-right-circle',
+                default => 'heroicon-o-circle-stack',
+            }
+        );
     }
 
-    public function getFormattedAmountAttribute(): string
+    protected function formattedAmount(): Attribute
     {
-        $prefix = match ($this->type) {
-            'income' => '+',
-            'expense' => '-',
-            default => '',
-        };
+        return Attribute::make(
+            get: function () {
+                $prefix = match ($this->type) {
+                    'income' => '+',
+                    'expense' => '-',
+                    default => '',
+                };
 
-        $currency = $this->account?->currency ?? 'USD';
+                $currency = $this->account?->currency ?? 'USD';
 
-        return $prefix.$currency.' '.number_format($this->amount, 2);
+                return $prefix.$currency.' '.number_format($this->amount, 2);
+            }
+        );
     }
 
     public function registerMediaCollections(): void

@@ -107,15 +107,15 @@ describe('Transaction Model', function () {
         $expense = Transaction::factory()->expense()->make();
         $transfer = Transaction::factory()->transfer()->make();
 
-        expect($income->getTypeColorAttribute())->toBe('success');
-        expect($expense->getTypeColorAttribute())->toBe('danger');
-        expect($transfer->getTypeColorAttribute())->toBe('info');
+        expect($income->type_color)->toBe('success');
+        expect($expense->type_color)->toBe('danger');
+        expect($transfer->type_color)->toBe('info');
     });
 
     it('returns default color for unknown type', function () {
         $transaction = new Transaction(['type' => 'unknown']);
 
-        expect($transaction->getTypeColorAttribute())->toBe('gray');
+        expect($transaction->type_color)->toBe('gray');
     });
 
     it('returns correct type icon attribute', function () {
@@ -123,15 +123,15 @@ describe('Transaction Model', function () {
         $expense = Transaction::factory()->expense()->make();
         $transfer = Transaction::factory()->transfer()->make();
 
-        expect($income->getTypeIconAttribute())->toBe('heroicon-o-arrow-down-circle');
-        expect($expense->getTypeIconAttribute())->toBe('heroicon-o-arrow-up-circle');
-        expect($transfer->getTypeIconAttribute())->toBe('heroicon-o-arrow-right-circle');
+        expect($income->type_icon)->toBe('heroicon-o-arrow-down-circle');
+        expect($expense->type_icon)->toBe('heroicon-o-arrow-up-circle');
+        expect($transfer->type_icon)->toBe('heroicon-o-arrow-right-circle');
     });
 
     it('returns default icon for unknown type', function () {
         $transaction = new Transaction(['type' => 'unknown']);
 
-        expect($transaction->getTypeIconAttribute())->toBe('heroicon-o-circle-stack');
+        expect($transaction->type_icon)->toBe('heroicon-o-circle-stack');
     });
 
     it('formats amount correctly for income', function () {
@@ -147,7 +147,7 @@ describe('Transaction Model', function () {
             'amount' => 1234.56,
         ]);
 
-        expect($income->getFormattedAmountAttribute())->toBe('+MYR 1,234.56');
+        expect($income->formatted_amount)->toBe('+MYR 1,234.56');
     });
 
     it('formats amount correctly for expense', function () {
@@ -163,7 +163,7 @@ describe('Transaction Model', function () {
             'amount' => 567.89,
         ]);
 
-        expect($expense->getFormattedAmountAttribute())->toBe('-USD 567.89');
+        expect($expense->formatted_amount)->toBe('-USD 567.89');
     });
 
     it('formats amount correctly for transfer', function () {
@@ -183,7 +183,7 @@ describe('Transaction Model', function () {
         ]);
 
         // For transfers, the fromAccount's currency should be used
-        expect($transfer->getFormattedAmountAttribute())->toBe('EUR 300.00');
+        expect($transfer->formatted_amount)->toBe('EUR 300.00');
     });
 
     it('uses default currency when account is null', function () {
@@ -193,7 +193,7 @@ describe('Transaction Model', function () {
             'amount' => 100.00,
         ]);
 
-        expect($transaction->getFormattedAmountAttribute())->toBe('+USD 100.00');
+        expect($transaction->formatted_amount)->toBe('+USD 100.00');
     });
 
     it('can be created with different factory states', function () {

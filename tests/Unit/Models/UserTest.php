@@ -74,13 +74,13 @@ describe('User Model', function () {
             'balance' => -500.25, // Credit card debt
         ]);
 
-        expect($user->getNetWorthAttribute())->toBe(3001.0);
+        expect($user->net_worth)->toBe(3001);
     });
 
     it('returns zero net worth when no accounts', function () {
         $user = User::factory()->create();
 
-        expect($user->getNetWorthAttribute())->toBe(0.0);
+        expect($user->net_worth)->toBe(0);
     });
 
     it('only includes own accounts in net worth calculation', function () {
@@ -97,8 +97,8 @@ describe('User Model', function () {
             'balance' => 5000.00,
         ]);
 
-        expect($user1->getNetWorthAttribute())->toBe(1000.0);
-        expect($user2->getNetWorthAttribute())->toBe(5000.0);
+        expect($user1->net_worth)->toBe(1000);
+        expect($user2->net_worth)->toBe(5000);
     });
 
     it('has required fillable attributes', function () {

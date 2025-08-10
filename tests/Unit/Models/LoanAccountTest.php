@@ -47,6 +47,6 @@ describe('Loan Account Model', function () {
     it('shows correct icon for loan accounts', function () {
         $loan = Account::factory()->loan()->create();
 
-        expect($loan->getTypeIconAttribute())->toBe('heroicon-o-document-text');
+        expect($loan->type_icon)->toBe('heroicon-o-document-text');
     });
 });

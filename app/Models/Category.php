@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -50,13 +51,15 @@ class Category extends Model
             ->sum('amount') / 100;
     }
 
-    public function getDefaultIconAttribute(): string
+    protected function defaultIcon(): Attribute
     {
-        return match ($this->type) {
-            'income' => 'heroicon-o-arrow-trending-up',
-            'expense' => 'heroicon-o-arrow-trending-down',
-            default => 'heroicon-o-tag',
-        };
+        return Attribute::make(
+            get: fn () => match ($this->type) {
+                'income' => 'heroicon-o-arrow-trending-up',
+                'expense' => 'heroicon-o-arrow-trending-down',
+                default => 'heroicon-o-tag',
+            }
+        );
     }
 
     public function getBudgetForUser(int $userId): ?Budget

@@ -139,16 +139,16 @@ describe('Account Model', function () {
         $creditCard = Account::factory()->creditCard()->create();
         $loan = Account::factory()->loan()->create();
 
-        expect($bankAccount->getTypeIconAttribute())->toBe('heroicon-o-building-library');
-        expect($cashAccount->getTypeIconAttribute())->toBe('heroicon-o-banknotes');
-        expect($creditCard->getTypeIconAttribute())->toBe('heroicon-o-credit-card');
-        expect($loan->getTypeIconAttribute())->toBe('heroicon-o-document-text');
+        expect($bankAccount->type_icon)->toBe('heroicon-o-building-library');
+        expect($cashAccount->type_icon)->toBe('heroicon-o-banknotes');
+        expect($creditCard->type_icon)->toBe('heroicon-o-credit-card');
+        expect($loan->type_icon)->toBe('heroicon-o-document-text');
     });
 
     it('returns default icon for unknown type', function () {
         $account = Account::factory()->make(['type' => 'unknown']);
 
-        expect($account->getTypeIconAttribute())->toBe('heroicon-o-wallet');
+        expect($account->type_icon)->toBe('heroicon-o-wallet');
     });
 
     it('formats balance correctly', function () {
@@ -157,7 +157,7 @@ describe('Account Model', function () {
             'currency' => 'MYR',
         ]);
 
-        expect($account->getFormattedBalanceAttribute())->toBe('MYR 1,234.56');
+        expect($account->formatted_balance)->toBe('MYR 1,234.56');
     });
 
     it('handles different account types from factory', function () {

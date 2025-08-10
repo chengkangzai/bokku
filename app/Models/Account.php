@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Casts\MoneyCast;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -76,32 +77,33 @@ class Account extends Model
         $this->save();
     }
 
-    public function getTypeIconAttribute(): string
+    protected function typeIcon(): Attribute
     {
-        return match ($this->type) {
-            'bank' => 'heroicon-o-building-library',
-            'cash' => 'heroicon-o-banknotes',
-            'credit_card' => 'heroicon-o-credit-card',
-            'loan' => 'heroicon-o-document-text',
-            default => 'heroicon-o-wallet',
-        };
+        return Attribute::make(
+            get: fn () => match ($this->type) {
+                'bank' => 'heroicon-o-building-library',
+                'cash' => 'heroicon-o-banknotes',
+                'credit_card' => 'heroicon-o-credit-card',
+                'loan' => 'heroicon-o-document-text',
+                default => 'heroicon-o-wallet',
+            }
+        );
     }
 
-    public function getFormattedBalanceAttribute(): string
+    protected function formattedBalance(): Attribute
     {
-        if ($this->type === 'loan') {
-            // For loans, show positive outstanding amount
-            $outstanding = abs($this->balance);
-
-            return $this->currency.' '.number_format($outstanding, 2);
-        }
-
-        return $this->currency.' '.number_format($this->balance, 2);
+        return Attribute::make(
+            get: fn () => $this->type === 'loan'
+                ? $this->currency.' '.number_format(abs($this->balance), 2)
+                : $this->currency.' '.number_format($this->balance, 2)
+        );
     }
 
-    public function getBalanceLabelAttribute(): string
+    protected function balanceLabel(): Attribute
     {
-        return $this->type === 'loan' ? 'Outstanding' : 'Balance';
+        return Attribute::make(
+            get: fn () => $this->type === 'loan' ? 'Outstanding' : 'Balance'
+        );
     }
 
     public function isLoan(): bool
