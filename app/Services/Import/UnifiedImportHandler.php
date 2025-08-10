@@ -23,9 +23,6 @@ class UnifiedImportHandler
     public function processFile(string $content, string $fileType, ?string $userInstructions = null): array
     {
         try {
-            // Ensure content is UTF-8 encoded
-            $content = $this->ensureUtf8($content);
-
             // Extract transactions using AI
             $extracted = $this->aiService->extractTransactions(
                 $content,
@@ -352,30 +349,5 @@ class UnifiedImportHandler
         }
 
         return $errors;
-    }
-
-    /**
-     * Ensure content is UTF-8 encoded
-     */
-    protected function ensureUtf8(string $content): string
-    {
-        // Detect encoding
-        $encoding = mb_detect_encoding($content, ['UTF-8', 'ISO-8859-1', 'Windows-1252', 'ASCII'], true);
-
-        if ($encoding !== 'UTF-8') {
-            // Convert to UTF-8
-            $content = mb_convert_encoding($content, 'UTF-8', $encoding ?: 'ISO-8859-1');
-        }
-
-        // Remove any invalid UTF-8 sequences
-        $content = mb_convert_encoding($content, 'UTF-8', 'UTF-8');
-
-        // Remove BOM if present
-        $content = preg_replace('/^\xEF\xBB\xBF/', '', $content);
-
-        // Replace any remaining invalid characters with spaces
-        $content = iconv('UTF-8', 'UTF-8//IGNORE', $content);
-
-        return $content;
     }
 }
