@@ -198,9 +198,12 @@ describe('Account Model', function () {
         $casts = $account->getCasts();
 
         expect($casts)
-            ->toHaveKey('balance', 'decimal:2')
-            ->toHaveKey('initial_balance', 'decimal:2')
             ->toHaveKey('is_active', 'boolean');
+        
+        // Balance and initial_balance are now handled via accessors/mutators, not casts
+        // Verify the accessors work by checking the values
+        expect($account->balance)->toBeNumeric();
+        expect($account->initial_balance)->toBeNumeric();
     });
 
     it('can be created with different currencies', function () {

@@ -30,7 +30,7 @@ describe('Loan Account Resource', function () {
         $this->assertDatabaseHas(Account::class, [
             'name' => 'Car Loan - Honda City',
             'type' => 'loan',
-            'initial_balance' => -60000,
+            'initial_balance' => -6000000, // DB stores cents
             'user_id' => $this->user->id,
         ]);
     });

@@ -53,7 +53,7 @@ describe('AccountResource CRUD Operations', function () {
             'type' => $newData->type,
             'currency' => $newData->currency,
             'user_id' => $this->user->id,
-            'balance' => $newData->initial_balance, // balance should equal initial_balance
+            'balance' => round($newData->initial_balance * 100), // DB stores cents
         ]);
     });
 

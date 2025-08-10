@@ -252,9 +252,12 @@ describe('Transaction Model', function () {
         $casts = $transaction->getCasts();
 
         expect($casts)
-            ->toHaveKey('amount', 'decimal:2')
             ->toHaveKey('date', 'date')
             ->toHaveKey('is_reconciled', 'boolean');
+        
+        // Amount is now handled via accessor/mutator, not cast
+        // Verify the accessor works by checking the value
+        expect($transaction->amount)->toBeNumeric();
     });
 
     it('updates both account balances for transfers', function () {

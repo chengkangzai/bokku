@@ -65,7 +65,7 @@ describe('TransactionResource CRUD Operations', function () {
 
         $this->assertDatabaseHas(Transaction::class, [
             'type' => 'income',
-            'amount' => $transactionData->amount,
+            'amount' => round($transactionData->amount * 100), // DB stores cents
             'description' => $transactionData->description,
             'user_id' => $this->user->id,
             'account_id' => $this->account->id,
@@ -97,7 +97,7 @@ describe('TransactionResource CRUD Operations', function () {
 
         $this->assertDatabaseHas(Transaction::class, [
             'type' => 'expense',
-            'amount' => $transactionData->amount,
+            'amount' => round($transactionData->amount * 100), // DB stores cents
             'description' => $transactionData->description,
             'user_id' => $this->user->id,
             'account_id' => $this->account->id,
@@ -129,7 +129,7 @@ describe('TransactionResource CRUD Operations', function () {
 
         $this->assertDatabaseHas(Transaction::class, [
             'type' => 'transfer',
-            'amount' => $transactionData->amount,
+            'amount' => round($transactionData->amount * 100), // DB stores cents
             'description' => $transactionData->description,
             'user_id' => $this->user->id,
             'account_id' => $this->account->id,
