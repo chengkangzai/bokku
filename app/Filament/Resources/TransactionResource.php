@@ -60,7 +60,25 @@ class TransactionResource extends Resource
                                             ->required()
                                             ->numeric()
                                             ->prefix('RM')
-                                            ->minValue(0.01),
+                                            ->minValue(0.01)
+                                            ->reactive()
+                                            ->helperText(function (Get $get, $state) {
+                                                $accountId = $get('account_id');
+                                                $type = $get('type');
+                                                $amount = (float) $state;
+                                                
+                                                if (!$accountId || !$type || !$amount) {
+                                                    return null;
+                                                }
+                                                
+                                                $account = \App\Models\Account::find($accountId);
+                                                
+                                                if (!$account) {
+                                                    return null;
+                                                }
+                                                
+                                                return $account->getBalanceWarningMessage($amount, $type);
+                                            }),
 
                                         Forms\Components\DatePicker::make('date')
                                             ->required()
@@ -91,6 +109,7 @@ class TransactionResource extends Resource
                                             )
                                             ->required()
                                             ->native(false)
+                                            ->reactive()
                                             ->visible(fn (Get $get) => ! empty($get('type')) && in_array($get('type'), ['income', 'expense', 'transfer']))
                                             ->helperText(fn (Get $get) => empty($get('type')) ? 'Please select a transaction type first' : null
                                             ),

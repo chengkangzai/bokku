@@ -108,4 +108,43 @@ class Account extends Model
     {
         return $this->type === 'loan';
     }
+
+    public function hassufficientBalance(float $amount): bool
+    {
+        // For loan accounts, spending increases the outstanding amount (more negative)
+        // For regular accounts, check if balance is sufficient
+        if ($this->type === 'loan') {
+            // Loans can always go more negative (no credit limit check for now)
+            return true;
+        }
+
+        return $this->balance >= $amount;
+    }
+
+    public function getBalanceWarningMessage(float $amount, string $transactionType): ?string
+    {
+        if ($transactionType === 'income') {
+            return null; // No warning needed for income
+        }
+
+        $currentBalance = $this->balance;
+        $afterBalance = $currentBalance - $amount;
+
+        if ($this->type === 'loan') {
+            $currentOutstanding = abs($currentBalance);
+            $newOutstanding = abs($afterBalance);
+
+            return "Current outstanding: {$this->currency} " . number_format($currentOutstanding, 2) .
+                   " → New outstanding: {$this->currency} " . number_format($newOutstanding, 2);
+        }
+
+        $balanceText = "Current balance: {$this->currency} " . number_format($currentBalance, 2);
+
+        if (!$this->hassufficientBalance($amount)) {
+            $shortage = $amount - $currentBalance;
+            return "⚠️ Insufficient funds! {$balanceText} (Short by {$this->currency} " . number_format($shortage, 2) . ")";
+        }
+
+        return $balanceText . " → After transaction: {$this->currency} " . number_format($afterBalance, 2);
+    }
 }
