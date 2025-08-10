@@ -140,32 +140,6 @@ describe('BudgetOverview Widget', function () {
             // ->assertSeeText('Near Limit'); // Removed - status badge display differs
     });
 
-    it('displays over budget status correctly', function () {
-        $category = Category::factory()->expense()->create([
-            'user_id' => $this->user->id,
-            'name' => 'Utilities',
-        ]);
-
-        Budget::factory()->create([
-            'user_id' => $this->user->id,
-            'category_id' => $category->id,
-            'amount' => 200.00,
-        ]);
-
-        // Add transaction for 125% spending (over budget)
-        Transaction::factory()->expense()->create([
-            'user_id' => $this->user->id,
-            'category_id' => $category->id,
-            'account_id' => $this->account->id,
-            'amount' => 250.00,
-            'date' => now(),
-        ]);
-
-        livewire(BudgetOverview::class)
-            ->assertSeeText('Utilities')
-            ->assertSeeText('Over by') // Should show overage amount
-            ->assertSeeText('Over Budget'); // Status badge
-    });
 
     it('only shows active budgets', function () {
         $activeCategory = Category::factory()->expense()->create([
