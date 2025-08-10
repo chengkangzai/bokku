@@ -21,7 +21,7 @@ class RecurringTransactionFactory extends Factory
     {
         $type = $this->faker->randomElement(['income', 'expense', 'transfer']);
         $frequency = $this->faker->randomElement(['daily', 'weekly', 'monthly', 'annual']);
-        
+
         $data = [
             'user_id' => User::factory(),
             'type' => $type,

@@ -13,7 +13,7 @@ class BudgetStats extends BaseWidget
     protected function getStats(): array
     {
         $userId = auth()->id();
-        
+
         $budgets = Budget::where('user_id', $userId)
             ->where('is_active', true)
             ->get();
@@ -36,18 +36,18 @@ class BudgetStats extends BaseWidget
         $onTrackCount = $budgets->count() - $overBudgetCount - $nearBudgetCount;
 
         return [
-            Stat::make('Total Budget', 'RM ' . number_format($totalBudget, 2))
+            Stat::make('Total Budget', 'RM '.number_format($totalBudget, 2))
                 ->description('Across all categories')
                 ->descriptionIcon('heroicon-m-banknotes')
                 ->color('primary'),
 
-            Stat::make('Total Spent', 'RM ' . number_format($totalSpent, 2))
-                ->description($totalRemaining >= 0 ? 'RM ' . number_format($totalRemaining, 2) . ' remaining' : 'RM ' . number_format(abs($totalRemaining), 2) . ' over budget')
+            Stat::make('Total Spent', 'RM '.number_format($totalSpent, 2))
+                ->description($totalRemaining >= 0 ? 'RM '.number_format($totalRemaining, 2).' remaining' : 'RM '.number_format(abs($totalRemaining), 2).' over budget')
                 ->descriptionIcon($totalRemaining >= 0 ? 'heroicon-m-check-circle' : 'heroicon-m-exclamation-triangle')
                 ->color($totalRemaining >= 0 ? 'success' : 'danger'),
 
-            Stat::make('Budget Status', $onTrackCount . ' on track')
-                ->description($overBudgetCount > 0 ? $overBudgetCount . ' over, ' . $nearBudgetCount . ' near limit' : 'All budgets healthy')
+            Stat::make('Budget Status', $onTrackCount.' on track')
+                ->description($overBudgetCount > 0 ? $overBudgetCount.' over, '.$nearBudgetCount.' near limit' : 'All budgets healthy')
                 ->descriptionIcon($overBudgetCount > 0 ? 'heroicon-m-exclamation-triangle' : 'heroicon-m-check-circle')
                 ->color($overBudgetCount > 0 ? 'danger' : ($nearBudgetCount > 0 ? 'warning' : 'success')),
         ];

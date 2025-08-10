@@ -254,7 +254,7 @@ describe('Transaction Model', function () {
         expect($casts)
             ->toHaveKey('date', 'date')
             ->toHaveKey('is_reconciled', 'boolean');
-        
+
         // Amount is now handled via accessor/mutator, not cast
         // Verify the accessor works by checking the value
         expect($transaction->amount)->toBeNumeric();

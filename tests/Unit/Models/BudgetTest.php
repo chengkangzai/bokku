@@ -39,7 +39,7 @@ describe('Budget Model', function () {
     });
 
     it('has correct fillable attributes', function () {
-        $fillable = (new Budget())->getFillable();
+        $fillable = (new Budget)->getFillable();
 
         expect($fillable)->toContain(
             'user_id',
@@ -67,7 +67,7 @@ describe('Budget Period Calculations', function () {
     it('calculates monthly period correctly', function () {
         $user = User::factory()->create();
         $category = Category::factory()->expense()->create(['user_id' => $user->id]);
-        
+
         $budget = Budget::factory()->monthly()->create([
             'user_id' => $user->id,
             'category_id' => $category->id,
@@ -86,7 +86,7 @@ describe('Budget Period Calculations', function () {
     it('calculates weekly period correctly', function () {
         $user = User::factory()->create();
         $category = Category::factory()->expense()->create(['user_id' => $user->id]);
-        
+
         // Start on a Wednesday (2024-03-13)
         $budget = Budget::factory()->weekly()->create([
             'user_id' => $user->id,
@@ -107,7 +107,7 @@ describe('Budget Period Calculations', function () {
     it('calculates annual period correctly', function () {
         $user = User::factory()->create();
         $category = Category::factory()->expense()->create(['user_id' => $user->id]);
-        
+
         $budget = Budget::factory()->annual()->create([
             'user_id' => $user->id,
             'category_id' => $category->id,
@@ -129,7 +129,7 @@ describe('Budget Amount Calculations', function () {
         $user = User::factory()->create();
         $category = Category::factory()->expense()->create(['user_id' => $user->id]);
         $account = \App\Models\Account::factory()->create(['user_id' => $user->id]);
-        
+
         $budget = Budget::factory()->monthly()->create([
             'user_id' => $user->id,
             'category_id' => $category->id,
@@ -162,7 +162,7 @@ describe('Budget Amount Calculations', function () {
         $user = User::factory()->create();
         $category = Category::factory()->expense()->create(['user_id' => $user->id]);
         $account = \App\Models\Account::factory()->create(['user_id' => $user->id]);
-        
+
         $budget = Budget::factory()->monthly()->create([
             'user_id' => $user->id,
             'category_id' => $category->id,
@@ -229,7 +229,7 @@ describe('Budget Amount Calculations', function () {
         $user = User::factory()->create();
         $category = Category::factory()->expense()->create(['user_id' => $user->id]);
         $account = \App\Models\Account::factory()->create(['user_id' => $user->id]);
-        
+
         $budget = Budget::factory()->monthly()->create([
             'user_id' => $user->id,
             'category_id' => $category->id,
@@ -251,7 +251,7 @@ describe('Budget Amount Calculations', function () {
         $user = User::factory()->create();
         $category = Category::factory()->expense()->create(['user_id' => $user->id]);
         $account = \App\Models\Account::factory()->create(['user_id' => $user->id]);
-        
+
         $budget = Budget::factory()->monthly()->create([
             'user_id' => $user->id,
             'category_id' => $category->id,
@@ -275,7 +275,7 @@ describe('Budget Progress and Status', function () {
         $user = User::factory()->create();
         $category = Category::factory()->expense()->create(['user_id' => $user->id]);
         $account = \App\Models\Account::factory()->create(['user_id' => $user->id]);
-        
+
         $budget = Budget::factory()->monthly()->create([
             'user_id' => $user->id,
             'category_id' => $category->id,
@@ -297,7 +297,7 @@ describe('Budget Progress and Status', function () {
         $user = User::factory()->create();
         $category = Category::factory()->expense()->create(['user_id' => $user->id]);
         $account = \App\Models\Account::factory()->create(['user_id' => $user->id]);
-        
+
         $budget = Budget::factory()->monthly()->create([
             'user_id' => $user->id,
             'category_id' => $category->id,
@@ -318,7 +318,7 @@ describe('Budget Progress and Status', function () {
     it('returns zero progress for zero amount budget', function () {
         $user = User::factory()->create();
         $category = Category::factory()->expense()->create(['user_id' => $user->id]);
-        
+
         $budget = Budget::factory()->monthly()->create([
             'user_id' => $user->id,
             'category_id' => $category->id,
@@ -332,7 +332,7 @@ describe('Budget Progress and Status', function () {
         $user = User::factory()->create();
         $category = Category::factory()->expense()->create(['user_id' => $user->id]);
         $account = \App\Models\Account::factory()->create(['user_id' => $user->id]);
-        
+
         $budget = Budget::factory()->monthly()->create([
             'user_id' => $user->id,
             'category_id' => $category->id,
@@ -354,7 +354,7 @@ describe('Budget Progress and Status', function () {
         $user = User::factory()->create();
         $category = Category::factory()->expense()->create(['user_id' => $user->id]);
         $account = \App\Models\Account::factory()->create(['user_id' => $user->id]);
-        
+
         $budget = Budget::factory()->monthly()->create([
             'user_id' => $user->id,
             'category_id' => $category->id,
@@ -376,7 +376,7 @@ describe('Budget Progress and Status', function () {
         $user = User::factory()->create();
         $category = Category::factory()->expense()->create(['user_id' => $user->id]);
         $account = \App\Models\Account::factory()->create(['user_id' => $user->id]);
-        
+
         $budget = Budget::factory()->monthly()->create([
             'user_id' => $user->id,
             'category_id' => $category->id,
@@ -397,7 +397,7 @@ describe('Budget Progress and Status', function () {
     it('returns correct status colors', function () {
         $user = User::factory()->create();
         $account = \App\Models\Account::factory()->create(['user_id' => $user->id]);
-        
+
         // Test under budget color
         $underCategory = Category::factory()->expense()->create([
             'user_id' => $user->id,
@@ -463,7 +463,7 @@ describe('Budget Progress and Status', function () {
     it('returns correct status icons', function () {
         $user = User::factory()->create();
         $account = \App\Models\Account::factory()->create(['user_id' => $user->id]);
-        
+
         // Test under budget icon
         $underCategory = Category::factory()->expense()->create([
             'user_id' => $user->id,
@@ -532,7 +532,7 @@ describe('Budget Formatting Methods', function () {
         $user = User::factory()->create();
         $category = Category::factory()->expense()->create(['user_id' => $user->id]);
         $account = \App\Models\Account::factory()->create(['user_id' => $user->id]);
-        
+
         $budget = Budget::factory()->monthly()->create([
             'user_id' => $user->id,
             'category_id' => $category->id,
@@ -560,7 +560,7 @@ describe('Budget Formatting Methods', function () {
         $user = User::factory()->create();
         $category = Category::factory()->expense()->create(['user_id' => $user->id]);
         $account = \App\Models\Account::factory()->create(['user_id' => $user->id]);
-        
+
         $budget = Budget::factory()->monthly()->create([
             'user_id' => $user->id,
             'category_id' => $category->id,
@@ -582,7 +582,7 @@ describe('Budget Formatting Methods', function () {
         $user = User::factory()->create();
         $category = Category::factory()->expense()->create(['user_id' => $user->id]);
         $account = \App\Models\Account::factory()->create(['user_id' => $user->id]);
-        
+
         $budget = Budget::factory()->monthly()->create([
             'user_id' => $user->id,
             'category_id' => $category->id,
@@ -606,7 +606,7 @@ describe('Budget Status Methods', function () {
         $user = User::factory()->create();
         $category = Category::factory()->expense()->create(['user_id' => $user->id]);
         $account = \App\Models\Account::factory()->create(['user_id' => $user->id]);
-        
+
         $budget = Budget::factory()->monthly()->create([
             'user_id' => $user->id,
             'category_id' => $category->id,
@@ -629,7 +629,7 @@ describe('Budget Status Methods', function () {
         $user = User::factory()->create();
         $category = Category::factory()->expense()->create(['user_id' => $user->id]);
         $account = \App\Models\Account::factory()->create(['user_id' => $user->id]);
-        
+
         $budget = Budget::factory()->monthly()->create([
             'user_id' => $user->id,
             'category_id' => $category->id,
@@ -652,7 +652,7 @@ describe('Budget Status Methods', function () {
         $user = User::factory()->create();
         $category = Category::factory()->expense()->create(['user_id' => $user->id]);
         $account = \App\Models\Account::factory()->create(['user_id' => $user->id]);
-        
+
         $budget = Budget::factory()->monthly()->create([
             'user_id' => $user->id,
             'category_id' => $category->id,

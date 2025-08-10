@@ -64,7 +64,7 @@ class Budget extends Model
 
     public function getSpentAmount(): float
     {
-        if (!$this->category) {
+        if (! $this->category) {
             return 0;
         }
 
@@ -74,7 +74,7 @@ class Budget extends Model
             ->where('type', 'expense')
             ->whereBetween('date', [
                 $this->getCurrentPeriodStart(),
-                $this->getCurrentPeriodEnd()
+                $this->getCurrentPeriodEnd(),
             ])
             ->sum('amount');
 
@@ -131,19 +131,20 @@ class Budget extends Model
 
     public function getFormattedSpent(): string
     {
-        return 'RM ' . number_format($this->getSpentAmount(), 2);
+        return 'RM '.number_format($this->getSpentAmount(), 2);
     }
 
     public function getFormattedBudget(): string
     {
-        return 'RM ' . number_format($this->amount, 2);
+        return 'RM '.number_format($this->amount, 2);
     }
 
     public function getFormattedRemaining(): string
     {
         $remaining = $this->getRemainingAmount();
         $prefix = $remaining < 0 ? '-RM ' : 'RM ';
-        return $prefix . number_format(abs($remaining), 2);
+
+        return $prefix.number_format(abs($remaining), 2);
     }
 
     public function isOverBudget(): bool
@@ -153,6 +154,6 @@ class Budget extends Model
 
     public function isNearBudget(): bool
     {
-        return $this->getProgressPercentage() >= 80 && !$this->isOverBudget();
+        return $this->getProgressPercentage() >= 80 && ! $this->isOverBudget();
     }
 }

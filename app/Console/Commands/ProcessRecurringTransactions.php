@@ -32,27 +32,28 @@ class ProcessRecurringTransactions extends Command
         $userId = $this->option('user');
 
         $this->info('Processing recurring transactions...');
-        
+
         // Get all due recurring transactions
         $query = RecurringTransaction::due()
             ->where('auto_process', true);
-        
+
         if ($userId) {
             $query->where('user_id', $userId);
         }
-        
+
         $dueTransactions = $query->get();
-        
+
         if ($dueTransactions->isEmpty()) {
             $this->info('No recurring transactions are due.');
+
             return Command::SUCCESS;
         }
-        
+
         $this->info("Found {$dueTransactions->count()} due recurring transaction(s).");
-        
+
         $processed = 0;
         $failed = 0;
-        
+
         foreach ($dueTransactions as $recurring) {
             try {
                 if ($dryRun) {
@@ -60,7 +61,7 @@ class ProcessRecurringTransactions extends Command
                     $this->line("  Next date would be: {$recurring->calculateNextDate()->format('Y-m-d')}");
                 } else {
                     $transaction = $recurring->generateTransaction();
-                    
+
                     if ($transaction) {
                         $this->info("✓ Created transaction: {$recurring->description} - RM {$recurring->amount}");
                         $this->line("  Next occurrence: {$recurring->next_date->format('Y-m-d')}");
@@ -73,7 +74,7 @@ class ProcessRecurringTransactions extends Command
                 $this->error("✗ Failed to process: {$recurring->description}");
                 $this->error("  Error: {$e->getMessage()}");
                 $failed++;
-                
+
                 // Log the error for debugging
                 \Log::error('Failed to process recurring transaction', [
                     'recurring_id' => $recurring->id,
@@ -83,21 +84,22 @@ class ProcessRecurringTransactions extends Command
                 ]);
             }
         }
-        
-        if (!$dryRun) {
+
+        if (! $dryRun) {
             $this->newLine();
-            $this->info("Summary:");
+            $this->info('Summary:');
             $this->info("  Processed: {$processed}");
-            
+
             if ($failed > 0) {
                 $this->error("  Failed: {$failed}");
+
                 return Command::FAILURE;
             }
         } else {
             $this->newLine();
-            $this->info("Dry run complete - no transactions were created.");
+            $this->info('Dry run complete - no transactions were created.');
         }
-        
+
         return Command::SUCCESS;
     }
 }

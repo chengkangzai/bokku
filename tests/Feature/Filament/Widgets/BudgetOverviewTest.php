@@ -83,7 +83,7 @@ describe('BudgetOverview Widget', function () {
 
         livewire(BudgetOverview::class)
             ->assertSeeText('Food & Dining');
-            // ->assertSeeText('40%'); // Removed - progress calculation differs
+        // ->assertSeeText('40%'); // Removed - progress calculation differs
     });
 
     it('displays under budget status correctly', function () {
@@ -137,9 +137,8 @@ describe('BudgetOverview Widget', function () {
         livewire(BudgetOverview::class)
             ->assertSeeText('Shopping')
             ->assertSeeText('remaining'); // Should show remaining amount
-            // ->assertSeeText('Near Limit'); // Removed - status badge display differs
+        // ->assertSeeText('Near Limit'); // Removed - status badge display differs
     });
-
 
     it('only shows active budgets', function () {
         $activeCategory = Category::factory()->expense()->create([
@@ -172,7 +171,7 @@ describe('BudgetOverview Widget', function () {
 
     it('only shows budgets for authenticated user', function () {
         $otherUser = User::factory()->create();
-        
+
         // Create budget for current user
         $userCategory = Category::factory()->expense()->create([
             'user_id' => $this->user->id,
@@ -346,9 +345,9 @@ describe('BudgetOverview Widget', function () {
             ->assertSeeText('Under Budget')
             ->assertSeeText('Near Budget')
             ->assertSeeText('Over Budget');
-            // ->assertSeeText('On Track')  // Removed - status display differs
-            // ->assertSeeText('Near Limit')  // Removed - status display differs
-            // ->assertSeeText('Over Budget');  // Removed - duplicate assertion
+        // ->assertSeeText('On Track')  // Removed - status display differs
+        // ->assertSeeText('Near Limit')  // Removed - status display differs
+        // ->assertSeeText('Over Budget');  // Removed - duplicate assertion
     });
 
     it('limits number of displayed budgets', function () {

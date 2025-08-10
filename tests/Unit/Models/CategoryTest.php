@@ -163,7 +163,7 @@ describe('Category Model', function () {
         // Factory adds unique suffix, so we need to check the base name
         $incomeCategoryBaseName = explode('_', $incomeCategory->name)[0];
         $expenseCategoryBaseName = explode('_', $expenseCategory->name)[0];
-        
+
         expect($incomeNames)->toContain($incomeCategoryBaseName);
         expect($expenseNames)->toContain($expenseCategoryBaseName);
     });
@@ -368,7 +368,7 @@ describe('Category Budget Warnings', function () {
 
         // Additional transaction of 250 would make total 550, exceeding 500 budget
         $warning = $category->getBudgetWarning(250.00);
-        
+
         expect($warning)->toBeString()
             ->and($warning)->toContain('⚠️ This will put you RM 50.00 over your Groceries budget');
     });
@@ -400,7 +400,7 @@ describe('Category Budget Warnings', function () {
 
         // Additional transaction of 140 would make total 340 (85% of 400)
         $warning = $category->getBudgetWarning(140.00);
-        
+
         expect($warning)->toBeString()
             ->and($warning)->toContain('💡 This will use 85% of your Entertainment budget');
     });
@@ -428,7 +428,7 @@ describe('Category Budget Warnings', function () {
 
         // Additional transaction of 50 would make total 150 (30% of 500)
         $warning = $category->getBudgetWarning(50.00);
-        
+
         expect($warning)->toBeNull();
     });
 
@@ -437,7 +437,7 @@ describe('Category Budget Warnings', function () {
         $category = Category::factory()->expense()->create(['user_id' => $user->id]);
 
         $warning = $category->getBudgetWarning(100.00);
-        
+
         expect($warning)->toBeNull();
     });
 
@@ -468,7 +468,7 @@ describe('Category Budget Warnings', function () {
 
         // Zero additional amount should still show current percentage
         $warning = $category->getBudgetWarning(0.00);
-        
+
         expect($warning)->toBeString()
             ->and($warning)->toContain('💡 This will use 88% of your Zero Amount Category budget');
     });
@@ -509,7 +509,7 @@ describe('Category Budget Warnings', function () {
 
         // Additional 50 would make current month total 150, not exceeding 300 budget
         $warning = $category->getBudgetWarning(50.00);
-        
+
         expect($warning)->toBeNull(); // Should be well within budget
     });
 });

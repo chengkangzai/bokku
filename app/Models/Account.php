@@ -53,7 +53,6 @@ class Account extends Model
         return $this->hasMany(Transaction::class, 'to_account_id');
     }
 
-
     public function updateBalance(): void
     {
         $income = $this->transactions()
@@ -136,17 +135,18 @@ class Account extends Model
             $currentOutstanding = abs($currentBalance);
             $newOutstanding = abs($afterBalance);
 
-            return "Current outstanding: {$this->currency} " . number_format($currentOutstanding, 2) .
-                   " → New outstanding: {$this->currency} " . number_format($newOutstanding, 2);
+            return "Current outstanding: {$this->currency} ".number_format($currentOutstanding, 2).
+                   " → New outstanding: {$this->currency} ".number_format($newOutstanding, 2);
         }
 
-        $balanceText = "Current balance: {$this->currency} " . number_format($currentBalance, 2);
+        $balanceText = "Current balance: {$this->currency} ".number_format($currentBalance, 2);
 
-        if (!$this->hasSufficientBalance($amount)) {
+        if (! $this->hasSufficientBalance($amount)) {
             $shortage = $amount - $currentBalance;
-            return "⚠️ Insufficient funds! {$balanceText} (Short by {$this->currency} " . number_format($shortage, 2) . ")";
+
+            return "⚠️ Insufficient funds! {$balanceText} (Short by {$this->currency} ".number_format($shortage, 2).')';
         }
 
-        return $balanceText . " → After transaction: {$this->currency} " . number_format($afterBalance, 2);
+        return $balanceText." → After transaction: {$this->currency} ".number_format($afterBalance, 2);
     }
 }

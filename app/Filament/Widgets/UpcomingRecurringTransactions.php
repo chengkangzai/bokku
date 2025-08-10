@@ -6,13 +6,12 @@ use App\Models\RecurringTransaction;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget as BaseWidget;
-use Illuminate\Database\Eloquent\Builder;
 
 class UpcomingRecurringTransactions extends BaseWidget
 {
     protected static ?int $sort = 4;
 
-    protected int | string | array $columnSpan = 'full';
+    protected int|string|array $columnSpan = 'full';
 
     protected static ?string $heading = 'Upcoming Recurring Transactions';
 
@@ -44,7 +43,7 @@ class UpcomingRecurringTransactions extends BaseWidget
                     ->weight('semibold'),
 
                 Tables\Columns\TextColumn::make('amount')
-                    ->formatStateUsing(fn ($state) => 'RM ' . number_format($state, 2))
+                    ->formatStateUsing(fn ($state) => 'RM '.number_format($state, 2))
                     ->color(fn ($record) => match ($record->type) {
                         'income' => 'success',
                         'expense' => 'danger',

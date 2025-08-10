@@ -77,7 +77,7 @@ class RecurringTransaction extends Model
 
     public function isDue(): bool
     {
-        if (!$this->is_active) {
+        if (! $this->is_active) {
             return false;
         }
 
@@ -90,7 +90,7 @@ class RecurringTransaction extends Model
 
     public function generateTransaction(): ?Transaction
     {
-        if (!$this->isDue()) {
+        if (! $this->isDue()) {
             return null;
         }
 
@@ -125,19 +125,20 @@ class RecurringTransaction extends Model
     public function calculateNextDate(): Carbon
     {
         $baseDate = ($this->next_date ?? $this->start_date)->copy();
-        
+
         switch ($this->frequency) {
             case 'daily':
                 return $baseDate->addDays($this->interval);
-                
+
             case 'weekly':
                 $nextDate = $baseDate->addWeeks($this->interval);
                 if ($this->day_of_week !== null) {
                     // Using Carbon's standard: 0=Sun, 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat
                     $nextDate->next($this->day_of_week);
                 }
+
                 return $nextDate;
-                
+
             case 'monthly':
                 if ($this->day_of_month) {
                     // Use Carbon's addMonthsNoOverflow for proper month addition
@@ -146,10 +147,10 @@ class RecurringTransaction extends Model
                         // For days 29-31, use special handling
                         $nextDate = $baseDate->copy();
                         $targetDay = $this->day_of_month;
-                        
+
                         // Add months
                         $nextDate->addMonthsNoOverflow($this->interval);
-                        
+
                         // If target day is 31, always use end of month
                         if ($targetDay == 31) {
                             $nextDate->endOfMonth();
@@ -158,7 +159,7 @@ class RecurringTransaction extends Model
                             $lastDay = $nextDate->copy()->endOfMonth()->day;
                             $nextDate->day(min($targetDay, $lastDay));
                         }
-                        
+
                         return $nextDate->startOfDay();
                     } else {
                         // For days 1-28, simple addition works
@@ -167,22 +168,22 @@ class RecurringTransaction extends Model
                 } else {
                     return $baseDate->addMonths($this->interval);
                 }
-                
+
             case 'annual':
                 $nextDate = $baseDate->addYears($this->interval);
-                
+
                 if ($this->month_of_year) {
                     $nextDate->month($this->month_of_year);
-                    
+
                     if ($this->day_of_month) {
                         // Handle February 29 for leap years
                         $lastDay = $nextDate->copy()->endOfMonth()->day;
                         $nextDate->day(min($this->day_of_month, $lastDay));
                     }
                 }
-                
+
                 return $nextDate;
-                
+
             default:
                 return $baseDate->addMonth();
         }
@@ -246,18 +247,18 @@ class RecurringTransaction extends Model
                 $occurrences = [];
                 $tempRecurring = clone $this;
                 $date = $this->next_date->copy();
-                
+
                 for ($i = 0; $i < 5; $i++) {
                     if ($this->end_date && $date->greaterThan($this->end_date)) {
                         break;
                     }
                     $occurrences[] = $date->copy();
-                    
+
                     // Calculate the next date based on the current temp date
                     $tempRecurring->next_date = $date;
                     $date = $tempRecurring->calculateNextDate();
                 }
-                
+
                 return $occurrences;
             }
         );
@@ -297,11 +298,11 @@ class RecurringTransaction extends Model
         return $query->active()
             ->where(function ($q) {
                 $q->whereDate('next_date', '<=', now())
-                  ->orWhereNull('next_date');
+                    ->orWhereNull('next_date');
             })
             ->where(function ($q) {
                 $q->whereNull('end_date')
-                  ->orWhereDate('end_date', '>=', now());
+                    ->orWhereDate('end_date', '>=', now());
             });
     }
 
@@ -311,7 +312,7 @@ class RecurringTransaction extends Model
             ->whereBetween('next_date', [now(), now()->addDays($days)])
             ->where(function ($q) {
                 $q->whereNull('end_date')
-                  ->orWhereDate('end_date', '>=', now());
+                    ->orWhereDate('end_date', '>=', now());
             });
     }
 }

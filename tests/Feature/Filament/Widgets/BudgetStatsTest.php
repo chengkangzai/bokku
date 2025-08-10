@@ -69,11 +69,11 @@ describe('BudgetStats Widget', function () {
             ->assertSeeText('RM 800.00')
             ->assertSeeText('Across all categories')
             ->assertSeeText('Total Spent');
-            // ->assertSeeText('RM 300.00')  // Removed - calculation differs
-            // ->assertSeeText('RM 500.00 remaining')  // Removed - calculation differs
-            // ->assertSeeText('Budget Status')  // Removed - may not display
-            // ->assertSeeText('2 on track')  // Removed - calculation differs
-            // ->assertSeeText('All budgets healthy');  // Removed - text differs
+        // ->assertSeeText('RM 300.00')  // Removed - calculation differs
+        // ->assertSeeText('RM 500.00 remaining')  // Removed - calculation differs
+        // ->assertSeeText('Budget Status')  // Removed - may not display
+        // ->assertSeeText('2 on track')  // Removed - calculation differs
+        // ->assertSeeText('All budgets healthy');  // Removed - text differs
     });
 
     it('shows over budget and near budget warnings', function () {
@@ -142,7 +142,7 @@ describe('BudgetStats Widget', function () {
 
         livewire(BudgetStats::class)
             ->assertSeeText('Budget Status');
-            // ->assertSeeText('0 on track');  // Removed - calculation differs
+        // ->assertSeeText('0 on track');  // Removed - calculation differs
     });
 
     it('only includes active budgets in calculations', function () {
@@ -262,8 +262,8 @@ describe('BudgetStats Widget', function () {
 
         livewire(BudgetStats::class)
             ->assertSeeText('RM 1,234.56');
-            // ->assertSeeText('RM 987.43')  // Removed - calculation differs
-            // ->assertSeeText('RM 247.13 remaining');  // Removed - calculation differs
+        // ->assertSeeText('RM 987.43')  // Removed - calculation differs
+        // ->assertSeeText('RM 247.13 remaining');  // Removed - calculation differs
     });
 
     it('shows correct colors based on budget status', function () {
@@ -287,8 +287,8 @@ describe('BudgetStats Widget', function () {
 
         livewire(BudgetStats::class)
             ->assertSuccessful();
-            // ->assertSee('RM 100.00 over budget')  // Removed - calculation differs
-            // ->assertSeeText('0 on track')  // Removed - calculation differs
-            // ->assertSeeText('1 over, 0 near limit');  // Removed - calculation differs
+        // ->assertSee('RM 100.00 over budget')  // Removed - calculation differs
+        // ->assertSeeText('0 on track')  // Removed - calculation differs
+        // ->assertSeeText('1 over, 0 near limit');  // Removed - calculation differs
     });
 });

@@ -87,7 +87,7 @@ describe('RecurringTransactionResource CRUD Operations', function () {
             ->assertHasNoFormErrors();
 
         $recurring = RecurringTransaction::where('description', 'Test Expense')->first();
-        
+
         expect($recurring)->not->toBeNull();
         expect($recurring->start_date->toDateString())->toBe(now()->toDateString());
         expect($recurring->next_date->toDateString())->toBe(now()->toDateString());
@@ -389,9 +389,9 @@ describe('RecurringTransaction Model Functionality', function () {
         expect($daily->frequency_label)->toBe('Daily');
 
         $biweekly = RecurringTransaction::factory()->weekly()->make([
-            'interval' => 2, 
+            'interval' => 2,
             'day_of_week' => 1,  // Monday (Carbon standard: 0=Sun, 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat)
-            'user_id' => $this->user->id
+            'user_id' => $this->user->id,
         ]);
         expect($biweekly->frequency_label)->toBe('Every 2 weeks on Monday');
 
@@ -490,7 +490,7 @@ describe('RecurringTransactionResource Bulk Actions', function () {
             'category_id' => $this->expenseCategory->id,
             'is_active' => true,
         ]);
-        
+
         $notDueRecurring = RecurringTransaction::factory()->create([
             'user_id' => $this->user->id,
             'account_id' => $this->account->id,
@@ -505,14 +505,14 @@ describe('RecurringTransactionResource Bulk Actions', function () {
 
         // Check that transactions were created only for due recurring transactions
         $this->assertDatabaseCount(Transaction::class, 2);
-        
+
         foreach ($dueRecurring as $recurring) {
             $this->assertDatabaseHas(Transaction::class, [
                 'user_id' => $this->user->id,
                 'recurring_transaction_id' => $recurring->id,
             ]);
         }
-        
+
         // Not due recurring should not have generated a transaction
         $this->assertDatabaseMissing(Transaction::class, [
             'recurring_transaction_id' => $notDueRecurring->id,

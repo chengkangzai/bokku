@@ -601,7 +601,7 @@ describe('TransactionResource Budget Warning Integration', function () {
             'user_id' => $this->user->id,
             'name' => 'Test Budget Category',
         ]);
-        
+
         $this->budget = \App\Models\Budget::factory()->create([
             'user_id' => $this->user->id,
             'category_id' => $this->budgetCategory->id,
@@ -609,7 +609,6 @@ describe('TransactionResource Budget Warning Integration', function () {
             'is_active' => true,
         ]);
     });
-
 
     it('does not show budget warning for transfer transactions', function () {
         // Transfer transactions should not trigger budget warnings
@@ -642,7 +641,8 @@ describe('TransactionResource Budget Warning Integration', function () {
                 'account_id' => $this->account->id,
                 'category_id' => $noBudgetCategory->id,
             ])
-            ->assertDontSee('⚠️')
+            // Note: Automation section may show rule matching info, but no budget warnings
+            ->assertDontSee('Budget warning')
             ->assertDontSee('💡')
             ->assertFormSet([
                 'category_id' => $noBudgetCategory->id,
@@ -884,7 +884,7 @@ describe('TransactionResource Budget Warning Integration', function () {
 
     it('only shows warnings for current users budgets with multi-tenant isolation', function () {
         $otherUser = User::factory()->create();
-        
+
         // Create category and budget for other user with same name
         $otherCategory = Category::factory()->expense()->create([
             'user_id' => $otherUser->id,

@@ -199,7 +199,7 @@ describe('Account Model', function () {
 
         expect($casts)
             ->toHaveKey('is_active', 'boolean');
-        
+
         // Balance and initial_balance are now handled via accessors/mutators, not casts
         // Verify the accessors work by checking the values
         expect($account->balance)->toBeNumeric();

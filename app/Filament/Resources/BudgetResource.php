@@ -93,7 +93,7 @@ class BudgetResource extends Resource
 
                 Tables\Columns\TextColumn::make('amount')
                     ->label('Budget')
-                    ->formatStateUsing(fn ($state) => 'RM ' . number_format($state, 2))
+                    ->formatStateUsing(fn ($state) => 'RM '.number_format($state, 2))
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('spent')
@@ -103,7 +103,7 @@ class BudgetResource extends Resource
 
                 Tables\Columns\TextColumn::make('progress')
                     ->label('Progress')
-                    ->getStateUsing(fn (Budget $record): string => $record->getProgressPercentage() . '%')
+                    ->getStateUsing(fn (Budget $record): string => $record->getProgressPercentage().'%')
                     ->color(fn (Budget $record): string => $record->getStatusColor())
                     ->badge(),
 
@@ -140,17 +140,17 @@ class BudgetResource extends Resource
                         'over' => 'Over Budget',
                     ])
                     ->query(function (Builder $query, array $data): Builder {
-                        if (!$data['value']) {
+                        if (! $data['value']) {
                             return $query;
                         }
-                        
+
                         // Get all budgets and filter by status in memory
                         // This is necessary because status is calculated based on transactions
                         $budgets = $query->get();
                         $filteredIds = $budgets->filter(function ($budget) use ($data) {
                             return $budget->getStatus() === $data['value'];
                         })->pluck('id');
-                        
+
                         return $query->whereIn('id', $filteredIds);
                     }),
 
@@ -169,7 +169,7 @@ class BudgetResource extends Resource
                         ->icon('heroicon-m-power')
                         ->action(function ($records) {
                             foreach ($records as $record) {
-                                $record->update(['is_active' => !$record->is_active]);
+                                $record->update(['is_active' => ! $record->is_active]);
                             }
                         })
                         ->requiresConfirmation(),

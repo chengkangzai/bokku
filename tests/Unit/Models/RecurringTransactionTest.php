@@ -16,7 +16,7 @@ beforeEach(function () {
 describe('RecurringTransaction Model Relationships', function () {
     it('belongs to a user', function () {
         $recurring = RecurringTransaction::factory()->create(['user_id' => $this->user->id]);
-        
+
         expect($recurring->user)->toBeInstanceOf(User::class);
         expect($recurring->user->id)->toBe($this->user->id);
     });
@@ -26,7 +26,7 @@ describe('RecurringTransaction Model Relationships', function () {
             'user_id' => $this->user->id,
             'account_id' => $this->account->id,
         ]);
-        
+
         expect($recurring->account)->toBeInstanceOf(Account::class);
         expect($recurring->account->id)->toBe($this->account->id);
     });
@@ -36,19 +36,19 @@ describe('RecurringTransaction Model Relationships', function () {
             'user_id' => $this->user->id,
             'category_id' => $this->category->id,
         ]);
-        
+
         expect($recurring->category)->toBeInstanceOf(Category::class);
         expect($recurring->category->id)->toBe($this->category->id);
     });
 
     it('has many generated transactions', function () {
         $recurring = RecurringTransaction::factory()->create(['user_id' => $this->user->id]);
-        
+
         Transaction::factory()->count(3)->create([
             'user_id' => $this->user->id,
             'recurring_transaction_id' => $recurring->id,
         ]);
-        
+
         expect($recurring->generatedTransactions)->toHaveCount(3);
         expect($recurring->generatedTransactions->first())->toBeInstanceOf(Transaction::class);
     });
@@ -60,7 +60,7 @@ describe('RecurringTransaction Model Relationships', function () {
             'account_id' => $this->account->id,
             'to_account_id' => $toAccount->id,
         ]);
-        
+
         expect($recurring->toAccount)->toBeInstanceOf(Account::class);
         expect($recurring->toAccount->id)->toBe($toAccount->id);
     });
@@ -73,9 +73,9 @@ describe('RecurringTransaction Date Calculations', function () {
             'interval' => 3,
             'next_date' => Carbon::parse('2024-01-15'),
         ]);
-        
+
         $nextDate = $recurring->calculateNextDate();
-        
+
         expect($nextDate->format('Y-m-d'))->toBe('2024-01-18');
     });
 
@@ -86,9 +86,9 @@ describe('RecurringTransaction Date Calculations', function () {
             'day_of_week' => null,
             'next_date' => Carbon::parse('2024-01-15'), // Monday
         ]);
-        
+
         $nextDate = $recurring->calculateNextDate();
-        
+
         expect($nextDate->format('Y-m-d'))->toBe('2024-01-29');
     });
 
@@ -99,9 +99,9 @@ describe('RecurringTransaction Date Calculations', function () {
             'day_of_week' => Carbon::FRIDAY,
             'next_date' => Carbon::parse('2024-01-15'), // Monday
         ]);
-        
+
         $nextDate = $recurring->calculateNextDate();
-        
+
         // Should be the next Friday after adding 1 week
         expect($nextDate->dayOfWeek)->toBe(Carbon::FRIDAY);
         expect($nextDate->format('Y-m-d'))->toBe('2024-01-26');
@@ -114,9 +114,9 @@ describe('RecurringTransaction Date Calculations', function () {
             'day_of_month' => 15,
             'next_date' => Carbon::parse('2024-01-15'),
         ]);
-        
+
         $nextDate = $recurring->calculateNextDate();
-        
+
         expect($nextDate->format('Y-m-d'))->toBe('2024-02-15');
     });
 
@@ -127,9 +127,9 @@ describe('RecurringTransaction Date Calculations', function () {
             'day_of_month' => 31,
             'next_date' => Carbon::parse('2024-01-31'),
         ]);
-        
+
         $nextDate = $recurring->calculateNextDate();
-        
+
         // February 2024 is a leap year, so last day is 29th
         expect($nextDate->format('Y-m-d'))->toBe('2024-02-29');
     });
@@ -141,9 +141,9 @@ describe('RecurringTransaction Date Calculations', function () {
             'day_of_month' => 31,
             'next_date' => Carbon::parse('2023-01-31'),
         ]);
-        
+
         $nextDate = $recurring->calculateNextDate();
-        
+
         // February 2023 is not a leap year, so last day is 28th
         expect($nextDate->format('Y-m-d'))->toBe('2023-02-28');
     });
@@ -155,9 +155,9 @@ describe('RecurringTransaction Date Calculations', function () {
             'day_of_month' => 30,
             'next_date' => Carbon::parse('2024-01-30'),
         ]);
-        
+
         $nextDate = $recurring->calculateNextDate();
-        
+
         // February only has 29 days in 2024
         expect($nextDate->format('Y-m-d'))->toBe('2024-02-29');
     });
@@ -170,9 +170,9 @@ describe('RecurringTransaction Date Calculations', function () {
             'day_of_month' => 15,
             'next_date' => Carbon::parse('2024-06-15'),
         ]);
-        
+
         $nextDate = $recurring->calculateNextDate();
-        
+
         expect($nextDate->format('Y-m-d'))->toBe('2025-06-15');
     });
 
@@ -184,9 +184,9 @@ describe('RecurringTransaction Date Calculations', function () {
             'day_of_month' => 29,
             'next_date' => Carbon::parse('2024-02-29'),
         ]);
-        
+
         $nextDate = $recurring->calculateNextDate();
-        
+
         // 2025 is not a leap year, so Feb 29 becomes Feb 28
         expect($nextDate->format('Y-m-d'))->toBe('2025-02-28');
     });
@@ -199,9 +199,9 @@ describe('RecurringTransaction Date Calculations', function () {
             'month_of_year' => null,  // Ensure no month override
             'day_of_month' => null,   // Ensure no day override
         ]);
-        
+
         $nextDate = $recurring->calculateNextDate();
-        
+
         expect($nextDate->format('Y-m-d'))->toBe('2027-01-15');
     });
 });
@@ -212,7 +212,7 @@ describe('RecurringTransaction isDue Logic', function () {
             'next_date' => now()->startOfDay(),
             'is_active' => true,
         ]);
-        
+
         expect($recurring->isDue())->toBeTrue();
     });
 
@@ -221,7 +221,7 @@ describe('RecurringTransaction isDue Logic', function () {
             'next_date' => now()->subDays(3),
             'is_active' => true,
         ]);
-        
+
         expect($recurring->isDue())->toBeTrue();
     });
 
@@ -230,7 +230,7 @@ describe('RecurringTransaction isDue Logic', function () {
             'next_date' => now()->addDays(3),
             'is_active' => true,
         ]);
-        
+
         expect($recurring->isDue())->toBeFalse();
     });
 
@@ -239,7 +239,7 @@ describe('RecurringTransaction isDue Logic', function () {
             'next_date' => now()->subDay(),
             'is_active' => false,
         ]);
-        
+
         expect($recurring->isDue())->toBeFalse();
     });
 
@@ -249,7 +249,7 @@ describe('RecurringTransaction isDue Logic', function () {
             'end_date' => now()->subWeek(),
             'is_active' => true,
         ]);
-        
+
         expect($recurring->isDue())->toBeFalse();
     });
 
@@ -259,7 +259,7 @@ describe('RecurringTransaction isDue Logic', function () {
             'end_date' => now()->addWeek(),
             'is_active' => true,
         ]);
-        
+
         expect($recurring->isDue())->toBeTrue();
     });
 });
@@ -276,9 +276,9 @@ describe('RecurringTransaction Transaction Generation', function () {
             'next_date' => now()->subDay(),
             'is_active' => true,
         ]);
-        
+
         $transaction = $recurring->generateTransaction();
-        
+
         expect($transaction)->toBeInstanceOf(Transaction::class);
         expect($transaction->amount)->toBe(150.00);
         expect($transaction->description)->toBe('Test Expense');
@@ -292,9 +292,9 @@ describe('RecurringTransaction Transaction Generation', function () {
             'next_date' => now()->addWeek(),
             'is_active' => true,
         ]);
-        
+
         $transaction = $recurring->generateTransaction();
-        
+
         expect($transaction)->toBeNull();
     });
 
@@ -306,19 +306,19 @@ describe('RecurringTransaction Transaction Generation', function () {
             'interval' => 1,
             'is_active' => true,
         ]);
-        
+
         $originalNextDate = $recurring->next_date->copy();
-        
+
         $recurring->generateTransaction();
         $recurring->refresh();
-        
+
         expect($recurring->next_date)->toBeGreaterThan($originalNextDate);
         expect($recurring->last_processed)->not->toBeNull();
     });
 
     it('generates transfer transaction with both accounts', function () {
         $toAccount = Account::factory()->create(['user_id' => $this->user->id]);
-        
+
         $recurring = RecurringTransaction::factory()->create([
             'user_id' => $this->user->id,
             'type' => 'transfer',
@@ -328,9 +328,9 @@ describe('RecurringTransaction Transaction Generation', function () {
             'next_date' => now()->subDay(),
             'is_active' => true,
         ]);
-        
+
         $transaction = $recurring->generateTransaction();
-        
+
         expect($transaction->type)->toBe('transfer');
         expect($transaction->from_account_id)->toBe($this->account->id);
         expect($transaction->to_account_id)->toBe($toAccount->id);
@@ -345,11 +345,11 @@ describe('RecurringTransaction Helper Methods', function () {
             'next_date' => now(),
             'interval' => 1,
         ]);
-        
+
         $originalDate = $recurring->next_date->copy();
-        
+
         $recurring->skipOnce();
-        
+
         expect($recurring->next_date)->toBeGreaterThan($originalDate);
     });
 
@@ -358,9 +358,9 @@ describe('RecurringTransaction Helper Methods', function () {
             'user_id' => $this->user->id,
             'is_active' => true,
         ]);
-        
+
         $recurring->pause();
-        
+
         expect($recurring->is_active)->toBeFalse();
     });
 
@@ -369,9 +369,9 @@ describe('RecurringTransaction Helper Methods', function () {
             'user_id' => $this->user->id,
             'is_active' => false,
         ]);
-        
+
         $recurring->resume();
-        
+
         expect($recurring->is_active)->toBeTrue();
     });
 });
@@ -382,7 +382,7 @@ describe('RecurringTransaction Frequency Labels', function () {
             'frequency' => 'daily',
             'interval' => 1,
         ]);
-        
+
         expect($recurring->frequency_label)->toBe('Daily');
     });
 
@@ -391,7 +391,7 @@ describe('RecurringTransaction Frequency Labels', function () {
             'frequency' => 'daily',
             'interval' => 3,
         ]);
-        
+
         expect($recurring->frequency_label)->toBe('Every 3 days');
     });
 
@@ -401,7 +401,7 @@ describe('RecurringTransaction Frequency Labels', function () {
             'interval' => 1,
             'day_of_week' => Carbon::MONDAY,
         ]);
-        
+
         expect($recurring->frequency_label)->toBe('Weekly on Monday');
     });
 
@@ -411,7 +411,7 @@ describe('RecurringTransaction Frequency Labels', function () {
             'interval' => 2,
             'day_of_week' => Carbon::FRIDAY,
         ]);
-        
+
         expect($recurring->frequency_label)->toBe('Every 2 weeks on Friday');
     });
 
@@ -421,7 +421,7 @@ describe('RecurringTransaction Frequency Labels', function () {
             'interval' => 1,
             'day_of_month' => 15,
         ]);
-        
+
         expect($recurring->frequency_label)->toBe('Monthly on day 15');
     });
 
@@ -432,7 +432,7 @@ describe('RecurringTransaction Frequency Labels', function () {
             'month_of_year' => 12,
             'day_of_month' => 25,
         ]);
-        
+
         expect($recurring->frequency_label)->toBe('Annually in December on day 25');
     });
 });
@@ -447,11 +447,11 @@ describe('RecurringTransaction Scopes', function () {
             'user_id' => $this->user->id,
             'is_active' => false,
         ]);
-        
+
         $active = RecurringTransaction::active()->get();
-        
+
         expect($active)->toHaveCount(3);
-        expect($active->every(fn($r) => $r->is_active === true))->toBeTrue();
+        expect($active->every(fn ($r) => $r->is_active === true))->toBeTrue();
     });
 
     it('filters due recurring transactions', function () {
@@ -465,9 +465,9 @@ describe('RecurringTransaction Scopes', function () {
             'next_date' => now()->addWeek(),
             'is_active' => true,
         ]);
-        
+
         $due = RecurringTransaction::due()->get();
-        
+
         expect($due)->toHaveCount(2);
     });
 
@@ -478,9 +478,9 @@ describe('RecurringTransaction Scopes', function () {
             'end_date' => now()->subWeek(),
             'is_active' => true,
         ]);
-        
+
         $due = RecurringTransaction::due()->get();
-        
+
         expect($due)->toHaveCount(0);
     });
 
@@ -495,9 +495,9 @@ describe('RecurringTransaction Scopes', function () {
             'next_date' => now()->addDays(10),
             'is_active' => true,
         ]);
-        
+
         $upcoming = RecurringTransaction::upcoming(7)->get();
-        
+
         expect($upcoming)->toHaveCount(1);
     });
 });
@@ -507,7 +507,7 @@ describe('RecurringTransaction Attributes', function () {
         $income = RecurringTransaction::factory()->make(['type' => 'income']);
         $expense = RecurringTransaction::factory()->make(['type' => 'expense']);
         $transfer = RecurringTransaction::factory()->make(['type' => 'transfer']);
-        
+
         expect($income->type_color)->toBe('success');
         expect($expense->type_color)->toBe('danger');
         expect($transfer->type_color)->toBe('info');
@@ -517,7 +517,7 @@ describe('RecurringTransaction Attributes', function () {
         $income = RecurringTransaction::factory()->make(['type' => 'income']);
         $expense = RecurringTransaction::factory()->make(['type' => 'expense']);
         $transfer = RecurringTransaction::factory()->make(['type' => 'transfer']);
-        
+
         expect($income->type_icon)->toBe('heroicon-o-arrow-down-circle');
         expect($expense->type_icon)->toBe('heroicon-o-arrow-up-circle');
         expect($transfer->type_icon)->toBe('heroicon-o-arrow-right-circle');
@@ -529,9 +529,9 @@ describe('RecurringTransaction Attributes', function () {
             'next_date' => now()->startOfMonth(),
             'interval' => 1,
         ]);
-        
+
         $occurrences = $recurring->next_occurrences;
-        
+
         expect($occurrences)->toHaveCount(5);
         expect($occurrences[0]->format('Y-m-d'))->toBe(now()->startOfMonth()->format('Y-m-d'));
     });
@@ -543,9 +543,9 @@ describe('RecurringTransaction Attributes', function () {
             'end_date' => now()->addDays(2)->endOfDay(),
             'interval' => 1,
         ]);
-        
+
         $occurrences = $recurring->next_occurrences;
-        
+
         // Should include today, tomorrow, and day after (3 occurrences)
         expect($occurrences)->toHaveCount(3);
     });
@@ -559,9 +559,9 @@ describe('RecurringTransaction Edge Cases', function () {
             'day_of_month' => 15,
             'next_date' => Carbon::parse('2024-12-15'),
         ]);
-        
+
         $nextDate = $recurring->calculateNextDate();
-        
+
         expect($nextDate->format('Y-m-d'))->toBe('2025-01-15');
     });
 
@@ -572,9 +572,9 @@ describe('RecurringTransaction Edge Cases', function () {
             'next_date' => Carbon::parse('2024-01-15'),
             'day_of_week' => null,  // No specific day of week
         ]);
-        
+
         $nextDate = $recurring->calculateNextDate();
-        
+
         expect($nextDate->format('Y-m-d'))->toBe('2024-02-05');
     });
 
@@ -585,9 +585,9 @@ describe('RecurringTransaction Edge Cases', function () {
             'day_of_month' => 31,
             'next_date' => Carbon::parse('2024-03-31'),
         ]);
-        
+
         $nextDate = $recurring->calculateNextDate();
-        
+
         // April has 30 days, so should be April 30
         expect($nextDate->format('Y-m-d'))->toBe('2024-04-30');
     });
@@ -598,9 +598,9 @@ describe('RecurringTransaction Edge Cases', function () {
             'interval' => 1,
             'next_date' => Carbon::parse('2024-01-15 14:30:00'),
         ]);
-        
+
         $nextDate = $recurring->calculateNextDate();
-        
+
         // For monthly with day_of_month, time should be start of day
         expect($nextDate->format('H:i:s'))->toBe('00:00:00');
     });

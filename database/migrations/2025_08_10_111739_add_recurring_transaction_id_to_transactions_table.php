@@ -14,7 +14,7 @@ return new class extends Migration
                 ->after('category_id')
                 ->constrained('recurring_transactions')
                 ->onDelete('set null');
-            
+
             $table->index('recurring_transaction_id');
         });
     }
