@@ -135,7 +135,25 @@ class TransactionResource extends Resource
                                             ->native(false)
                                             ->searchable()
                                             ->preload()
+                                            ->reactive()
                                             ->getOptionLabelFromRecordUsing(fn ($record) => $record->name)
+                                            ->helperText(function (Get $get, $state) {
+                                                $categoryId = $state;
+                                                $amount = (float) $get('amount');
+                                                $type = $get('type');
+                                                
+                                                if (!$categoryId || !$amount || $type !== 'expense') {
+                                                    return null;
+                                                }
+                                                
+                                                $category = \App\Models\Category::find($categoryId);
+                                                
+                                                if (!$category) {
+                                                    return null;
+                                                }
+                                                
+                                                return $category->getBudgetWarning($amount);
+                                            })
                                             ->createOptionForm(fn (Get $get) => [
                                                 Forms\Components\TextInput::make('name')
                                                     ->required()

@@ -32,6 +32,10 @@ class CategoryFactory extends Factory
         $categoryName = $type === 'income'
             ? fake()->randomElement($incomeCategories)
             : fake()->randomElement($expenseCategories);
+        
+        // Add unique suffix to prevent duplicates in parallel tests
+        $uniqueSuffix = fake()->unique()->numberBetween(1000, 99999);
+        $categoryName = $categoryName . '_' . $uniqueSuffix;
 
         return [
             'user_id' => User::factory(),
@@ -49,10 +53,10 @@ class CategoryFactory extends Factory
             'Salary', 'Freelance', 'Investment', 'Business', 'Rental Income',
             'Bonus', 'Commission', 'Interest', 'Dividend', 'Gift',
         ];
-
+        
         return $this->state(fn (array $attributes) => [
             'type' => 'income',
-            'name' => fake()->randomElement($incomeCategories),
+            'name' => fake()->randomElement($incomeCategories) . '_' . fake()->unique()->numberBetween(1000, 99999),
         ]);
     }
 
@@ -66,7 +70,7 @@ class CategoryFactory extends Factory
 
         return $this->state(fn (array $attributes) => [
             'type' => 'expense',
-            'name' => fake()->randomElement($expenseCategories),
+            'name' => fake()->randomElement($expenseCategories) . '_' . fake()->unique()->numberBetween(1000, 99999),
         ]);
     }
 
