@@ -103,7 +103,7 @@ describe('RecurringTransactionResource CRUD Operations', function () {
                 'category_id' => $this->incomeCategory->id,
                 'frequency' => 'weekly',
                 'interval' => 1,
-                'day_of_week' => 5, // Friday
+                'day_of_week' => 5, // Friday (Carbon standard: 0=Sun, 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat)
                 'is_active' => true,
                 'auto_process' => false,
             ])
@@ -129,7 +129,7 @@ describe('RecurringTransactionResource CRUD Operations', function () {
                 'to_account_id' => $this->toAccount->id,
                 'frequency' => 'weekly',
                 'interval' => 1,
-                'day_of_week' => 1,  // Monday - required for weekly frequency
+                'day_of_week' => 1,  // Monday (Carbon standard: 0=Sun, 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat)
                 'is_active' => true,
                 'auto_process' => true,
             ])
@@ -287,7 +287,7 @@ describe('RecurringTransaction Model Functionality', function () {
         $recurring = RecurringTransaction::factory()->weekly()->create([
             'user_id' => $this->user->id,
             'interval' => 1,
-            'day_of_week' => 1, // Monday
+            'day_of_week' => 1, // Monday (Carbon standard: 0=Sun, 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat)
             'next_date' => now()->startOfWeek(),
         ]);
 
@@ -390,7 +390,7 @@ describe('RecurringTransaction Model Functionality', function () {
 
         $biweekly = RecurringTransaction::factory()->weekly()->make([
             'interval' => 2, 
-            'day_of_week' => 1,  // Monday
+            'day_of_week' => 1,  // Monday (Carbon standard: 0=Sun, 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat)
             'user_id' => $this->user->id
         ]);
         expect($biweekly->frequency_label)->toBe('Every 2 weeks on Monday');

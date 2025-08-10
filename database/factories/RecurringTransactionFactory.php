@@ -57,7 +57,7 @@ class RecurringTransactionFactory extends Factory
 
         // Set specific day fields based on frequency
         if ($frequency === 'weekly') {
-            $data['day_of_week'] = $this->faker->numberBetween(1, 7);
+            $data['day_of_week'] = $this->faker->numberBetween(0, 6); // Carbon standard: 0=Sun, 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat
         } elseif ($frequency === 'monthly') {
             $data['day_of_month'] = $this->faker->numberBetween(1, 28);
         } elseif ($frequency === 'annual') {
@@ -109,7 +109,7 @@ class RecurringTransactionFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'frequency' => 'weekly',
-            'day_of_week' => $this->faker->numberBetween(1, 7),
+            'day_of_week' => $this->faker->numberBetween(0, 6), // Carbon standard: 0=Sun, 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat
             'day_of_month' => null,
             'month_of_year' => null,
         ]);
