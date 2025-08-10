@@ -24,10 +24,12 @@ class Transaction extends Model implements HasMedia
         'account_id',
         'category_id',
         'recurring_transaction_id',
+        'applied_rule_id',
         'from_account_id',
         'to_account_id',
         'reference',
         'notes',
+        'tags',
         'is_reconciled',
     ];
 
@@ -35,12 +37,18 @@ class Transaction extends Model implements HasMedia
         'amount' => MoneyCast::class,
         'date' => 'date',
         'is_reconciled' => 'boolean',
+        'tags' => 'array',
     ];
 
     protected static function booted(): void
     {
         static::created(function (Transaction $transaction) {
             $transaction->updateAccountBalances();
+
+            // Apply rules to new transactions (but not those from recurring transactions)
+            if (! $transaction->recurring_transaction_id) {
+                TransactionRule::applyRules($transaction);
+            }
         });
 
         static::updated(function (Transaction $transaction) {
@@ -80,6 +88,11 @@ class Transaction extends Model implements HasMedia
     public function recurringTransaction(): BelongsTo
     {
         return $this->belongsTo(RecurringTransaction::class);
+    }
+
+    public function appliedRule(): BelongsTo
+    {
+        return $this->belongsTo(TransactionRule::class, 'applied_rule_id');
     }
 
     public function updateAccountBalances(): void
