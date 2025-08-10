@@ -111,7 +111,7 @@ class Account extends Model
         return $this->type === 'loan';
     }
 
-    public function hassufficientBalance(float $amount): bool
+    public function hasSufficientBalance(float $amount): bool
     {
         // For loan accounts, spending increases the outstanding amount (more negative)
         // For regular accounts, check if balance is sufficient
@@ -142,7 +142,7 @@ class Account extends Model
 
         $balanceText = "Current balance: {$this->currency} " . number_format($currentBalance, 2);
 
-        if (!$this->hassufficientBalance($amount)) {
+        if (!$this->hasSufficientBalance($amount)) {
             $shortage = $amount - $currentBalance;
             return "⚠️ Insufficient funds! {$balanceText} (Short by {$this->currency} " . number_format($shortage, 2) . ")";
         }
