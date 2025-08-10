@@ -22,13 +22,13 @@ class TransactionFactory extends Factory
 
         $descriptions = [
             'income' => [
-                'Salary Payment', 'Freelance Project', 'Investment Return', 
-                'Business Revenue', 'Bonus Payment', 'Commission', 'Interest Earned'
+                'Salary Payment', 'Freelance Project', 'Investment Return',
+                'Business Revenue', 'Bonus Payment', 'Commission', 'Interest Earned',
             ],
             'expense' => [
                 'Grocery Shopping', 'Restaurant Bill', 'Gas Station', 'Online Purchase',
-                'Utility Payment', 'Medical Expenses', 'Insurance Premium', 'Rent Payment'
-            ]
+                'Utility Payment', 'Medical Expenses', 'Insurance Premium', 'Rent Payment',
+            ],
         ];
 
         return [
@@ -50,8 +50,8 @@ class TransactionFactory extends Factory
     public function income(): static
     {
         $descriptions = [
-            'Salary Payment', 'Freelance Project', 'Investment Return', 
-            'Business Revenue', 'Bonus Payment', 'Commission', 'Interest Earned'
+            'Salary Payment', 'Freelance Project', 'Investment Return',
+            'Business Revenue', 'Bonus Payment', 'Commission', 'Interest Earned',
         ];
 
         return $this->state(fn (array $attributes) => [
@@ -66,7 +66,7 @@ class TransactionFactory extends Factory
     {
         $descriptions = [
             'Grocery Shopping', 'Restaurant Bill', 'Gas Station', 'Online Purchase',
-            'Utility Payment', 'Medical Expenses', 'Insurance Premium', 'Rent Payment'
+            'Utility Payment', 'Medical Expenses', 'Insurance Premium', 'Rent Payment',
         ];
 
         return $this->state(fn (array $attributes) => [
@@ -125,7 +125,7 @@ class TransactionFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'date' => fake()->dateTimeBetween(
-                now()->subMonth()->startOfMonth(), 
+                now()->subMonth()->startOfMonth(),
                 now()->subMonth()->endOfMonth()
             ),
         ]);
@@ -140,21 +140,21 @@ class TransactionFactory extends Factory
         return $this->afterCreating(function (Transaction $transaction) {
             // Create a temporary test image file
             $tempFile = tempnam(sys_get_temp_dir(), 'test_receipt_');
-            
+
             // Create a simple 1x1 pixel PNG image
             $imageData = base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==');
             file_put_contents($tempFile, $imageData);
-            
+
             // Rename to have proper extension
-            $imageFile = $tempFile . '.png';
+            $imageFile = $tempFile.'.png';
             rename($tempFile, $imageFile);
-            
+
             // Attach the file to the transaction
             $transaction->addMedia($imageFile)
                 ->usingName('Test Receipt')
-                ->usingFileName('test_receipt_' . fake()->uuid() . '.png')
+                ->usingFileName('test_receipt_'.fake()->uuid().'.png')
                 ->toMediaCollection('receipts');
-            
+
             // Clean up temp file (media library copies it)
             @unlink($imageFile);
         });
@@ -169,21 +169,21 @@ class TransactionFactory extends Factory
             for ($i = 1; $i <= $count; $i++) {
                 // Create a temporary test image file
                 $tempFile = tempnam(sys_get_temp_dir(), 'test_receipt_');
-                
+
                 // Create a simple 1x1 pixel PNG image
                 $imageData = base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==');
                 file_put_contents($tempFile, $imageData);
-                
+
                 // Rename to have proper extension
-                $imageFile = $tempFile . '.png';
+                $imageFile = $tempFile.'.png';
                 rename($tempFile, $imageFile);
-                
+
                 // Attach the file to the transaction
                 $transaction->addMedia($imageFile)
                     ->usingName("Test Receipt {$i}")
-                    ->usingFileName("test_receipt_{$i}_" . fake()->uuid() . '.png')
+                    ->usingFileName("test_receipt_{$i}_".fake()->uuid().'.png')
                     ->toMediaCollection('receipts');
-                
+
                 // Clean up temp file
                 @unlink($imageFile);
             }

@@ -16,7 +16,7 @@ use function Pest\Livewire\livewire;
 beforeEach(function () {
     $this->user = User::factory()->create();
     $this->actingAs($this->user);
-    
+
     // Create test accounts and categories for the user
     $this->account = Account::factory()->create(['user_id' => $this->user->id]);
     $this->toAccount = Account::factory()->create(['user_id' => $this->user->id]);
@@ -35,7 +35,7 @@ describe('TransactionResource Page Rendering', function () {
 
     it('can render edit page', function () {
         $transaction = Transaction::factory()->create(['user_id' => $this->user->id]);
-        
+
         $this->get(TransactionResource::getUrl('edit', ['record' => $transaction]))->assertSuccessful();
     });
 });
@@ -193,7 +193,7 @@ describe('TransactionResource CRUD Operations', function () {
             'account_id' => $this->account->id,
             'category_id' => $this->incomeCategory->id,
         ]);
-        
+
         $newData = Transaction::factory()->make([
             'user_id' => $this->user->id,
             'account_id' => $this->account->id,
@@ -346,7 +346,7 @@ describe('TransactionResource User Data Scoping', function () {
     it('only shows transactions for authenticated user', function () {
         $user1 = User::factory()->create();
         $user2 = User::factory()->create();
-        
+
         $user1Transactions = Transaction::factory()->count(2)->create(['user_id' => $user1->id]);
         $user2Transactions = Transaction::factory()->count(3)->create(['user_id' => $user2->id]);
 
@@ -369,7 +369,7 @@ describe('TransactionResource User Data Scoping', function () {
         $otherUser = User::factory()->create();
         $otherTransaction = Transaction::factory()->create(['user_id' => $otherUser->id]);
 
-        // Since no proper authorization policies are set up, the edit page will render 
+        // Since no proper authorization policies are set up, the edit page will render
         // but won't show any data due to the modifyQueryUsing filter
         // This tests that data scoping is working at the query level
         $this->get(TransactionResource::getUrl('edit', ['record' => $otherTransaction]))
@@ -411,7 +411,7 @@ describe('TransactionResource Navigation Badge', function () {
             'user_id' => $this->user->id,
             'date' => today(),
         ]);
-        
+
         Transaction::factory()->count(2)->create([
             'user_id' => $this->user->id,
             'date' => today()->subDay(),
@@ -439,7 +439,7 @@ describe('TransactionResource Media Attachments', function () {
 
     it('can upload receipt when creating transaction', function () {
         $file = UploadedFile::fake()->image('receipt.jpg');
-        
+
         livewire(CreateTransaction::class)
             ->fillForm([
                 'type' => 'expense',
@@ -454,7 +454,7 @@ describe('TransactionResource Media Attachments', function () {
             ->assertHasNoFormErrors();
 
         $transaction = Transaction::where('description', 'Test purchase with receipt')->first();
-        
+
         expect($transaction)->not->toBeNull();
         expect($transaction->getMedia('receipts'))->toHaveCount(1);
         expect($transaction->getFirstMedia('receipts')->name)->toBe('receipt');
@@ -466,7 +466,7 @@ describe('TransactionResource Media Attachments', function () {
             UploadedFile::fake()->image('receipt2.png'),
             UploadedFile::fake()->image('receipt3.jpg'), // Using image instead of PDF to avoid the issue
         ];
-        
+
         livewire(CreateTransaction::class)
             ->fillForm([
                 'type' => 'expense',
@@ -481,7 +481,7 @@ describe('TransactionResource Media Attachments', function () {
             ->assertHasNoFormErrors();
 
         $transaction = Transaction::where('description', 'Test purchase with multiple receipts')->first();
-        
+
         expect($transaction)->not->toBeNull();
         expect($transaction->getMedia('receipts'))->toHaveCount(3);
     });
@@ -491,9 +491,9 @@ describe('TransactionResource Media Attachments', function () {
             'user_id' => $this->user->id,
             'account_id' => $this->account->id,
         ]);
-        
+
         $file = UploadedFile::fake()->image('new_receipt.jpg');
-        
+
         livewire(EditTransaction::class, ['record' => $transaction->getRouteKey()])
             ->fillForm([
                 'receipts' => [$file],
@@ -514,7 +514,7 @@ describe('TransactionResource Media Attachments', function () {
             UploadedFile::fake()->image('receipt5.jpg'),
             UploadedFile::fake()->image('receipt6.jpg'), // This exceeds the limit of 5
         ];
-        
+
         livewire(CreateTransaction::class)
             ->fillForm([
                 'type' => 'income',
@@ -531,7 +531,7 @@ describe('TransactionResource Media Attachments', function () {
 
     it('only accepts allowed file types', function () {
         $invalidFile = UploadedFile::fake()->create('document.txt', 1000, 'text/plain');
-        
+
         livewire(CreateTransaction::class)
             ->fillForm([
                 'type' => 'income',
@@ -548,7 +548,7 @@ describe('TransactionResource Media Attachments', function () {
 
     it('respects maximum file size limit', function () {
         $largeFile = UploadedFile::fake()->image('large_receipt.jpg')->size(6000); // 6MB exceeds 5MB limit
-        
+
         livewire(CreateTransaction::class)
             ->fillForm([
                 'type' => 'expense',
@@ -572,7 +572,7 @@ describe('TransactionResource Media Attachments', function () {
         livewire(ListTransactions::class)
             ->assertCanSeeTableRecords([$transaction])
             ->assertSee('Transaction with receipt');
-        
+
         // The media column should be present in the table
         expect($transaction->getMedia('receipts'))->toHaveCount(1);
     });
@@ -588,7 +588,7 @@ describe('TransactionResource Media Attachments', function () {
             ->callTableAction('delete', $transaction);
 
         $this->assertModelMissing($transaction);
-        
+
         // Media should also be deleted when transaction is deleted
         expect(Transaction::find($transaction->id))->toBeNull();
     });

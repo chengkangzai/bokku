@@ -25,7 +25,7 @@ describe('Category Model', function () {
     it('has many transactions', function () {
         $user = User::factory()->create();
         $category = Category::factory()->create(['user_id' => $user->id]);
-        
+
         $transaction = Transaction::factory()->create([
             'user_id' => $user->id,
             'category_id' => $category->id,
@@ -126,7 +126,7 @@ describe('Category Model', function () {
     });
 
     it('has correct fillable attributes', function () {
-        $fillable = (new Category())->getFillable();
+        $fillable = (new Category)->getFillable();
 
         expect($fillable)->toContain(
             'user_id',
@@ -150,14 +150,14 @@ describe('Category Model', function () {
         $expenseCategory = Category::factory()->expense()->create();
 
         $incomeNames = [
-            'Salary', 'Freelance', 'Investment', 'Business', 'Rental Income', 
-            'Bonus', 'Commission', 'Interest', 'Dividend', 'Gift'
+            'Salary', 'Freelance', 'Investment', 'Business', 'Rental Income',
+            'Bonus', 'Commission', 'Interest', 'Dividend', 'Gift',
         ];
 
         $expenseNames = [
             'Food & Dining', 'Transportation', 'Shopping', 'Entertainment',
             'Utilities', 'Healthcare', 'Education', 'Travel', 'Insurance',
-            'Groceries', 'Rent', 'Internet', 'Phone', 'Fuel', 'Clothing'
+            'Groceries', 'Rent', 'Internet', 'Phone', 'Fuel', 'Clothing',
         ];
 
         expect($incomeNames)->toContain($incomeCategory->name);

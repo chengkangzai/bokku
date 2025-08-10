@@ -17,19 +17,19 @@ class CategoryFactory extends Factory
     {
         $types = ['income', 'expense'];
         $type = fake()->randomElement($types);
-        
+
         $incomeCategories = [
-            'Salary', 'Freelance', 'Investment', 'Business', 'Rental Income', 
-            'Bonus', 'Commission', 'Interest', 'Dividend', 'Gift'
+            'Salary', 'Freelance', 'Investment', 'Business', 'Rental Income',
+            'Bonus', 'Commission', 'Interest', 'Dividend', 'Gift',
         ];
-        
+
         $expenseCategories = [
             'Food & Dining', 'Transportation', 'Shopping', 'Entertainment',
             'Utilities', 'Healthcare', 'Education', 'Travel', 'Insurance',
-            'Groceries', 'Rent', 'Internet', 'Phone', 'Fuel', 'Clothing'
+            'Groceries', 'Rent', 'Internet', 'Phone', 'Fuel', 'Clothing',
         ];
 
-        $categoryName = $type === 'income' 
+        $categoryName = $type === 'income'
             ? fake()->randomElement($incomeCategories)
             : fake()->randomElement($expenseCategories);
 
@@ -46,8 +46,8 @@ class CategoryFactory extends Factory
     public function income(): static
     {
         $incomeCategories = [
-            'Salary', 'Freelance', 'Investment', 'Business', 'Rental Income', 
-            'Bonus', 'Commission', 'Interest', 'Dividend', 'Gift'
+            'Salary', 'Freelance', 'Investment', 'Business', 'Rental Income',
+            'Bonus', 'Commission', 'Interest', 'Dividend', 'Gift',
         ];
 
         return $this->state(fn (array $attributes) => [
@@ -61,7 +61,7 @@ class CategoryFactory extends Factory
         $expenseCategories = [
             'Food & Dining', 'Transportation', 'Shopping', 'Entertainment',
             'Utilities', 'Healthcare', 'Education', 'Travel', 'Insurance',
-            'Groceries', 'Rent', 'Internet', 'Phone', 'Fuel', 'Clothing'
+            'Groceries', 'Rent', 'Internet', 'Phone', 'Fuel', 'Clothing',
         ];
 
         return $this->state(fn (array $attributes) => [

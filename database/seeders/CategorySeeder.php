@@ -12,7 +12,7 @@ class CategorySeeder extends Seeder
     {
         $user = User::where('email', 'test@example.com')->first();
 
-        if (!$user) {
+        if (! $user) {
             return;
         }
 

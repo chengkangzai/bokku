@@ -15,7 +15,7 @@ beforeEach(function () {
 
 describe('RecentTransactions Widget Instantiation', function () {
     it('can be instantiated', function () {
-        $widget = new RecentTransactions();
+        $widget = new RecentTransactions;
         expect($widget)->toBeInstanceOf(RecentTransactions::class);
     });
 
@@ -23,16 +23,16 @@ describe('RecentTransactions Widget Instantiation', function () {
         $reflectionClass = new ReflectionClass(RecentTransactions::class);
         $sortProperty = $reflectionClass->getProperty('sort');
         $sortProperty->setAccessible(true);
-        
+
         expect($sortProperty->getValue())->toBe(2);
     });
 
     it('has correct column span', function () {
-        $widget = new RecentTransactions();
+        $widget = new RecentTransactions;
         $reflectionClass = new ReflectionClass(RecentTransactions::class);
         $columnSpanProperty = $reflectionClass->getProperty('columnSpan');
         $columnSpanProperty->setAccessible(true);
-        
+
         expect($columnSpanProperty->getValue($widget))->toBe('full');
     });
 
@@ -40,7 +40,7 @@ describe('RecentTransactions Widget Instantiation', function () {
         $reflectionClass = new ReflectionClass(RecentTransactions::class);
         $headingProperty = $reflectionClass->getProperty('heading');
         $headingProperty->setAccessible(true);
-        
+
         expect($headingProperty->getValue())->toBe('Recent Transactions');
     });
 });
@@ -77,20 +77,20 @@ describe('RecentTransactions Widget Rendering', function () {
 
         livewire(RecentTransactions::class)
             ->assertSuccessful();
-            // The query has limit(10) but the table testing may not respect it
-            // The important thing is that the widget renders successfully
+        // The query has limit(10) but the table testing may not respect it
+        // The important thing is that the widget renders successfully
     });
 });
 
 describe('RecentTransactions Data Scoping', function () {
     it('only shows transactions for authenticated user', function () {
         $otherUser = User::factory()->create();
-        
+
         $userTransactions = Transaction::factory()->count(3)->create([
             'user_id' => $this->user->id,
             'date' => now()->subDays(rand(1, 10)),
         ]);
-        
+
         $otherUserTransactions = Transaction::factory()->count(4)->create([
             'user_id' => $otherUser->id,
             'date' => now()->subDays(rand(1, 10)),
@@ -111,13 +111,13 @@ describe('RecentTransactions Ordering', function () {
             'date' => now(),
             'description' => 'Newest Transaction',
         ]);
-        
+
         $middleTransaction = Transaction::factory()->create([
             'user_id' => $this->user->id,
             'date' => now()->subDays(5),
             'description' => 'Middle Transaction',
         ]);
-        
+
         $oldestTransaction = Transaction::factory()->create([
             'user_id' => $this->user->id,
             'date' => now()->subDays(10),
@@ -146,7 +146,7 @@ describe('RecentTransactions Ordering', function () {
             ->assertSuccessful()
             ->assertCanSeeTableRecords($recentTransactions)
             ->assertCanNotSeeTableRecords($olderTransactions);
-            // The query has limit(10) but the table testing may not respect it
+        // The query has limit(10) but the table testing may not respect it
     });
 });
 
@@ -230,7 +230,7 @@ describe('RecentTransactions Transaction Types', function () {
 
         livewire(RecentTransactions::class)
             ->assertSuccessful();
-        
+
         // The color coding is handled by the BadgeColumn component
         // Testing that the records are displayed correctly
         $this->assertTrue(true);
@@ -264,8 +264,8 @@ describe('RecentTransactions Widget Properties', function () {
 
         livewire(RecentTransactions::class)
             ->assertSuccessful();
-            // The table is not paginated and has a query limit of 10
-            // The important thing is that it renders successfully
+        // The table is not paginated and has a query limit of 10
+        // The important thing is that it renders successfully
     });
 });
 
@@ -273,7 +273,7 @@ describe('RecentTransactions Relationship Loading', function () {
     it('loads account and category relationships', function () {
         $account = Account::factory()->create(['user_id' => $this->user->id]);
         $category = Category::factory()->create(['user_id' => $this->user->id]);
-        
+
         $transaction = Transaction::factory()->create([
             'user_id' => $this->user->id,
             'account_id' => $account->id,
@@ -289,7 +289,7 @@ describe('RecentTransactions Relationship Loading', function () {
 
     it('handles transactions without category gracefully', function () {
         $account = Account::factory()->create(['user_id' => $this->user->id]);
-        
+
         $transaction = Transaction::factory()->create([
             'user_id' => $this->user->id,
             'account_id' => $account->id,
@@ -305,7 +305,7 @@ describe('RecentTransactions Relationship Loading', function () {
     it('loads toAccount relationship for transfers', function () {
         $fromAccount = Account::factory()->create(['user_id' => $this->user->id, 'name' => 'From Account']);
         $toAccount = Account::factory()->create(['user_id' => $this->user->id, 'name' => 'To Account']);
-        
+
         $transferTransaction = Transaction::factory()->transfer()->create([
             'user_id' => $this->user->id,
             'account_id' => $fromAccount->id,

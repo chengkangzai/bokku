@@ -21,7 +21,7 @@ class AccountFactory extends Factory
 
         return [
             'user_id' => User::factory(),
-            'name' => fake()->company() . ' ' . fake()->randomElement(['Checking', 'Savings', 'Account']),
+            'name' => fake()->company().' '.fake()->randomElement(['Checking', 'Savings', 'Account']),
             'type' => fake()->randomElement($types),
             'icon' => null,
             'color' => fake()->hexColor(),
@@ -38,7 +38,7 @@ class AccountFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'type' => 'bank',
-            'name' => fake()->company() . ' Bank Account',
+            'name' => fake()->company().' Bank Account',
         ]);
     }
 
@@ -55,7 +55,7 @@ class AccountFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'type' => 'credit_card',
-            'name' => fake()->company() . ' Credit Card',
+            'name' => fake()->company().' Credit Card',
             'initial_balance' => 0,
             'balance' => fake()->randomFloat(2, -5000, 0),
         ]);
@@ -65,7 +65,7 @@ class AccountFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'type' => 'loan',
-            'name' => fake()->randomElement(['Home', 'Car', 'Personal']) . ' Loan',
+            'name' => fake()->randomElement(['Home', 'Car', 'Personal']).' Loan',
             'initial_balance' => fake()->randomFloat(2, -50000, -1000),
             'balance' => fake()->randomFloat(2, -50000, -1000),
         ]);

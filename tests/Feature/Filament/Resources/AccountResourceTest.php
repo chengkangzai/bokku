@@ -25,7 +25,7 @@ describe('AccountResource Page Rendering', function () {
 
     it('can render edit page', function () {
         $account = Account::factory()->create(['user_id' => $this->user->id]);
-        
+
         $this->get(AccountResource::getUrl('edit', ['record' => $account]))->assertSuccessful();
     });
 });
@@ -59,7 +59,7 @@ describe('AccountResource CRUD Operations', function () {
 
     it('can create account with different types', function () {
         $accountTypes = ['bank', 'cash', 'credit_card', 'loan'];
-        
+
         foreach ($accountTypes as $type) {
             $accountData = Account::factory()->make([
                 'user_id' => $this->user->id,
@@ -242,7 +242,7 @@ describe('AccountResource User Data Scoping', function () {
     it('only shows accounts for authenticated user', function () {
         $user1 = User::factory()->create();
         $user2 = User::factory()->create();
-        
+
         $user1Accounts = Account::factory()->count(2)->create(['user_id' => $user1->id]);
         $user2Accounts = Account::factory()->count(3)->create(['user_id' => $user2->id]);
 
@@ -265,7 +265,7 @@ describe('AccountResource User Data Scoping', function () {
         $otherUser = User::factory()->create();
         $otherAccount = Account::factory()->create(['user_id' => $otherUser->id]);
 
-        // Since no proper authorization policies are set up, the edit page will render 
+        // Since no proper authorization policies are set up, the edit page will render
         // but won't show any data due to the modifyQueryUsing filter
         // This tests that data scoping is working at the query level
         $this->get(AccountResource::getUrl('edit', ['record' => $otherAccount]))

@@ -49,7 +49,7 @@ describe('Transaction Model', function () {
         $user = User::factory()->create();
         $fromAccount = Account::factory()->create(['user_id' => $user->id]);
         $toAccount = Account::factory()->create(['user_id' => $user->id]);
-        
+
         $transfer = Transaction::factory()->create([
             'user_id' => $user->id,
             'type' => 'transfer',
@@ -66,7 +66,7 @@ describe('Transaction Model', function () {
         $user = User::factory()->create();
         $fromAccount = Account::factory()->create(['user_id' => $user->id]);
         $toAccount = Account::factory()->create(['user_id' => $user->id]);
-        
+
         $transfer = Transaction::factory()->create([
             'user_id' => $user->id,
             'type' => 'transfer',
@@ -89,7 +89,7 @@ describe('Transaction Model', function () {
 
         // Mock the updateBalance method to verify it gets called
         $initialBalance = $account->balance;
-        
+
         Transaction::factory()->create([
             'user_id' => $user->id,
             'account_id' => $account->id,
@@ -140,7 +140,7 @@ describe('Transaction Model', function () {
             'user_id' => $user->id,
             'currency' => 'MYR',
         ]);
-        
+
         $income = Transaction::factory()->income()->create([
             'user_id' => $user->id,
             'account_id' => $account->id,
@@ -156,7 +156,7 @@ describe('Transaction Model', function () {
             'user_id' => $user->id,
             'currency' => 'USD',
         ]);
-        
+
         $expense = Transaction::factory()->expense()->create([
             'user_id' => $user->id,
             'account_id' => $account->id,
@@ -172,7 +172,7 @@ describe('Transaction Model', function () {
             'user_id' => $user->id,
             'currency' => 'EUR',
         ]);
-        
+
         $transfer = Transaction::factory()->create([
             'user_id' => $user->id,
             'type' => 'transfer',
@@ -213,7 +213,7 @@ describe('Transaction Model', function () {
             ->reconciled()
             ->make();
 
-        expect((float)$transaction->amount)->toBe(500.0);
+        expect((float) $transaction->amount)->toBe(500.0);
         expect($transaction->date->format('Y-m-d'))->toBe('2023-06-15');
         expect($transaction->is_reconciled)->toBeTrue();
     });
@@ -224,12 +224,12 @@ describe('Transaction Model', function () {
 
         expect($thisMonth->date->month)->toBe(now()->month);
         expect($thisMonth->date->year)->toBe(now()->year);
-        
+
         expect($lastMonth->date->month)->toBe(now()->subMonth()->month);
     });
 
     it('has correct fillable attributes', function () {
-        $fillable = (new Transaction())->getFillable();
+        $fillable = (new Transaction)->getFillable();
 
         expect($fillable)->toContain(
             'user_id',

@@ -13,7 +13,7 @@ beforeEach(function () {
 
 describe('AccountBalances Widget Instantiation', function () {
     it('can be instantiated', function () {
-        $widget = new AccountBalances();
+        $widget = new AccountBalances;
         expect($widget)->toBeInstanceOf(AccountBalances::class);
     });
 
@@ -21,16 +21,16 @@ describe('AccountBalances Widget Instantiation', function () {
         $reflectionClass = new ReflectionClass(AccountBalances::class);
         $sortProperty = $reflectionClass->getProperty('sort');
         $sortProperty->setAccessible(true);
-        
+
         expect($sortProperty->getValue())->toBe(3);
     });
 
     it('has correct column span', function () {
-        $widget = new AccountBalances();
+        $widget = new AccountBalances;
         $reflectionClass = new ReflectionClass(AccountBalances::class);
         $columnSpanProperty = $reflectionClass->getProperty('columnSpan');
         $columnSpanProperty->setAccessible(true);
-        
+
         expect($columnSpanProperty->getValue($widget))->toBe(1);
     });
 
@@ -38,7 +38,7 @@ describe('AccountBalances Widget Instantiation', function () {
         $reflectionClass = new ReflectionClass(AccountBalances::class);
         $headingProperty = $reflectionClass->getProperty('heading');
         $headingProperty->setAccessible(true);
-        
+
         expect($headingProperty->getValue())->toBe('Account Balances');
     });
 });
@@ -60,7 +60,7 @@ describe('AccountBalances Widget Rendering', function () {
             'user_id' => $this->user->id,
             'is_active' => true,
         ]);
-        
+
         $inactiveAccount = Account::factory()->create([
             'user_id' => $this->user->id,
             'is_active' => false,
@@ -77,12 +77,12 @@ describe('AccountBalances Widget Rendering', function () {
 describe('AccountBalances Data Scoping', function () {
     it('only shows accounts for authenticated user', function () {
         $otherUser = User::factory()->create();
-        
+
         $userAccounts = Account::factory()->count(2)->create([
             'user_id' => $this->user->id,
             'is_active' => true,
         ]);
-        
+
         $otherUserAccounts = Account::factory()->count(3)->create([
             'user_id' => $otherUser->id,
             'is_active' => true,
@@ -100,7 +100,7 @@ describe('AccountBalances Data Scoping', function () {
             'user_id' => $this->user->id,
             'is_active' => true,
         ]);
-        
+
         $inactiveAccounts = Account::factory()->count(2)->create([
             'user_id' => $this->user->id,
             'is_active' => false,
@@ -191,7 +191,7 @@ describe('AccountBalances Table Columns', function () {
 
         livewire(AccountBalances::class)
             ->assertSuccessful();
-            // Note: Specific currency formatting depends on money() helper implementation
+        // Note: Specific currency formatting depends on money() helper implementation
     });
 });
 

@@ -14,7 +14,7 @@ beforeEach(function () {
 
 describe('StatsOverview Widget Instantiation', function () {
     it('can be instantiated', function () {
-        $widget = new StatsOverview();
+        $widget = new StatsOverview;
         expect($widget)->toBeInstanceOf(StatsOverview::class);
     });
 
@@ -22,7 +22,7 @@ describe('StatsOverview Widget Instantiation', function () {
         $reflectionClass = new ReflectionClass(StatsOverview::class);
         $sortProperty = $reflectionClass->getProperty('sort');
         $sortProperty->setAccessible(true);
-        
+
         expect($sortProperty->getValue())->toBe(1);
     });
 });
@@ -48,7 +48,7 @@ describe('StatsOverview Widget Rendering', function () {
             'user_id' => $this->user->id,
             'balance' => 1000.00,
         ]);
-        
+
         Account::factory()->create([
             'user_id' => $this->user->id,
             'balance' => 500.00,
@@ -80,13 +80,13 @@ describe('StatsOverview Widget Rendering', function () {
 describe('StatsOverview Data Scoping', function () {
     it('only shows data for authenticated user', function () {
         $otherUser = User::factory()->create();
-        
+
         // Create data for current user
         Account::factory()->create([
             'user_id' => $this->user->id,
             'balance' => 1000.00,
         ]);
-        
+
         Transaction::factory()->create([
             'user_id' => $this->user->id,
             'type' => 'income',
@@ -99,7 +99,7 @@ describe('StatsOverview Data Scoping', function () {
             'user_id' => $otherUser->id,
             'balance' => 5000.00,
         ]);
-        
+
         Transaction::factory()->create([
             'user_id' => $otherUser->id,
             'type' => 'income',
@@ -122,7 +122,7 @@ describe('StatsOverview Monthly Calculations', function () {
             'user_id' => $this->user->id,
             'balance' => 1500.00,
         ]);
-        
+
         Account::factory()->create([
             'user_id' => $this->user->id,
             'balance' => -500.00, // Credit card debt
@@ -256,7 +256,7 @@ describe('StatsOverview Zero Values', function () {
 describe('StatsOverview Month Display', function () {
     it('shows current month name in descriptions', function () {
         $currentMonth = now()->format('F Y');
-        
+
         livewire(StatsOverview::class)
             ->assertSuccessful()
             ->assertSee($currentMonth); // Should show current month name

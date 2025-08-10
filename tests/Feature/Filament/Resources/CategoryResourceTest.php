@@ -25,7 +25,7 @@ describe('CategoryResource Page Rendering', function () {
 
     it('can render edit page', function () {
         $category = Category::factory()->create(['user_id' => $this->user->id]);
-        
+
         $this->get(CategoryResource::getUrl('edit', ['record' => $category]))->assertSuccessful();
     });
 });
@@ -237,12 +237,12 @@ describe('CategoryResource User Data Scoping', function () {
     it('only shows categories for authenticated user', function () {
         $user1 = User::factory()->create();
         $user2 = User::factory()->create();
-        
+
         $user1Categories = collect([
             Category::factory()->create(['user_id' => $user1->id, 'name' => 'User1 Income', 'type' => 'income']),
             Category::factory()->create(['user_id' => $user1->id, 'name' => 'User1 Expense', 'type' => 'expense']),
         ]);
-        
+
         $user2Categories = collect([
             Category::factory()->create(['user_id' => $user2->id, 'name' => 'User2 Income', 'type' => 'income']),
             Category::factory()->create(['user_id' => $user2->id, 'name' => 'User2 Expense', 'type' => 'expense']),
@@ -268,7 +268,7 @@ describe('CategoryResource User Data Scoping', function () {
         $otherUser = User::factory()->create();
         $otherCategory = Category::factory()->create(['user_id' => $otherUser->id]);
 
-        // Since no proper authorization policies are set up, the edit page will render 
+        // Since no proper authorization policies are set up, the edit page will render
         // but won't show any data due to the modifyQueryUsing filter
         // This tests that data scoping is working at the query level
         $this->get(CategoryResource::getUrl('edit', ['record' => $otherCategory]))

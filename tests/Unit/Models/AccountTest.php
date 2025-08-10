@@ -40,7 +40,7 @@ describe('Account Model', function () {
         $user = User::factory()->create();
         $fromAccount = Account::factory()->create(['user_id' => $user->id]);
         $toAccount = Account::factory()->create(['user_id' => $user->id]);
-        
+
         // Create a transfer with a dummy account_id to satisfy NOT NULL constraint
         // but use from/to accounts for the actual transfer logic
         $transfer = Transaction::factory()->create([
@@ -61,7 +61,7 @@ describe('Account Model', function () {
         $user = User::factory()->create();
         $fromAccount = Account::factory()->create(['user_id' => $user->id]);
         $toAccount = Account::factory()->create(['user_id' => $user->id]);
-        
+
         $transfer = Transaction::factory()->create([
             'user_id' => $user->id,
             'type' => 'transfer',
@@ -100,7 +100,7 @@ describe('Account Model', function () {
 
         $account->updateBalance();
 
-        expect((float)$account->balance)->toBe(1300.0); // 1000 + 500 - 200
+        expect((float) $account->balance)->toBe(1300.0); // 1000 + 500 - 200
     });
 
     it('updates balance correctly with transfers', function () {
@@ -129,8 +129,8 @@ describe('Account Model', function () {
         $fromAccount->updateBalance();
         $toAccount->updateBalance();
 
-        expect((float)$fromAccount->balance)->toBe(800.0); // 1000 - 200 (transfer out)
-        expect((float)$toAccount->balance)->toBe(700.0);   // 500 + 200 (transfer in)
+        expect((float) $fromAccount->balance)->toBe(800.0); // 1000 - 200 (transfer out)
+        expect((float) $toAccount->balance)->toBe(700.0);   // 500 + 200 (transfer in)
     });
 
     it('returns correct type icon', function () {
@@ -176,7 +176,7 @@ describe('Account Model', function () {
     });
 
     it('has correct fillable attributes', function () {
-        $fillable = (new Account())->getFillable();
+        $fillable = (new Account)->getFillable();
 
         expect($fillable)->toContain(
             'user_id',

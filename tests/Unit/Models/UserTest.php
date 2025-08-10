@@ -102,7 +102,7 @@ describe('User Model', function () {
     });
 
     it('has required fillable attributes', function () {
-        $fillable = (new User())->getFillable();
+        $fillable = (new User)->getFillable();
 
         expect($fillable)->toContain('name', 'email', 'password');
     });
