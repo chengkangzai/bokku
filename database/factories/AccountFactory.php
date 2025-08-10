@@ -17,7 +17,7 @@ class AccountFactory extends Factory
     {
         $types = ['bank', 'cash', 'credit_card', 'loan'];
         $currencies = ['MYR', 'USD', 'EUR', 'GBP', 'JPY'];
-        $initialBalance = fake()->randomFloat(2, 0, 10000);
+        $initialBalance = fake()->numberBetween(0, 10000); // $0 to $10,000
 
         return [
             'user_id' => User::factory(),
@@ -57,7 +57,7 @@ class AccountFactory extends Factory
             'type' => 'credit_card',
             'name' => fake()->company().' Credit Card',
             'initial_balance' => 0,
-            'balance' => fake()->randomFloat(2, -5000, 0),
+            'balance' => fake()->numberBetween(-5000, 0), // -$5000 to $0
         ]);
     }
 
@@ -66,8 +66,8 @@ class AccountFactory extends Factory
         return $this->state(fn (array $attributes) => [
             'type' => 'loan',
             'name' => fake()->randomElement(['Home', 'Car', 'Personal']).' Loan',
-            'initial_balance' => fake()->randomFloat(2, -50000, -1000),
-            'balance' => fake()->randomFloat(2, -50000, -1000),
+            'initial_balance' => fake()->numberBetween(-50000, -1000), // -$50,000 to -$1,000
+            'balance' => fake()->numberBetween(-50000, -1000), // -$50,000 to -$1,000
         ]);
     }
 

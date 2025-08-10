@@ -34,7 +34,7 @@ class TransactionFactory extends Factory
         return [
             'user_id' => User::factory(),
             'type' => $type,
-            'amount' => fake()->randomFloat(2, 10, 1000),
+            'amount' => fake()->numberBetween(10, 1000), // $10 to $1000
             'description' => fake()->randomElement($descriptions[$type]),
             'date' => fake()->dateTimeBetween('-1 year', 'now'),
             'account_id' => Account::factory(),
@@ -57,7 +57,7 @@ class TransactionFactory extends Factory
         return $this->state(fn (array $attributes) => [
             'type' => 'income',
             'description' => fake()->randomElement($descriptions),
-            'amount' => fake()->randomFloat(2, 100, 5000),
+            'amount' => fake()->numberBetween(100, 5000), // $100 to $5000
             'category_id' => Category::factory()->income(),
         ]);
     }
@@ -72,7 +72,7 @@ class TransactionFactory extends Factory
         return $this->state(fn (array $attributes) => [
             'type' => 'expense',
             'description' => fake()->randomElement($descriptions),
-            'amount' => fake()->randomFloat(2, 5, 500),
+            'amount' => fake()->numberBetween(5, 500), // $5 to $500
             'category_id' => Category::factory()->expense(),
         ]);
     }
@@ -82,14 +82,15 @@ class TransactionFactory extends Factory
         return $this->state(fn (array $attributes) => [
             'type' => 'transfer',
             'description' => 'Transfer between accounts',
-            'amount' => fake()->randomFloat(2, 50, 2000),
+            'amount' => fake()->numberBetween(50, 2000), // $50 to $2000
         ]);
     }
 
-    public function withAmount(float $amount): static
+    public function withAmount(float $amountInDollars): static
     {
+        // MoneyCast handles conversion from dollars to cents
         return $this->state(fn (array $attributes) => [
-            'amount' => $amount,
+            'amount' => $amountInDollars, // Pass dollars, cast converts to cents
         ]);
     }
 
