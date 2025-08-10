@@ -13,7 +13,7 @@ class BudgetSeeder extends Seeder
     public function run(): void
     {
         $ahmad = User::where('email', 'ahmad@example.com')->first();
-        
+
         if ($ahmad) {
             $this->createBudgetsForAhmad($ahmad);
         }

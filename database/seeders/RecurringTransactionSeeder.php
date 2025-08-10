@@ -14,7 +14,7 @@ class RecurringTransactionSeeder extends Seeder
     public function run(): void
     {
         $ahmad = User::where('email', 'ahmad@example.com')->first();
-        
+
         if ($ahmad) {
             $this->createRecurringTransactionsForAhmad($ahmad);
         }
@@ -46,8 +46,8 @@ class RecurringTransactionSeeder extends Seeder
                 'interval' => 1,
                 'day_of_month' => 25,
                 'start_date' => Carbon::now()->startOfMonth()->setDay(25),
-                'next_due_date' => Carbon::now()->startOfMonth()->setDay(25)->isFuture() 
-                    ? Carbon::now()->startOfMonth()->setDay(25) 
+                'next_due_date' => Carbon::now()->startOfMonth()->setDay(25)->isFuture()
+                    ? Carbon::now()->startOfMonth()->setDay(25)
                     : Carbon::now()->startOfMonth()->addMonth()->setDay(25),
                 'is_active' => true,
                 'auto_create' => true,
@@ -68,8 +68,8 @@ class RecurringTransactionSeeder extends Seeder
                 'interval' => 1,
                 'day_of_month' => 5,
                 'start_date' => Carbon::now()->startOfMonth()->setDay(5),
-                'next_due_date' => Carbon::now()->startOfMonth()->setDay(5)->isFuture() 
-                    ? Carbon::now()->startOfMonth()->setDay(5) 
+                'next_due_date' => Carbon::now()->startOfMonth()->setDay(5)->isFuture()
+                    ? Carbon::now()->startOfMonth()->setDay(5)
                     : Carbon::now()->startOfMonth()->addMonth()->setDay(5),
                 'end_date' => Carbon::now()->addYears(5), // 5 years remaining
                 'is_active' => true,
@@ -91,8 +91,8 @@ class RecurringTransactionSeeder extends Seeder
                 'interval' => 1,
                 'day_of_month' => 10,
                 'start_date' => Carbon::now()->startOfMonth()->setDay(10),
-                'next_due_date' => Carbon::now()->startOfMonth()->setDay(10)->isFuture() 
-                    ? Carbon::now()->startOfMonth()->setDay(10) 
+                'next_due_date' => Carbon::now()->startOfMonth()->setDay(10)->isFuture()
+                    ? Carbon::now()->startOfMonth()->setDay(10)
                     : Carbon::now()->startOfMonth()->addMonth()->setDay(10),
                 'end_date' => Carbon::now()->addYears(10),
                 'is_active' => true,
@@ -112,8 +112,8 @@ class RecurringTransactionSeeder extends Seeder
                 'interval' => 1,
                 'day_of_month' => 7,
                 'start_date' => Carbon::now()->startOfMonth()->setDay(7),
-                'next_due_date' => Carbon::now()->startOfMonth()->setDay(7)->isFuture() 
-                    ? Carbon::now()->startOfMonth()->setDay(7) 
+                'next_due_date' => Carbon::now()->startOfMonth()->setDay(7)->isFuture()
+                    ? Carbon::now()->startOfMonth()->setDay(7)
                     : Carbon::now()->startOfMonth()->addMonth()->setDay(7),
                 'is_active' => true,
                 'auto_create' => false,
@@ -133,8 +133,8 @@ class RecurringTransactionSeeder extends Seeder
                 'interval' => 1,
                 'day_of_month' => 8,
                 'start_date' => Carbon::now()->startOfMonth()->setDay(8),
-                'next_due_date' => Carbon::now()->startOfMonth()->setDay(8)->isFuture() 
-                    ? Carbon::now()->startOfMonth()->setDay(8) 
+                'next_due_date' => Carbon::now()->startOfMonth()->setDay(8)->isFuture()
+                    ? Carbon::now()->startOfMonth()->setDay(8)
                     : Carbon::now()->startOfMonth()->addMonth()->setDay(8),
                 'is_active' => true,
                 'auto_create' => true,
@@ -153,8 +153,8 @@ class RecurringTransactionSeeder extends Seeder
                 'interval' => 1,
                 'day_of_month' => 15,
                 'start_date' => Carbon::now()->startOfMonth()->setDay(15),
-                'next_due_date' => Carbon::now()->startOfMonth()->setDay(15)->isFuture() 
-                    ? Carbon::now()->startOfMonth()->setDay(15) 
+                'next_due_date' => Carbon::now()->startOfMonth()->setDay(15)->isFuture()
+                    ? Carbon::now()->startOfMonth()->setDay(15)
                     : Carbon::now()->startOfMonth()->addMonth()->setDay(15),
                 'is_active' => true,
                 'auto_create' => true,
@@ -173,8 +173,8 @@ class RecurringTransactionSeeder extends Seeder
                 'interval' => 1,
                 'day_of_month' => 3,
                 'start_date' => Carbon::now()->startOfMonth()->setDay(3),
-                'next_due_date' => Carbon::now()->startOfMonth()->setDay(3)->isFuture() 
-                    ? Carbon::now()->startOfMonth()->setDay(3) 
+                'next_due_date' => Carbon::now()->startOfMonth()->setDay(3)->isFuture()
+                    ? Carbon::now()->startOfMonth()->setDay(3)
                     : Carbon::now()->startOfMonth()->addMonth()->setDay(3),
                 'is_active' => true,
                 'auto_create' => true,
@@ -193,8 +193,8 @@ class RecurringTransactionSeeder extends Seeder
                 'interval' => 1,
                 'day_of_month' => 12,
                 'start_date' => Carbon::now()->startOfMonth()->setDay(12),
-                'next_due_date' => Carbon::now()->startOfMonth()->setDay(12)->isFuture() 
-                    ? Carbon::now()->startOfMonth()->setDay(12) 
+                'next_due_date' => Carbon::now()->startOfMonth()->setDay(12)->isFuture()
+                    ? Carbon::now()->startOfMonth()->setDay(12)
                     : Carbon::now()->startOfMonth()->addMonth()->setDay(12),
                 'is_active' => true,
                 'auto_create' => true,
@@ -231,8 +231,8 @@ class RecurringTransactionSeeder extends Seeder
                 'interval' => 1,
                 'day_of_month' => 20,
                 'start_date' => Carbon::now()->startOfMonth()->setDay(20),
-                'next_due_date' => Carbon::now()->startOfMonth()->setDay(20)->isFuture() 
-                    ? Carbon::now()->startOfMonth()->setDay(20) 
+                'next_due_date' => Carbon::now()->startOfMonth()->setDay(20)->isFuture()
+                    ? Carbon::now()->startOfMonth()->setDay(20)
                     : Carbon::now()->startOfMonth()->addMonth()->setDay(20),
                 'is_active' => true,
                 'auto_create' => true,
@@ -253,8 +253,8 @@ class RecurringTransactionSeeder extends Seeder
                 'interval' => 1,
                 'day_of_month' => 26,
                 'start_date' => Carbon::now()->startOfMonth()->setDay(26),
-                'next_due_date' => Carbon::now()->startOfMonth()->setDay(26)->isFuture() 
-                    ? Carbon::now()->startOfMonth()->setDay(26) 
+                'next_due_date' => Carbon::now()->startOfMonth()->setDay(26)->isFuture()
+                    ? Carbon::now()->startOfMonth()->setDay(26)
                     : Carbon::now()->startOfMonth()->addMonth()->setDay(26),
                 'is_active' => true,
                 'auto_create' => false,

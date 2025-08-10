@@ -14,7 +14,7 @@ class TransactionSeeder extends Seeder
     public function run(): void
     {
         $ahmad = User::where('email', 'ahmad@example.com')->first();
-        
+
         if ($ahmad) {
             $this->createTransactionsForAhmad($ahmad);
         }
@@ -36,7 +36,7 @@ class TransactionSeeder extends Seeder
 
         // Current month transactions
         $currentMonth = Carbon::now()->startOfMonth();
-        
+
         $transactions = [
             // Monthly salary
             [
@@ -318,7 +318,7 @@ class TransactionSeeder extends Seeder
 
         // Add some previous month transactions for comparison
         $lastMonth = Carbon::now()->subMonth()->startOfMonth();
-        
+
         $previousMonthTransactions = [
             [
                 'user_id' => $user->id,
