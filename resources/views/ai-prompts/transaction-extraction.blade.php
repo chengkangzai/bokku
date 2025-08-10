@@ -11,18 +11,15 @@ Extract transaction data from the provided {{ $fileType }} content and return it
 **Required JSON Structure:**
 ```json
 {
-  "bank_name": "Detected bank name",
-  "account_number": "Masked account number (show last 4 digits only)",
-  "statement_period": "Date range if available", 
-  "currency": "RM",
   "transactions": [
     {
       "date": "DD/MM/YYYY format",
       "description": "Clean transaction description",
       "amount": 123.45,
       "type": "income|expense|transfer",
+      "reference": "Transaction reference if available",
       "balance": 1000.00,
-      "reference": "Transaction reference if available"
+      "category": "Category name from available categories"
     }
   ]
 }
@@ -37,6 +34,25 @@ Extract transaction data from the provided {{ $fileType }} content and return it
    - transfer: Account-to-account transfers
 4. **Description:** Clean and standardize (remove codes, extra spaces)
 5. **Balance:** Running balance if shown in statement
+6. **Category:** Select the most appropriate category from the available options below
+
+@if(isset($existingCategories) && !empty($existingCategories))
+**Available Categories:**
+@if(isset($existingCategories['income']) && !empty($existingCategories['income']))
+Income Categories: {{ implode(', ', $existingCategories['income']) }}
+@endif
+@if(isset($existingCategories['expense']) && !empty($existingCategories['expense']))
+Expense Categories: {{ implode(', ', $existingCategories['expense']) }}
+@endif
+
+**Category Selection Rules:**
+- Choose the most specific matching category based on transaction description
+- Only use categories from the provided lists
+- Leave category null if no good match exists
+- Match category type with transaction type (income categories for income, expense for expense)
+@else
+**Category:** Leave as null (no existing categories available)
+@endif
 
 **Malaysian Bank Patterns:**
 - Maybank: POS, ATM, IBG, GIRO, FPX transactions
@@ -54,4 +70,4 @@ Extract transaction data from the provided {{ $fileType }} content and return it
 - Handle various bank statement formats
 - Extract ALL transactions, don't miss any
 - If uncertain about transaction type, default to "expense"
-- Mask account numbers for privacy (show last 4 digits only)
+- Only use provided categories, don't invent new ones

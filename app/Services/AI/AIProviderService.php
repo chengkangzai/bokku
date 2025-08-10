@@ -61,7 +61,7 @@ class AIProviderService
     /**
      * Extract transactions from file content
      */
-    public function extractTransactions(string $content, string $fileType, ?string $userInstructions = null): array
+    public function extractTransactions(string $content, string $fileType, ?string $userInstructions = null, array $existingCategories = []): array
     {
         $schema = $this->getTransactionExtractionSchema();
 
@@ -79,6 +79,7 @@ class AIProviderService
             $response = $prism->withSystemPrompt(view('ai-prompts.transaction-extraction', [
                 'fileType' => $fileType,
                 'userInstructions' => $userInstructions,
+                'existingCategories' => $existingCategories,
             ]))
                 ->withMessages([
                     new UserMessage(

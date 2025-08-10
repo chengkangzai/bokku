@@ -2,9 +2,11 @@
 
 namespace App\Services\Import;
 
+use App\Models\Category;
 use App\Services\AI\AIProviderService;
 use Carbon\Carbon;
 use Exception;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
@@ -23,11 +25,26 @@ class UnifiedImportHandler
     public function processFile(string $content, string $fileType, ?string $userInstructions = null): array
     {
         try {
+            // Get user's existing categories
+            $categories = [];
+            if (Auth::check()) {
+                $categories = Category::query()
+                    ->where('user_id', Auth::id())
+                    ->select('name', 'type')
+                    ->get()
+                    ->groupBy('type')
+                    ->map(function ($group) {
+                        return $group->pluck('name')->values()->all();
+                    })
+                    ->all();
+            }
+
             // Extract transactions using AI
             $extracted = $this->aiService->extractTransactions(
                 $content,
                 $fileType,
-                $userInstructions
+                $userInstructions,
+                $categories
             );
 
             // Format and validate the extracted data
