@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -17,6 +16,9 @@ class DatabaseSeeder extends Seeder
             AccountSeeder::class,
             CategorySeeder::class,
             TransactionSeeder::class,
+            TransactionRuleSeeder::class,
+            RecurringTransactionSeeder::class,
+            BudgetSeeder::class,
         ]);
     }
 }
