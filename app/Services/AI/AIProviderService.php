@@ -9,6 +9,8 @@ use Prism\Prism\Schema\ArraySchema;
 use Prism\Prism\Schema\NumberSchema;
 use Prism\Prism\Schema\ObjectSchema;
 use Prism\Prism\Schema\StringSchema;
+use Prism\Prism\ValueObjects\Media\Document;
+use Prism\Prism\ValueObjects\Media\Image;
 use Prism\Prism\ValueObjects\Messages\UserMessage;
 
 class AIProviderService
@@ -44,7 +46,7 @@ class AIProviderService
 
         $this->provider = $provider;
         $this->config = config("prism.providers.{$provider}", []);
-        
+
         // Set model based on provider with hardcoded defaults
         $this->model = match ($provider) {
             'ollama' => 'gemma3:4b',
@@ -67,10 +69,16 @@ class AIProviderService
             Prism::structured()->withSchema($schema)
         );
 
+        // Determine if it's an image or document based on file extension
+        $media = in_array(strtolower($fileType), ['jpg', 'jpeg', 'png', 'webp'])
+            ? Image::fromRawContent($content)
+            : Document::fromRawContent($content);
+
         $response = $prism->withSystemPrompt($systemPrompt)
             ->withMessages([
                 new UserMessage(
-                    "Extract all transactions from the following content:\n\n".$content
+                    'Extract all transactions from the attached file',
+                    [$media]  // Pass as media attachment
                 ),
             ])
             ->asStructured();
