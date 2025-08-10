@@ -11,6 +11,8 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
+use Filament\Tables\Columns\SpatieMediaLibraryImageColumn;
 
 class TransactionResource extends Resource
 {
@@ -26,134 +28,177 @@ class TransactionResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\Section::make('Transaction Details')
-                    ->schema([
-                        Forms\Components\Radio::make('type')
-                            ->required()
-                            ->options([
-                                'income' => 'Income',
-                                'expense' => 'Expense',
-                                'transfer' => 'Transfer',
-                            ])
-                            ->descriptions([
-                                'income' => 'Money coming in',
-                                'expense' => 'Money going out',
-                                'transfer' => 'Move between accounts',
-                            ])
-                            ->reactive()
-                            ->afterStateUpdated(fn (callable $set) => $set('category_id', null))
-                            ->columnSpanFull(),
+                Forms\Components\Grid::make([
+                    'default' => 1,
+                    'lg' => 3,
+                ])
+                ->schema([
+                    Forms\Components\Grid::make(1)
+                        ->schema([
+                            Forms\Components\Section::make('Transaction Details')
+                                ->schema([
+                                    Forms\Components\Radio::make('type')
+                                        ->required()
+                                        ->options([
+                                            'income' => '💰 Income',
+                                            'expense' => '💸 Expense',
+                                            'transfer' => '🔄 Transfer',
+                                        ])
+                                        ->inline()
+                                        ->default('expense')
+                                        ->inlineLabel(false)
+                                        ->descriptions([
+                                            'income' => 'Money coming in',
+                                            'expense' => 'Money going out',
+                                            'transfer' => 'Move between accounts',
+                                        ])
+                                        ->reactive()
+                                        ->afterStateUpdated(fn (callable $set) => $set('category_id', null))
+                                        ->columnSpanFull(),
 
-                        Forms\Components\TextInput::make('amount')
-                            ->required()
-                            ->numeric()
-                            ->prefix('RM')
-                            ->minValue(0.01),
+                                    Forms\Components\TextInput::make('amount')
+                                        ->required()
+                                        ->numeric()
+                                        ->prefix('RM')
+                                        ->minValue(0.01),
 
-                        Forms\Components\DatePicker::make('date')
-                            ->required()
-                            ->default(now())
-                            ->maxDate(now()),
+                                    Forms\Components\DatePicker::make('date')
+                                        ->required()
+                                        ->default(now())
+                                        ->maxDate(now()),
 
-                        Forms\Components\TextInput::make('description')
-                            ->required()
-                            ->maxLength(255)
-                            ->placeholder('e.g., Grocery shopping at Walmart'),
-                    ])->columns([
-                        'default' => 1,
-                        'sm' => 2,
-                    ]),
+                                    Forms\Components\TextInput::make('description')
+                                        ->required()
+                                        ->maxLength(255)
+                                        ->placeholder('e.g., Grocery shopping at Walmart'),
+                                ])->columns([
+                                    'default' => 1,
+                                    'sm' => 2,
+                                ]),
 
-                Forms\Components\Section::make('Accounts & Category')
-                    ->schema([
-                        Forms\Components\Select::make('account_id')
-                            ->label(fn (Get $get) => match ($get('type')) {
-                                'income' => 'To Account',
-                                'expense' => 'From Account',
-                                'transfer' => 'From Account',
-                                default => 'Account'
-                            })
-                            ->relationship(
-                                'account',
-                                'name',
-                                fn (Builder $query) => $query->where('user_id', auth()->id())->where('is_active', true)
-                            )
-                            ->required()
-                            ->native(false)
-                            ->visible(fn (Get $get) => ! empty($get('type')) && in_array($get('type'), ['income', 'expense', 'transfer']))
-                            ->helperText(fn (Get $get) => empty($get('type')) ? 'Please select a transaction type first' : null
-                            ),
+                            Forms\Components\Section::make('Accounts & Category')
+                                ->schema([
+                                    Forms\Components\Select::make('account_id')
+                                        ->label(fn (Get $get) => match ($get('type')) {
+                                            'income' => 'To Account',
+                                            'expense', 'transfer' => 'From Account',
+                                            default => 'Account'
+                                        })
+                                        ->relationship(
+                                            'account',
+                                            'name',
+                                            fn (Builder $query) => $query->where('user_id', auth()->id())->where('is_active', true)
+                                        )
+                                        ->required()
+                                        ->native(false)
+                                        ->visible(fn (Get $get) => ! empty($get('type')) && in_array($get('type'), ['income', 'expense', 'transfer']))
+                                        ->helperText(fn (Get $get) => empty($get('type')) ? 'Please select a transaction type first' : null
+                                        ),
 
-                        Forms\Components\Select::make('to_account_id')
-                            ->label('To Account')
-                            ->relationship(
-                                'toAccount',
-                                'name',
-                                fn (Builder $query) => $query->where('user_id', auth()->id())->where('is_active', true)
-                            )
-                            ->required()
-                            ->native(false)
-                            ->visible(fn (Get $get) => $get('type') === 'transfer'),
+                                    Forms\Components\Select::make('to_account_id')
+                                        ->label('To Account')
+                                        ->relationship(
+                                            'toAccount',
+                                            'name',
+                                            fn (Builder $query) => $query->where('user_id', auth()->id())->where('is_active', true)
+                                        )
+                                        ->required()
+                                        ->native(false)
+                                        ->visible(fn (Get $get) => $get('type') === 'transfer'),
 
-                        Forms\Components\Select::make('category_id')
-                            ->relationship(
-                                'category',
-                                'name',
-                                fn (Builder $query, Get $get) => $query->where('user_id', auth()->id())
-                                    ->when($get('type'), fn ($q, $type) => $q->where('type', $type))
-                            )
-                            ->native(false)
-                            ->searchable()
-                            ->preload()
-                            ->getOptionLabelFromRecordUsing(fn ($record) => $record->name)
-                            ->createOptionForm(fn (Get $get) => [
-                                Forms\Components\TextInput::make('name')
-                                    ->required()
-                                    ->maxLength(255)
-                                    ->placeholder('e.g., Groceries, Salary'),
-                                Forms\Components\Select::make('type')
-                                    ->required()
-                                    ->options([
-                                        'income' => 'Income',
-                                        'expense' => 'Expense',
-                                    ])
-                                    ->default($get('type'))
-                                    ->disabled()
-                                    ->dehydrated(),
-                                Forms\Components\ColorPicker::make('color')
-                                    ->required()
-                                    ->default('#6b7280'),
-                                Forms\Components\Hidden::make('user_id')
-                                    ->default(auth()->id()),
-                                Forms\Components\Hidden::make('sort_order')
-                                    ->default(0),
-                            ])
-                            ->createOptionUsing(function (array $data, Get $get) {
-                                $data['user_id'] = auth()->id();
-                                $data['type'] = $get('type');
-                                return \App\Models\Category::create($data)->getKey();
-                            })
-                            ->createOptionModalHeading('Create New Category')
-                            ->visible(fn (Get $get) => ! empty($get('type')) && in_array($get('type'), ['income', 'expense'])),
-                    ])
-                    ->columns(2)
-                    ->description(fn (Get $get) => empty($get('type')) ? 'Select a transaction type to see available options' : null),
+                                    Forms\Components\Select::make('category_id')
+                                        ->relationship(
+                                            'category',
+                                            'name',
+                                            fn (Builder $query, Get $get) => $query->where('user_id', auth()->id())
+                                                ->when($get('type'), fn ($q, $type) => $q->where('type', $type))
+                                        )
+                                        ->native(false)
+                                        ->searchable()
+                                        ->preload()
+                                        ->getOptionLabelFromRecordUsing(fn ($record) => $record->name)
+                                        ->createOptionForm(fn (Get $get) => [
+                                            Forms\Components\TextInput::make('name')
+                                                ->required()
+                                                ->maxLength(255)
+                                                ->placeholder('e.g., Groceries, Salary'),
+                                            Forms\Components\Select::make('type')
+                                                ->required()
+                                                ->options([
+                                                    'income' => 'Income',
+                                                    'expense' => 'Expense',
+                                                ])
+                                                ->default($get('type'))
+                                                ->disabled()
+                                                ->dehydrated(),
+                                            Forms\Components\ColorPicker::make('color')
+                                                ->required()
+                                                ->default('#6b7280'),
+                                            Forms\Components\Hidden::make('user_id')
+                                                ->default(auth()->id()),
+                                            Forms\Components\Hidden::make('sort_order')
+                                                ->default(0),
+                                        ])
+                                        ->createOptionUsing(function (array $data, Get $get) {
+                                            $data['user_id'] = auth()->id();
+                                            $data['type'] = $get('type');
+                                            return \App\Models\Category::create($data)->getKey();
+                                        })
+                                        ->createOptionModalHeading('Create New Category')
+                                        ->visible(fn (Get $get) => ! empty($get('type')) && in_array($get('type'), ['income', 'expense'])),
+                                ])
+                                ->columns(2)
+                                ->description(fn (Get $get) => empty($get('type')) ? 'Select a transaction type to see available options' : null),
 
-                Forms\Components\Section::make('Additional Information')
-                    ->schema([
-                        Forms\Components\TextInput::make('reference')
-                            ->maxLength(255)
-                            ->placeholder('Check number, invoice #, etc.'),
+                        ])
+                        ->columnSpan([
+                            'default' => 1,
+                            'lg' => 2,
+                        ]),
 
-                        Forms\Components\Textarea::make('notes')
-                            ->maxLength(65535)
-                            ->columnSpanFull(),
+                    Forms\Components\Grid::make(1)
+                        ->schema([
+                            Forms\Components\Section::make('Attachments')
+                                ->schema([
+                                    SpatieMediaLibraryFileUpload::make('receipts')
+                                        ->collection('receipts')
+                                        ->multiple()
+                                        ->reorderable()
+                                        ->maxFiles(5)
+                                        ->acceptedFileTypes([
+                                            'image/jpeg',
+                                            'image/png',
+                                            'image/gif',
+                                            'image/webp',
+                                            'application/pdf',
+                                        ])
+                                        ->maxSize(5120) // 5MB in KB
+                                        ->label('Upload Receipts')
+                                        ->helperText('Upload receipts, invoices, or related documents (max 5 files, 5MB each)')
+                                        ->columnSpanFull()
+                                        ->conversion('thumb'),
+                                ]),
 
-                        Forms\Components\Toggle::make('is_reconciled')
-                            ->label('Reconciled')
-                            ->helperText('Mark as reconciled when verified against bank statement'),
-                    ])
-                    ->collapsed(),
+                            Forms\Components\Section::make('Additional Information')
+                                ->schema([
+                                    Forms\Components\TextInput::make('reference')
+                                        ->maxLength(255)
+                                        ->placeholder('Check number, invoice #, etc.'),
+
+                                    Forms\Components\Textarea::make('notes')
+                                        ->maxLength(65535)
+                                        ->columnSpanFull(),
+
+                                    Forms\Components\Toggle::make('is_reconciled')
+                                        ->label('Reconciled')
+                                        ->helperText('Mark as reconciled when verified against bank statement'),
+                                ]),
+                        ])
+                        ->columnSpan([
+                            'default' => 1,
+                            'lg' => 1,
+                        ]),
+                ]),
             ]);
     }
 
@@ -209,6 +254,14 @@ class TransactionResource extends Resource
                     ->searchable()
                     ->placeholder('—')
                     ->toggleable(isToggledHiddenByDefault: true),
+
+                SpatieMediaLibraryImageColumn::make('receipts')
+                    ->collection('receipts')
+                    ->label('Attachments')
+                    ->circular()
+                    ->stacked()
+                    ->limit(3)
+                    ->limitedRemainingText(),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('type')
