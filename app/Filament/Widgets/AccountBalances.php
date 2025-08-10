@@ -36,8 +36,9 @@ class AccountBalances extends BaseWidget
                     ->formatStateUsing(fn (string $state): string => ucwords(str_replace('_', ' ', $state))),
 
                 Tables\Columns\TextColumn::make('balance')
-                    ->money(fn (Account $record) => strtolower($record->currency))
-                    ->color(fn (Account $record) => $record->balance >= 0 ? 'success' : 'danger'),
+                    ->label('Balance/Outstanding')
+                    ->formatStateUsing(fn (Account $record) => $record->formatted_balance)
+                    ->color(fn (Account $record) => $record->type === 'loan' ? 'danger' : ($record->balance >= 0 ? 'success' : 'danger')),
             ])
             ->actions([
                 Tables\Actions\Action::make('view')

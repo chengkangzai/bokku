@@ -86,6 +86,23 @@ class Account extends Model
 
     public function getFormattedBalanceAttribute(): string
     {
+        if ($this->type === 'loan') {
+            // For loans, show positive outstanding amount
+            $outstanding = abs($this->balance);
+
+            return $this->currency.' '.number_format($outstanding, 2);
+        }
+
         return $this->currency.' '.number_format($this->balance, 2);
+    }
+
+    public function getBalanceLabelAttribute(): string
+    {
+        return $this->type === 'loan' ? 'Outstanding' : 'Balance';
+    }
+
+    public function isLoan(): bool
+    {
+        return $this->type === 'loan';
     }
 }

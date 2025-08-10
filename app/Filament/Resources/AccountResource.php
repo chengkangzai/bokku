@@ -47,7 +47,10 @@ class AccountResource extends Resource
                             ->numeric()
                             ->default(0)
                             ->prefix('RM')
-                            ->label('Initial Balance'),
+                            ->label(fn (Forms\Get $get) => $get('type') === 'loan' ? 'Total Amount Owed' : 'Initial Balance')
+                            ->helperText(fn (Forms\Get $get) => $get('type') === 'loan'
+                                ? 'Enter as negative amount (e.g., -60000 for RM 60,000 loan)'
+                                : 'Starting balance for this account'),
 
                         Forms\Components\Select::make('currency')
                             ->required()
@@ -74,7 +77,10 @@ class AccountResource extends Resource
 
                         Forms\Components\Textarea::make('notes')
                             ->maxLength(65535)
-                            ->columnSpanFull(),
+                            ->columnSpanFull()
+                            ->placeholder(fn (Forms\Get $get) => $get('type') === 'loan'
+                                ? 'e.g., Monthly payment: RM 1,200, Due on 15th of each month, Loan ref: HP123456'
+                                : 'Additional notes about this account'),
 
                         Forms\Components\Toggle::make('is_active')
                             ->required()
@@ -102,9 +108,11 @@ class AccountResource extends Resource
                     ->formatStateUsing(fn (string $state): string => ucwords(str_replace('_', ' ', $state))),
 
                 Tables\Columns\TextColumn::make('balance')
+                    ->label('Balance/Outstanding')
                     ->money(fn (Account $record) => strtolower($record->currency))
                     ->sortable()
-                    ->color(fn (Account $record) => $record->balance >= 0 ? 'success' : 'danger'),
+                    ->formatStateUsing(fn (Account $record) => $record->formatted_balance)
+                    ->color(fn (Account $record) => $record->type === 'loan' ? 'danger' : ($record->balance >= 0 ? 'success' : 'danger')),
 
                 Tables\Columns\TextColumn::make('currency')
                     ->badge()
