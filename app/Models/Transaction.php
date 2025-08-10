@@ -22,6 +22,7 @@ class Transaction extends Model implements HasMedia
         'date',
         'account_id',
         'category_id',
+        'recurring_transaction_id',
         'from_account_id',
         'to_account_id',
         'reference',
@@ -75,6 +76,10 @@ class Transaction extends Model implements HasMedia
         return $this->belongsTo(Account::class, 'to_account_id');
     }
 
+    public function recurringTransaction(): BelongsTo
+    {
+        return $this->belongsTo(RecurringTransaction::class);
+    }
 
     public function updateAccountBalances(): void
     {
