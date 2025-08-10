@@ -42,7 +42,7 @@ class Category extends Model
         return $this->transactions()
             ->whereYear('date', $year)
             ->whereMonth('date', $month)
-            ->sum('amount');
+            ->sum('amount') / 100;
     }
 
     public function getDefaultIconAttribute(): string

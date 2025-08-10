@@ -71,6 +71,6 @@ class User extends Authenticatable implements FilamentUser
 
     public function getNetWorthAttribute(): float
     {
-        return $this->accounts()->sum('balance');
+        return $this->accounts()->sum('balance') / 100;
     }
 }

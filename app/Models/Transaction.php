@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Casts\MoneyCast;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -29,7 +30,7 @@ class Transaction extends Model implements HasMedia
     ];
 
     protected $casts = [
-        'amount' => 'decimal:2',
+        'amount' => MoneyCast::class,
         'date' => 'date',
         'is_reconciled' => 'boolean',
     ];
@@ -73,6 +74,7 @@ class Transaction extends Model implements HasMedia
     {
         return $this->belongsTo(Account::class, 'to_account_id');
     }
+
 
     public function updateAccountBalances(): void
     {

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Casts\MoneyCast;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -26,8 +27,8 @@ class Account extends Model
     ];
 
     protected $casts = [
-        'balance' => 'decimal:2',
-        'initial_balance' => 'decimal:2',
+        'balance' => MoneyCast::class,
+        'initial_balance' => MoneyCast::class,
         'is_active' => 'boolean',
     ];
 
@@ -51,6 +52,7 @@ class Account extends Model
         return $this->hasMany(Transaction::class, 'to_account_id');
     }
 
+
     public function updateBalance(): void
     {
         $income = $this->transactions()
@@ -69,7 +71,8 @@ class Account extends Model
             ->where('type', 'transfer')
             ->sum('amount');
 
-        $this->balance = $this->initial_balance + $income - $expenses - $transfersOut + $transfersIn;
+        // The cast will handle conversion to/from cents
+        $this->balance = ($this->getRawOriginal('initial_balance') + $income - $expenses - $transfersOut + $transfersIn) / 100;
         $this->save();
     }
 
