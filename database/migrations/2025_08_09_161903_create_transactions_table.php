@@ -12,7 +12,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->enum('type', ['income', 'expense', 'transfer']);
-            $table->decimal('amount', 19, 4);
+            $table->bigInteger('amount');
             $table->string('description');
             $table->date('date');
 

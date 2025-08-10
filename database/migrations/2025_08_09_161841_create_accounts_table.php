@@ -15,8 +15,8 @@ return new class extends Migration
             $table->enum('type', ['bank', 'cash', 'credit_card', 'loan']);
             $table->string('icon')->nullable();
             $table->string('color')->default('#3b82f6'); // Blue
-            $table->decimal('balance', 19, 4)->default(0);
-            $table->decimal('initial_balance', 19, 4)->default(0);
+            $table->bigInteger('balance')->default(0);
+            $table->bigInteger('initial_balance')->default(0);
             $table->string('currency', 3)->default('USD');
             $table->string('account_number')->nullable();
             $table->text('notes')->nullable();
