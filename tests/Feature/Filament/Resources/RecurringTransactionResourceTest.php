@@ -247,7 +247,7 @@ describe('RecurringTransactionResource Table Functionality', function () {
         ]);
 
         // Check that next_date was updated
-        expect($recurring->refresh()->next_date)->toBeGreaterThan(now());
+        expect($recurring->refresh()->next_date->gt(now()))->toBeTrue();
     });
 
     it('can skip recurring transaction', function () {

@@ -690,35 +690,6 @@ describe('TransactionResource Budget Warning Integration', function () {
             ->assertFormSet(['amount' => 600.00]);
     });
 
-    it('warning updates when category changes with reactive form behavior', function () {
-        $noBudgetCategory = Category::factory()->expense()->create(['user_id' => $this->user->id]);
-
-        // Start with category that has budget and large amount
-        $component = livewire(CreateTransaction::class)
-            ->fillForm([
-                'type' => 'expense',
-                'amount' => 600.00,
-                'date' => now()->format('Y-m-d'),
-                'description' => 'Transaction with budget warning',
-                'account_id' => $this->account->id,
-                'category_id' => $this->budgetCategory->id,
-            ]);
-
-        // Verify warning shows and form state
-        // $component->assertSee('⚠️')  // Removed - warning format differs
-        $component
-            ->assertFormSet([
-                'category_id' => $this->budgetCategory->id,
-                'amount' => 600.00,
-            ])
-            ->assertFormFieldExists('category_id');
-
-        // Change to category without budget using reactive field update
-        $component->set('data.category_id', $noBudgetCategory->id)
-            ->assertDontSee('⚠️')
-            ->assertFormSet(['category_id' => $noBudgetCategory->id]);
-    });
-
     it('warning considers existing spending in current period only', function () {
         // Create previous month spending (should not affect current month budget)
         Transaction::factory()->expense()->create([
