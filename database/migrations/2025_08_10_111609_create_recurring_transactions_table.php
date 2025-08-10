@@ -25,7 +25,7 @@ return new class extends Migration
             // Recurrence settings
             $table->enum('frequency', ['daily', 'weekly', 'monthly', 'annual']);
             $table->integer('interval')->default(1); // e.g., every 2 weeks
-            $table->integer('day_of_week')->nullable(); // 0-6 for weekly (Carbon standard: 0=Sun, 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat)
+            $table->integer('day_of_week')->nullable(); // 0-6 for weekly (Carbon's dayOfWeek: 0=Sunday, 6=Saturday)
             $table->integer('day_of_month')->nullable(); // 1-31 for monthly
             $table->integer('month_of_year')->nullable(); // 1-12 for annual
             

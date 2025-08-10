@@ -130,13 +130,13 @@ class RecurringTransactionResource extends Resource
                         Forms\Components\Select::make('day_of_week')
                             ->label('Day of Week')
                             ->options([
+                                0 => 'Sunday',
                                 1 => 'Monday',
                                 2 => 'Tuesday',
                                 3 => 'Wednesday',
                                 4 => 'Thursday',
                                 5 => 'Friday',
                                 6 => 'Saturday',
-                                7 => 'Sunday',
                             ])
                             ->visible(fn (callable $get) => $get('frequency') === 'weekly')
                             ->required(fn (callable $get) => $get('frequency') === 'weekly')
