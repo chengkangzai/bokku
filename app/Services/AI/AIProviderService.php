@@ -3,6 +3,7 @@
 namespace App\Services\AI;
 
 use Exception;
+use Illuminate\Support\Facades\Log;
 use Prism\Prism\Enums\Provider;
 use Prism\Prism\Prism;
 use Prism\Prism\Schema\ArraySchema;
@@ -67,6 +68,7 @@ class AIProviderService
 
         $prism = $this->configurePrism(
             Prism::structured()->withSchema($schema)
+
         );
 
         // Determine if it's an image or document based on file extension
@@ -74,16 +76,27 @@ class AIProviderService
             ? Image::fromRawContent($content)
             : Document::fromRawContent($content);
 
-        $response = $prism->withSystemPrompt($systemPrompt)
-            ->withMessages([
-                new UserMessage(
-                    'Extract all transactions from the attached file',
-                    [$media]  // Pass as media attachment
-                ),
-            ])
-            ->asStructured();
+        try {
+            $response = $prism->withSystemPrompt($systemPrompt)
+                ->withMessages([
+                    new UserMessage(
+                        'Extract all transactions from the attached file',
+                        [$media]  // Pass as media attachment
+                    ),
+                ])
+                ->asStructured();
 
-        return $response->toArray();
+            return $response->toArray();
+        } catch (Exception $e) {
+            // Log the error for debugging
+            Log::error('AI extraction failed', [
+                'error' => $e->getMessage(),
+                'provider' => $this->provider,
+                'model' => $this->model,
+            ]);
+
+            throw $e;
+        }
     }
 
     /**
@@ -111,13 +124,15 @@ class AIProviderService
                             new StringSchema('type', 'Transaction type: income, expense, or transfer'),
                             new StringSchema('reference', 'Transaction reference number', nullable: true),
                             new NumberSchema('balance', 'Balance after transaction', nullable: true),
-                            new StringSchema('category_suggestion', 'Suggested category', nullable: true),
+                            new StringSchema('category', 'Suggested category', nullable: true),
                         ],
-                        ['date', 'description', 'amount', 'type']
+                        // OpenAI strict mode requires ALL properties in required array, even nullable ones
+                        ['date', 'description', 'amount', 'type', 'reference', 'balance', 'category']
                     )
                 ),
             ],
-            ['transactions']
+            // OpenAI strict mode requires ALL properties in required array
+            ['bank_name', 'account_number', 'statement_period', 'transactions']
         );
     }
 
@@ -145,7 +160,18 @@ class AIProviderService
             default => $this->config['timeout'] ?? 30,
         };
 
-        return $prism->using($provider, $this->model)
+        $prism = $prism->using($provider, $this->model)
             ->withClientOptions(['timeout' => $timeout]);
+
+        // Only enable strict mode for OpenAI
+        if ($this->provider === 'openai') {
+            $prism = $prism->withProviderOptions([
+                'schema' => [
+                    'strict' => true,
+                ],
+            ]);
+        }
+
+        return $prism;
     }
 }
