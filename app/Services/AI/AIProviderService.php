@@ -86,7 +86,14 @@ class AIProviderService
                 ])
                 ->asStructured();
 
-            return $response->toArray();
+            // Access the structured data from the response
+            $data = $response->structured;
+
+            if ($data === null) {
+                throw new Exception('Failed to parse structured response from AI provider');
+            }
+
+            return $data;
         } catch (Exception $e) {
             // Log the error for debugging
             Log::error('AI extraction failed', [
