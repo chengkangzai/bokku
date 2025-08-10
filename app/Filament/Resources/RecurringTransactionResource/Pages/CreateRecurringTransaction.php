@@ -14,9 +14,14 @@ class CreateRecurringTransaction extends CreateRecord
     {
         $data['user_id'] = auth()->id();
 
+        // Set default start_date if not provided
+        if (empty($data['start_date'])) {
+            $data['start_date'] = now();
+        }
+
         // Set initial next_date if not provided
         if (empty($data['next_date'])) {
-            $data['next_date'] = $data['start_date'] ?? now();
+            $data['next_date'] = $data['start_date'];
         }
 
         return $data;

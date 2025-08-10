@@ -173,15 +173,17 @@ class RecurringTransactionResource extends Resource
                     ])->columns(2),
 
                 Forms\Components\Section::make('Schedule')
+                    ->description('Optional: Override automatic scheduling')
+                    ->collapsed()
                     ->schema([
                         Forms\Components\DatePicker::make('start_date')
-                            ->required()
-                            ->default(now()),
+                            ->default(now())
+                            ->helperText('When this recurring transaction should begin'),
 
                         Forms\Components\DatePicker::make('next_date')
                             ->label('Next Occurrence')
-                            ->required()
-                            ->default(now()->addDay()),
+                            ->helperText('Leave empty to auto-calculate from start date')
+                            ->placeholder('Auto-calculated if empty'),
 
                         Forms\Components\DatePicker::make('end_date')
                             ->label('End Date')
@@ -189,7 +191,8 @@ class RecurringTransactionResource extends Resource
 
                         Forms\Components\DateTimePicker::make('last_processed')
                             ->label('Last Processed')
-                            ->disabled(),
+                            ->disabled()
+                            ->helperText('Last time a transaction was generated'),
                     ])->columns(2),
 
                 Forms\Components\Section::make('Options')
@@ -239,7 +242,8 @@ class RecurringTransactionResource extends Resource
                 Tables\Columns\TextColumn::make('frequency_label')
                     ->label('Frequency')
                     ->badge()
-                    ->color('gray'),
+                    ->color('gray')
+                    ->toggleable(isToggledHiddenByDefault: true),
 
                 Tables\Columns\TextColumn::make('next_date')
                     ->label('Next Occurrence')
@@ -249,11 +253,11 @@ class RecurringTransactionResource extends Resource
 
                 Tables\Columns\TextColumn::make('account.name')
                     ->label('Account')
-                    ->toggleable(),
+                    ->toggleable(isToggledHiddenByDefault: true),
 
                 Tables\Columns\TextColumn::make('category.name')
                     ->label('Category')
-                    ->toggleable(),
+                    ->toggleable(isToggledHiddenByDefault: true),
 
                 Tables\Columns\IconColumn::make('is_active')
                     ->label('Active')
@@ -263,7 +267,7 @@ class RecurringTransactionResource extends Resource
                 Tables\Columns\IconColumn::make('auto_process')
                     ->label('Auto')
                     ->boolean()
-                    ->toggleable(),
+                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('type')
@@ -337,6 +341,46 @@ class RecurringTransactionResource extends Resource
                 Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([
+                Tables\Actions\BulkAction::make('process_now')
+                    ->label('Run Now')
+                    ->icon('heroicon-o-play')
+                    ->color('success')
+                    ->requiresConfirmation()
+                    ->modalHeading('Generate Transactions')
+                    ->modalDescription('This will create transactions for all selected recurring templates that are due.')
+                    ->action(function ($records) {
+                        $processed = 0;
+                        $skipped = 0;
+                        
+                        foreach ($records as $record) {
+                            if ($record->is_active) {
+                                $transaction = $record->generateTransaction();
+                                if ($transaction) {
+                                    $processed++;
+                                } else {
+                                    $skipped++;
+                                }
+                            } else {
+                                $skipped++;
+                            }
+                        }
+                        
+                        if ($processed > 0) {
+                            \Filament\Notifications\Notification::make()
+                                ->title('Transactions Created')
+                                ->success()
+                                ->body("Created {$processed} transaction(s). Skipped {$skipped}.")
+                                ->send();
+                        } else {
+                            \Filament\Notifications\Notification::make()
+                                ->title('No Transactions Created')
+                                ->warning()
+                                ->body("All selected recurring transactions were either not due or inactive.")
+                                ->send();
+                        }
+                    })
+                    ->deselectRecordsAfterCompletion(),
+
                 Tables\Actions\BulkAction::make('toggle_active')
                     ->label('Toggle Active')
                     ->icon('heroicon-o-arrow-path')

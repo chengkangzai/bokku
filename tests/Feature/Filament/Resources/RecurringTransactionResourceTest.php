@@ -69,6 +69,30 @@ describe('RecurringTransactionResource CRUD Operations', function () {
         ]);
     });
 
+    it('can create recurring transaction without optional schedule dates', function () {
+        livewire(CreateRecurringTransaction::class)
+            ->fillForm([
+                'type' => 'expense',
+                'amount' => 100.00,
+                'description' => 'Test Expense',
+                'account_id' => $this->account->id,
+                'category_id' => $this->expenseCategory->id,
+                'frequency' => 'daily',
+                'interval' => 1,
+                'is_active' => true,
+                'auto_process' => true,
+                // Not providing start_date or next_date - they should auto-calculate
+            ])
+            ->call('create')
+            ->assertHasNoFormErrors();
+
+        $recurring = RecurringTransaction::where('description', 'Test Expense')->first();
+        
+        expect($recurring)->not->toBeNull();
+        expect($recurring->start_date->toDateString())->toBe(now()->toDateString());
+        expect($recurring->next_date->toDateString())->toBe(now()->toDateString());
+    });
+
     it('can create weekly recurring income', function () {
         livewire(CreateRecurringTransaction::class)
             ->fillForm([
@@ -80,8 +104,6 @@ describe('RecurringTransactionResource CRUD Operations', function () {
                 'frequency' => 'weekly',
                 'interval' => 1,
                 'day_of_week' => 5, // Friday
-                'start_date' => now()->format('Y-m-d'),
-                'next_date' => now()->next(5)->format('Y-m-d'),
                 'is_active' => true,
                 'auto_process' => false,
             ])
@@ -107,8 +129,7 @@ describe('RecurringTransactionResource CRUD Operations', function () {
                 'to_account_id' => $this->toAccount->id,
                 'frequency' => 'weekly',
                 'interval' => 1,
-                'start_date' => now()->format('Y-m-d'),
-                'next_date' => now()->format('Y-m-d'),
+                'day_of_week' => 1,  // Monday - required for weekly frequency
                 'is_active' => true,
                 'auto_process' => true,
             ])
@@ -125,7 +146,7 @@ describe('RecurringTransactionResource CRUD Operations', function () {
     });
 
     it('can update recurring transaction', function () {
-        $recurring = RecurringTransaction::factory()->create([
+        $recurring = RecurringTransaction::factory()->monthly()->create([
             'user_id' => $this->user->id,
             'amount' => 100.00,
             'is_active' => true,
@@ -230,10 +251,11 @@ describe('RecurringTransactionResource Table Functionality', function () {
     });
 
     it('can skip recurring transaction', function () {
-        $recurring = RecurringTransaction::factory()->create([
+        $recurring = RecurringTransaction::factory()->monthly()->create([
             'user_id' => $this->user->id,
-            'next_date' => now(),
-            'frequency' => 'monthly',
+            'next_date' => now()->startOfMonth(),
+            'interval' => 1,
+            'day_of_month' => 15,  // Fixed day to avoid end-of-month issues
         ]);
 
         $originalDate = $recurring->next_date->copy();
@@ -241,9 +263,10 @@ describe('RecurringTransactionResource Table Functionality', function () {
         livewire(ListRecurringTransactions::class)
             ->callTableAction('skip', $recurring);
 
-        expect($recurring->refresh()->next_date)
-            ->toBeGreaterThan($originalDate)
-            ->format('Y-m')->toBe($originalDate->addMonth()->format('Y-m'));
+        $recurring->refresh();
+        expect($recurring->next_date)->toBeGreaterThan($originalDate);
+        // Check it's roughly a month later (allowing for month length variations)
+        expect($recurring->next_date->month)->toBe($originalDate->addMonth()->month);
     });
 });
 
@@ -292,12 +315,14 @@ describe('RecurringTransaction Model Functionality', function () {
         $recurring = RecurringTransaction::factory()->monthly()->create([
             'user_id' => $this->user->id,
             'day_of_month' => 31,
+            'interval' => 1,
             'next_date' => now()->parse('2024-01-31'), // January has 31 days
         ]);
 
         $nextDate = $recurring->calculateNextDate();
 
-        // February has 29 days in 2024 (leap year)
+        // Since day_of_month is 31, it should use the last day of each month
+        // For February 2024 (leap year), that should be the 29th
         expect($nextDate->format('Y-m-d'))->toBe('2024-02-29');
     });
 
@@ -363,8 +388,12 @@ describe('RecurringTransaction Model Functionality', function () {
         $daily = RecurringTransaction::factory()->daily()->make(['interval' => 1, 'user_id' => $this->user->id]);
         expect($daily->frequency_label)->toBe('Daily');
 
-        $biweekly = RecurringTransaction::factory()->weekly()->make(['interval' => 2, 'user_id' => $this->user->id]);
-        expect($biweekly->frequency_label)->toBe('Every 2 weeks');
+        $biweekly = RecurringTransaction::factory()->weekly()->make([
+            'interval' => 2, 
+            'day_of_week' => 1,  // Monday
+            'user_id' => $this->user->id
+        ]);
+        expect($biweekly->frequency_label)->toBe('Every 2 weeks on Monday');
 
         $monthly = RecurringTransaction::factory()->monthly()->make([
             'interval' => 1,
@@ -454,6 +483,56 @@ describe('RecurringTransactionResource Navigation Badge', function () {
 });
 
 describe('RecurringTransactionResource Bulk Actions', function () {
+    it('can bulk process multiple recurring transactions', function () {
+        $dueRecurring = RecurringTransaction::factory()->due()->count(2)->create([
+            'user_id' => $this->user->id,
+            'account_id' => $this->account->id,
+            'category_id' => $this->expenseCategory->id,
+            'is_active' => true,
+        ]);
+        
+        $notDueRecurring = RecurringTransaction::factory()->create([
+            'user_id' => $this->user->id,
+            'account_id' => $this->account->id,
+            'next_date' => now()->addWeek(),
+            'is_active' => true,
+        ]);
+
+        $allRecurring = $dueRecurring->concat([$notDueRecurring]);
+
+        livewire(ListRecurringTransactions::class)
+            ->callTableBulkAction('process_now', $allRecurring->pluck('id')->toArray());
+
+        // Check that transactions were created only for due recurring transactions
+        $this->assertDatabaseCount(Transaction::class, 2);
+        
+        foreach ($dueRecurring as $recurring) {
+            $this->assertDatabaseHas(Transaction::class, [
+                'user_id' => $this->user->id,
+                'recurring_transaction_id' => $recurring->id,
+            ]);
+        }
+        
+        // Not due recurring should not have generated a transaction
+        $this->assertDatabaseMissing(Transaction::class, [
+            'recurring_transaction_id' => $notDueRecurring->id,
+        ]);
+    });
+
+    it('can bulk process with all inactive recurring transactions', function () {
+        $inactiveRecurring = RecurringTransaction::factory()->count(3)->create([
+            'user_id' => $this->user->id,
+            'is_active' => false,
+            'next_date' => now()->subDay(),
+        ]);
+
+        livewire(ListRecurringTransactions::class)
+            ->callTableBulkAction('process_now', $inactiveRecurring->pluck('id')->toArray());
+
+        // No transactions should be created for inactive recurring transactions
+        $this->assertDatabaseCount(Transaction::class, 0);
+    });
+
     it('can toggle active status for multiple recurring transactions', function () {
         $recurring = RecurringTransaction::factory()->count(3)->create([
             'user_id' => $this->user->id,

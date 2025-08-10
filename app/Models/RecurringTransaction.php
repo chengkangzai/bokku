@@ -101,6 +101,7 @@ class RecurringTransaction extends Model
             'date' => $this->next_date,
             'account_id' => $this->account_id,
             'category_id' => $this->category_id,
+            'recurring_transaction_id' => $this->id,
             'notes' => "Generated from recurring transaction: {$this->description}",
             'is_reconciled' => false,
         ];
@@ -122,42 +123,67 @@ class RecurringTransaction extends Model
 
     public function calculateNextDate(): Carbon
     {
-        $baseDate = $this->next_date ?? $this->start_date;
+        $baseDate = ($this->next_date ?? $this->start_date)->copy();
         
         switch ($this->frequency) {
             case 'daily':
-                return $baseDate->copy()->addDays($this->interval);
+                return $baseDate->addDays($this->interval);
                 
             case 'weekly':
-                $nextDate = $baseDate->copy()->addWeeks($this->interval);
+                $nextDate = $baseDate->addWeeks($this->interval);
                 if ($this->day_of_week) {
+                    // Set to the specific day of week
                     $nextDate->next($this->day_of_week);
                 }
                 return $nextDate;
                 
             case 'monthly':
-                $nextDate = $baseDate->copy()->addMonths($this->interval);
                 if ($this->day_of_month) {
-                    $daysInMonth = $nextDate->daysInMonth;
-                    $day = min($this->day_of_month, $daysInMonth);
-                    $nextDate->day($day);
+                    // Use Carbon's addMonthsNoOverflow for proper month addition
+                    // This handles end-of-month scenarios correctly
+                    if ($this->day_of_month >= 29) {
+                        // For days 29-31, use special handling
+                        $nextDate = $baseDate->copy();
+                        $targetDay = $this->day_of_month;
+                        
+                        // Add months
+                        $nextDate->addMonthsNoOverflow($this->interval);
+                        
+                        // If target day is 31, always use end of month
+                        if ($targetDay == 31) {
+                            $nextDate->endOfMonth();
+                        } else {
+                            // For days 29-30, use the day if it exists, otherwise end of month
+                            $lastDay = $nextDate->copy()->endOfMonth()->day;
+                            $nextDate->day(min($targetDay, $lastDay));
+                        }
+                        
+                        return $nextDate->startOfDay();
+                    } else {
+                        // For days 1-28, simple addition works
+                        return $baseDate->day($this->day_of_month)->addMonthsNoOverflow($this->interval);
+                    }
+                } else {
+                    return $baseDate->addMonths($this->interval);
                 }
-                return $nextDate;
                 
             case 'annual':
-                $nextDate = $baseDate->copy()->addYears($this->interval);
+                $nextDate = $baseDate->addYears($this->interval);
+                
                 if ($this->month_of_year) {
                     $nextDate->month($this->month_of_year);
+                    
                     if ($this->day_of_month) {
-                        $daysInMonth = $nextDate->daysInMonth;
-                        $day = min($this->day_of_month, $daysInMonth);
-                        $nextDate->day($day);
+                        // Handle February 29 for leap years
+                        $lastDay = $nextDate->copy()->endOfMonth()->day;
+                        $nextDate->day(min($this->day_of_month, $lastDay));
                     }
                 }
+                
                 return $nextDate;
                 
             default:
-                return $baseDate->copy()->addMonth();
+                return $baseDate->addMonth();
         }
     }
 
