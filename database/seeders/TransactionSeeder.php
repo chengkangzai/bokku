@@ -38,7 +38,7 @@ class TransactionSeeder extends Seeder
             [
                 'user_id' => $user->id,
                 'type' => 'income',
-                'amount' => 6500.00,
+                'amount' => 6500, // $6,500.00
                 'description' => 'Monthly Salary',
                 'date' => Carbon::now()->startOfMonth(),
                 'account_id' => $maybankAccount->id,
@@ -48,7 +48,7 @@ class TransactionSeeder extends Seeder
             [
                 'user_id' => $user->id,
                 'type' => 'transfer',
-                'amount' => 2000.00,
+                'amount' => 2000, // $2,000.00
                 'description' => 'Transfer to daily account',
                 'date' => Carbon::now()->startOfMonth()->addDays(1),
                 'account_id' => $cimbAccount->id,
@@ -59,7 +59,7 @@ class TransactionSeeder extends Seeder
             [
                 'user_id' => $user->id,
                 'type' => 'expense',
-                'amount' => 150.00,
+                'amount' => 150, // $150.00
                 'description' => 'Lunch at Restaurant',
                 'date' => Carbon::now()->subDays(7),
                 'account_id' => $creditCard->id,
@@ -69,7 +69,7 @@ class TransactionSeeder extends Seeder
             [
                 'user_id' => $user->id,
                 'type' => 'expense',
-                'amount' => 85.00,
+                'amount' => 85, // $85.00
                 'description' => 'Grab rides',
                 'date' => Carbon::now()->subDays(6),
                 'account_id' => $cimbAccount->id,
@@ -79,7 +79,7 @@ class TransactionSeeder extends Seeder
             [
                 'user_id' => $user->id,
                 'type' => 'expense',
-                'amount' => 320.00,
+                'amount' => 320, // $320.00
                 'description' => 'Groceries at Lotus',
                 'date' => Carbon::now()->subDays(5),
                 'account_id' => $creditCard->id,
@@ -89,7 +89,7 @@ class TransactionSeeder extends Seeder
             [
                 'user_id' => $user->id,
                 'type' => 'expense',
-                'amount' => 180.00,
+                'amount' => 180, // $180.00
                 'description' => 'Petrol Ron95',
                 'date' => Carbon::now()->subDays(4),
                 'account_id' => $creditCard->id,
@@ -99,7 +99,7 @@ class TransactionSeeder extends Seeder
             [
                 'user_id' => $user->id,
                 'type' => 'expense',
-                'amount' => 450.00,
+                'amount' => 450, // $450.00
                 'description' => 'Electricity Bill',
                 'date' => Carbon::now()->subDays(3),
                 'account_id' => $cimbAccount->id,
@@ -110,7 +110,7 @@ class TransactionSeeder extends Seeder
             [
                 'user_id' => $user->id,
                 'type' => 'expense',
-                'amount' => 120.00,
+                'amount' => 120, // $120.00
                 'description' => 'Internet Bill - Unifi',
                 'date' => Carbon::now()->subDays(3),
                 'account_id' => $cimbAccount->id,
@@ -121,7 +121,7 @@ class TransactionSeeder extends Seeder
             [
                 'user_id' => $user->id,
                 'type' => 'transfer',
-                'amount' => 300.00,
+                'amount' => 300, // $300.00
                 'description' => 'ATM Withdrawal',
                 'date' => Carbon::now()->subDays(2),
                 'account_id' => $cashAccount->id,
@@ -132,7 +132,7 @@ class TransactionSeeder extends Seeder
             [
                 'user_id' => $user->id,
                 'type' => 'expense',
-                'amount' => 45.00,
+                'amount' => 45, // $45.00
                 'description' => 'Breakfast at mamak',
                 'date' => Carbon::now()->subDays(1),
                 'account_id' => $cashAccount->id,
@@ -142,7 +142,7 @@ class TransactionSeeder extends Seeder
             [
                 'user_id' => $user->id,
                 'type' => 'expense',
-                'amount' => 75.00,
+                'amount' => 75, // $75.00
                 'description' => 'Movie tickets',
                 'date' => Carbon::now()->subDays(1),
                 'account_id' => $creditCard->id,
@@ -152,7 +152,7 @@ class TransactionSeeder extends Seeder
             [
                 'user_id' => $user->id,
                 'type' => 'expense',
-                'amount' => 250.00,
+                'amount' => 250, // $250.00
                 'description' => 'Clothes shopping at Uniqlo',
                 'date' => Carbon::now(),
                 'account_id' => $creditCard->id,
@@ -163,7 +163,7 @@ class TransactionSeeder extends Seeder
             [
                 'user_id' => $user->id,
                 'type' => 'income',
-                'amount' => 6500.00,
+                'amount' => 6500, // $6,500.00
                 'description' => 'Monthly Salary',
                 'date' => Carbon::now()->subMonth()->startOfMonth(),
                 'account_id' => $maybankAccount->id,
@@ -173,7 +173,7 @@ class TransactionSeeder extends Seeder
             [
                 'user_id' => $user->id,
                 'type' => 'expense',
-                'amount' => 420.00,
+                'amount' => 420, // $420.00
                 'description' => 'Electricity Bill',
                 'date' => Carbon::now()->subMonth()->startOfMonth()->addDays(5),
                 'account_id' => $cimbAccount->id,
