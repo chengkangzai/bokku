@@ -154,7 +154,7 @@ class AccountResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            AccountResource\RelationManagers\TransactionsRelationManager::class,
         ];
     }
 
