@@ -14,12 +14,12 @@ use Prism\Prism\ValueObjects\Usage;
 
 beforeEach(function () {
     // Create handler with real AI service (will use Prism fake)
-    $this->handler = new UnifiedImportHandler(new AIProviderService());
+    $this->handler = new UnifiedImportHandler(new AIProviderService);
 
     // Setup auth user for tests
     $this->user = User::factory()->create();
     Auth::login($this->user);
-    
+
     // Create some test categories
     Category::factory()->create([
         'user_id' => $this->user->id,
@@ -61,7 +61,7 @@ describe('UnifiedImportHandler File Processing', function () {
                 ])
                 ->withFinishReason(FinishReason::Stop)
                 ->withUsage(new Usage(100, 200))
-                ->withMeta(new Meta('test-1', 'test-model'))
+                ->withMeta(new Meta('test-1', 'test-model')),
         ]);
 
         $result = $this->handler->processFile('maybank statement content', 'pdf');
@@ -101,7 +101,7 @@ describe('UnifiedImportHandler File Processing', function () {
                             'category' => 'Food & Dining',
                         ],
                     ],
-                ])
+                ]),
         ]);
 
         $result = $this->handler->processFile('Date,Amount,Description\n20/01/2024,25.50,GRAB PURCHASE', 'csv');
@@ -129,7 +129,7 @@ describe('UnifiedImportHandler File Processing', function () {
                             'category' => null,
                         ],
                     ],
-                ])
+                ]),
         ]);
 
         $result = $this->handler->processFile('Statement content', 'pdf', $userInstructions);
@@ -141,7 +141,7 @@ describe('UnifiedImportHandler File Processing', function () {
     it('handles AI extraction failure gracefully', function () {
         Prism::fake([
             StructuredResponseFake::make()
-                ->withStructured(null) // Simulate parsing failure
+                ->withStructured(null), // Simulate parsing failure
         ]);
 
         Log::shouldReceive('error')
@@ -163,7 +163,7 @@ describe('UnifiedImportHandler Transaction Formatting', function () {
                         ['date' => '15-01-2024', 'description' => 'Test 2', 'amount' => 200, 'type' => 'expense'],
                         ['date' => '15 Jan 2024', 'description' => 'Test 3', 'amount' => 300, 'type' => 'expense'],
                     ],
-                ])
+                ]),
         ]);
 
         $result = $this->handler->processFile('content', 'pdf');
@@ -182,7 +182,7 @@ describe('UnifiedImportHandler Transaction Formatting', function () {
                         ['date' => '16/01/2024', 'description' => 'IBG TRANSFER TO ACCOUNT', 'amount' => 200, 'type' => 'expense'],
                         ['date' => '17/01/2024', 'description' => 'ATM WITHDRAWAL', 'amount' => 300, 'type' => 'expense'],
                     ],
-                ])
+                ]),
         ]);
 
         $result = $this->handler->processFile('content', 'pdf');
@@ -201,7 +201,7 @@ describe('UnifiedImportHandler Transaction Formatting', function () {
                         ['date' => '16/01/2024', 'description' => 'IBG TRANSFER', 'amount' => 100, 'type' => 'transfer'],
                         ['date' => '17/01/2024', 'description' => 'PURCHASE', 'amount' => 50, 'type' => 'expense'],
                     ],
-                ])
+                ]),
         ]);
 
         $result = $this->handler->processFile('content', 'pdf');
@@ -221,7 +221,7 @@ describe('UnifiedImportHandler Transaction Formatting', function () {
                         ['date' => '16/01/2024', 'description' => 'Valid', 'amount' => 0, 'type' => 'expense'],
                         ['date' => '17/01/2024', 'description' => 'Another Valid', 'amount' => 50, 'type' => 'expense'],
                     ],
-                ])
+                ]),
         ]);
 
         Log::shouldReceive('warning')->times(3); // Three invalid transactions
@@ -239,7 +239,7 @@ describe('UnifiedImportHandler Bank Detection', function () {
             StructuredResponseFake::make()
                 ->withStructured([
                     'transactions' => [],
-                ])
+                ]),
         ]);
 
         $result = $this->handler->processFile('maybank statement content', 'pdf');
@@ -252,7 +252,7 @@ describe('UnifiedImportHandler Bank Detection', function () {
             StructuredResponseFake::make()
                 ->withStructured([
                     'transactions' => [],
-                ])
+                ]),
         ]);
 
         $result = $this->handler->processFile('This is a CIMB bank statement', 'pdf');
@@ -265,7 +265,7 @@ describe('UnifiedImportHandler Bank Detection', function () {
             StructuredResponseFake::make()
                 ->withStructured([
                     'transactions' => [],
-                ])
+                ]),
         ]);
 
         $result = $this->handler->processFile('Generic content without bank name', 'pdf');
@@ -284,7 +284,7 @@ describe('UnifiedImportHandler Date Range Calculation', function () {
                         ['date' => '20/01/2024', 'description' => 'Middle', 'amount' => 200, 'type' => 'expense'],
                         ['date' => '25/01/2024', 'description' => 'Last', 'amount' => 300, 'type' => 'expense'],
                     ],
-                ])
+                ]),
         ]);
 
         $result = $this->handler->processFile('content', 'pdf');
@@ -299,7 +299,7 @@ describe('UnifiedImportHandler Date Range Calculation', function () {
                     'transactions' => [
                         ['date' => '15/01/2024', 'description' => 'Only', 'amount' => 100, 'type' => 'expense'],
                     ],
-                ])
+                ]),
         ]);
 
         $result = $this->handler->processFile('content', 'pdf');
@@ -312,7 +312,7 @@ describe('UnifiedImportHandler Date Range Calculation', function () {
             StructuredResponseFake::make()
                 ->withStructured([
                     'transactions' => [],
-                ])
+                ]),
         ]);
 
         $result = $this->handler->processFile('content', 'pdf');
@@ -325,7 +325,7 @@ describe('UnifiedImportHandler Error Handling', function () {
     it('handles empty AI response gracefully', function () {
         Prism::fake([
             StructuredResponseFake::make()
-                ->withStructured([])
+                ->withStructured([]),
         ]);
 
         $result = $this->handler->processFile('content', 'pdf');
@@ -345,7 +345,7 @@ describe('UnifiedImportHandler Categories Integration', function () {
             'name' => 'Transport',
             'type' => 'expense',
         ]);
-        
+
         Prism::fake([
             StructuredResponseFake::make()
                 ->withStructured([
@@ -353,7 +353,7 @@ describe('UnifiedImportHandler Categories Integration', function () {
                         ['date' => '15/01/2024', 'description' => 'GRAB', 'amount' => 25, 'type' => 'expense', 'category' => 'Transport'],
                         ['date' => '16/01/2024', 'description' => 'LUNCH', 'amount' => 15, 'type' => 'expense', 'category' => 'Food & Dining'],
                     ],
-                ])
+                ]),
         ]);
 
         $result = $this->handler->processFile('content', 'pdf');
@@ -369,7 +369,7 @@ describe('UnifiedImportHandler Categories Integration', function () {
                     'transactions' => [
                         ['date' => '15/01/2024', 'description' => 'UNKNOWN VENDOR', 'amount' => 100, 'type' => 'expense', 'category' => null],
                     ],
-                ])
+                ]),
         ]);
 
         $result = $this->handler->processFile('content', 'pdf');

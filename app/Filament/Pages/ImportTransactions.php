@@ -8,6 +8,8 @@ use App\Models\Transaction;
 use App\Services\Import\UnifiedImportHandler;
 use Awcodes\TableRepeater\Components\TableRepeater;
 use Awcodes\TableRepeater\Header;
+use Filament\Forms\Components\Actions;
+use Filament\Forms\Components\Actions\Action;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Hidden;
@@ -99,8 +101,8 @@ class ImportTransactions extends Page implements HasForms
                                 ->rows(3)
                                 ->columnSpanFull(),
 
-                            \Filament\Forms\Components\Actions::make([
-                                \Filament\Forms\Components\Actions\Action::make('processFile')
+                            Actions::make([
+                                Action::make('processFile')
                                     ->label('Process File')
                                     ->icon('heroicon-o-sparkles')
                                     ->color('primary')
@@ -108,15 +110,17 @@ class ImportTransactions extends Page implements HasForms
                                     ->action(function () {
                                         $this->processFileWithConfiguration();
                                     })
-                                    ->visible(fn ($get) => !empty($get('file')) && !empty($get('account_id')) && empty($this->extractedData)),
+                                    ->visible(fn ($get) => ! empty($get('file')) && ! empty($get('account_id')) && empty($this->extractedData)),
                             ])->columnSpanFull(),
 
                             Placeholder::make('processing_status')
                                 ->content(function () {
-                                    if (!empty($this->extractedData)) {
+                                    if (! empty($this->extractedData)) {
                                         $count = count($this->extractedData['transactions'] ?? []);
+
                                         return new HtmlString("<div class='text-sm text-green-600'>✓ File processed successfully. Found {$count} transactions. Click 'Next' to review.</div>");
                                     }
+
                                     return '';
                                 })
                                 ->columnSpanFull(),
@@ -214,6 +218,7 @@ class ImportTransactions extends Page implements HasForms
                 ->body('Please upload a file and select an account before processing')
                 ->warning()
                 ->send();
+
             return;
         }
 
@@ -246,8 +251,6 @@ class ImportTransactions extends Page implements HasForms
                 $fileType,
                 $userInstructions
             );
-
-            info($result);
 
             // Store extracted data
             $this->extractedData = $result;
@@ -398,17 +401,15 @@ class ImportTransactions extends Page implements HasForms
         }
 
         $metadata = $this->extractedData['metadata'] ?? [];
-        $bankName = $this->extractedData['bank_name'] ?? 'Unknown Bank';
         $totalTransactions = $metadata['total_transactions'] ?? 0;
         $dateRange = $metadata['date_range'] ?? 'Unknown';
 
         return '<div class="bg-blue-50 border border-blue-200 rounded-lg p-4">'.
-               '<h3 class="text-sm font-medium text-blue-800">Import Summary</h3>'.
-               '<dl class="mt-2 text-sm text-blue-700">'.
-               '<dt class="inline font-medium">Bank:</dt> <dd class="inline ml-1">'.$bankName.'</dd><br>'.
-               '<dt class="inline font-medium">Transactions Found:</dt> <dd class="inline ml-1">'.$totalTransactions.'</dd><br>'.
-               '<dt class="inline font-medium">Date Range:</dt> <dd class="inline ml-1">'.$dateRange.'</dd>'.
-               '</dl></div>';
+            '<h3 class="text-sm font-medium text-blue-800">Import Summary</h3>'.
+            '<dl class="mt-2 text-sm text-blue-700">'.
+            '<dt class="inline font-medium">Transactions Found:</dt> <dd class="inline ml-1">'.$totalTransactions.'</dd><br>'.
+            '<dt class="inline font-medium">Date Range:</dt> <dd class="inline ml-1">'.$dateRange.'</dd>'.
+            '</dl></div>';
     }
 
     /**
@@ -425,15 +426,15 @@ class ImportTransactions extends Page implements HasForms
         $errors = $this->importResults['errors'] ?? [];
 
         $html = '<div class="bg-green-50 border border-green-200 rounded-lg p-4">'.
-                '<h3 class="text-sm font-medium text-green-800">Import Results</h3>'.
-                '<div class="mt-2 text-sm text-green-700">'.
-                '<p><strong>Successfully imported:</strong> '.$imported.' transactions</p>'.
-                '<p><strong>Total processed:</strong> '.$total.' transactions</p>';
+            '<h3 class="text-sm font-medium text-green-800">Import Results</h3>'.
+            '<div class="mt-2 text-sm text-green-700">'.
+            '<p><strong>Successfully imported:</strong> '.$imported.' transactions</p>'.
+            '<p><strong>Total processed:</strong> '.$total.' transactions</p>';
 
         if (! empty($errors)) {
             $html .= '<div class="mt-3 bg-yellow-50 border border-yellow-200 rounded p-3">'.
-                     '<p class="font-medium text-yellow-800">Errors:</p>'.
-                     '<ul class="mt-1 text-sm text-yellow-700 list-disc list-inside">';
+                '<p class="font-medium text-yellow-800">Errors:</p>'.
+                '<ul class="mt-1 text-sm text-yellow-700 list-disc list-inside">';
             foreach ($errors as $error) {
                 $html .= '<li>'.htmlspecialchars($error).'</li>';
             }
