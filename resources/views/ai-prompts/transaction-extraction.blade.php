@@ -28,10 +28,22 @@ Extract transaction data from the provided {{ $fileType }} content and return it
 **Extraction Rules:**
 1. **Date:** Convert all dates to DD/MM/YYYY format
 2. **Amount:** Always positive numbers, type determines income/expense
-3. **Type:** 
-   - income: Salary, deposits, credits, refunds
-   - expense: Purchases, withdrawals, fees, payments
-   - transfer: Account-to-account transfers
+3. **Type Classification:** 
+   - **income** (money coming IN to your account):
+     * Deposits (DEPOSIT, DEP, CASH DEPOSIT, CHQ DEPOSIT)
+     * Salary credits (SALARY, GAJI, PAYMENT RECEIVED)
+     * Transfers received (CREDIT TRANSFER, IBG CREDIT, INSTANT TRANSFER CR)
+     * Refunds (REFUND, REVERSAL)
+     * Interest earned (INTEREST, PROFIT)
+   - **expense** (money going OUT of your account):
+     * Withdrawals (WITHDRAWAL, WDL, ATM CASH, CASH OUT)
+     * Purchases (POS, PURCHASE, PAYMENT)
+     * Bill payments (BILL PAYMENT, UTILITIES, TELCO)
+     * Transfer sent (DEBIT TRANSFER, IBG DEBIT, INSTANT TRANSFER DR)
+     * Fees and charges (SERVICE CHARGE, ANNUAL FEE, GOVT TAX)
+   - **transfer** (moving between your own accounts):
+     * Inter-account transfers
+     * Own account transfers
 4. **Description:** Clean and standardize (remove codes, extra spaces)
 5. **Balance:** Running balance if shown in statement
 6. **Category:** Select the most appropriate category from the available options below
@@ -54,20 +66,31 @@ Expense Categories: {{ implode(', ', $existingCategories['expense']) }}
 **Category:** Leave as null (no existing categories available)
 @endif
 
-**Malaysian Bank Patterns:**
-- Maybank: POS, ATM, IBG, GIRO, FPX transactions
-- CIMB: Online transfers, bill payments
-- Public Bank: Various payment systems
-- Touch 'n Go: E-wallet transactions
+**Malaysian Bank Patterns & Keywords:**
+- **Maybank:** POS, ATM, IBG, GIRO, FPX, MEPS, JomPAY
+- **CIMB:** CIMB Clicks, PayNow, DuitNow, Bill Payment
+- **Public Bank:** PBe, Instant Transfer, Standing Instruction
+- **E-wallets:** Touch 'n Go (TNG), GrabPay, Boost, ShopeePay, BigPay
+- **Common Terms:**
+  * CR/CREDIT = Money IN (income)
+  * DR/DEBIT = Money OUT (expense)
+  * DEP/DEPOSIT = Money IN (income)
+  * WDL/WITHDRAWAL = Money OUT (expense)
 
 @if(isset($userInstructions) && !empty($userInstructions))
 **Additional User Instructions:**
 {{ $userInstructions }}
 @endif
 
-**Important:** 
+**Important Guidelines:** 
 - Be accurate with amounts and dates
 - Handle various bank statement formats
 - Extract ALL transactions, don't miss any
-- If uncertain about transaction type, default to "expense"
+- **Type Determination Logic:**
+  * Look for CR/CREDIT/DEPOSIT keywords → income
+  * Look for DR/DEBIT/WITHDRAWAL keywords → expense  
+  * Check if money increases account balance → income
+  * Check if money decreases account balance → expense
+  * If uncertain and no clear indicators → default to "expense"
 - Only use provided categories, don't invent new ones
+- Recognize that "deposit" means money coming IN (income), not going out

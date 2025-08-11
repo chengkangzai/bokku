@@ -80,7 +80,6 @@ class ImportTransactions extends Page implements HasForms
                                 ->maxSize(10240) // 10MB
                                 ->required()
                                 ->live(onBlur: true)
-                                ->afterStateUpdated(fn ($state) => $this->processUploadedFile($state))
                                 ->columnSpanFull(),
 
                             Select::make('account_id')
@@ -91,12 +90,35 @@ class ImportTransactions extends Page implements HasForms
                                 ->searchable()
                                 ->preload()
                                 ->required()
+                                ->live()
                                 ->columnSpanFull(),
 
                             Textarea::make('ai_instructions')
                                 ->label('Additional Instructions for AI (Optional)')
                                 ->placeholder('e.g., "This is a credit card statement" or "Ignore transactions before March 2024"')
                                 ->rows(3)
+                                ->columnSpanFull(),
+
+                            \Filament\Forms\Components\Actions::make([
+                                \Filament\Forms\Components\Actions\Action::make('processFile')
+                                    ->label('Process File')
+                                    ->icon('heroicon-o-sparkles')
+                                    ->color('primary')
+                                    ->disabled(fn ($get) => empty($get('file')) || empty($get('account_id')))
+                                    ->action(function () {
+                                        $this->processFileWithConfiguration();
+                                    })
+                                    ->visible(fn ($get) => !empty($get('file')) && !empty($get('account_id')) && empty($this->extractedData)),
+                            ])->columnSpanFull(),
+
+                            Placeholder::make('processing_status')
+                                ->content(function () {
+                                    if (!empty($this->extractedData)) {
+                                        $count = count($this->extractedData['transactions'] ?? []);
+                                        return new HtmlString("<div class='text-sm text-green-600'>✓ File processed successfully. Found {$count} transactions. Click 'Next' to review.</div>");
+                                    }
+                                    return '';
+                                })
                                 ->columnSpanFull(),
 
                             Hidden::make('extracted_data'),
@@ -176,21 +198,47 @@ class ImportTransactions extends Page implements HasForms
     }
 
     /**
-     * Process uploaded file using AI
+     * Process file with all configuration
      */
-    public function processUploadedFile(?TemporaryUploadedFile $file): void
+    public function processFileWithConfiguration(): void
     {
-        if (! $file) {
+        // Get form data
+        $fileData = $this->data['file'] ?? null;
+        $accountId = $this->data['account_id'] ?? null;
+        $userInstructions = $this->data['ai_instructions'] ?? null;
+
+        // Validate required fields
+        if (empty($fileData) || empty($accountId)) {
+            Notification::make()
+                ->title('Missing required fields')
+                ->body('Please upload a file and select an account before processing')
+                ->warning()
+                ->send();
             return;
         }
 
         $this->isProcessing = true;
 
         try {
+            // Get the uploaded file
+            $filePath = is_array($fileData) ? reset($fileData) : $fileData;
+
+            // Get the actual temporary file from storage
+            $uploadedFile = null;
+            if (is_string($filePath)) {
+                // Get file from Livewire temporary storage
+                $uploadedFile = TemporaryUploadedFile::createFromLivewire($filePath);
+            } elseif ($filePath instanceof TemporaryUploadedFile) {
+                $uploadedFile = $filePath;
+            }
+
+            if (! $uploadedFile) {
+                throw new \Exception('Unable to process the uploaded file');
+            }
+
             // Get file content
-            $content = file_get_contents($file->getRealPath());
-            $fileType = $file->getClientOriginalExtension();
-            $userInstructions = $this->data['ai_instructions'] ?? null;
+            $content = file_get_contents($uploadedFile->getRealPath());
+            $fileType = $uploadedFile->getClientOriginalExtension();
 
             // Process with AI
             $result = $this->importHandler->processFile(
@@ -198,6 +246,8 @@ class ImportTransactions extends Page implements HasForms
                 $fileType,
                 $userInstructions
             );
+
+            info($result);
 
             // Store extracted data
             $this->extractedData = $result;

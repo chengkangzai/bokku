@@ -25,15 +25,7 @@ class AIProviderService
     public function __construct()
     {
         // Get provider from app config
-        $this->provider = config('app.ai_provider', 'ollama');
-        $this->config = config("prism.providers.{$this->provider}", []);
-
-        // Set model based on provider with hardcoded defaults
-        $this->model = match ($this->provider) {
-            'ollama' => 'gemma3:4b',
-            'openai' => 'gpt-4o-mini',
-            default => 'gpt-4o-mini'
-        };
+        $this->setProvider(config('app.ai_provider', 'ollama'));
     }
 
     /**
@@ -45,6 +37,16 @@ class AIProviderService
             throw new Exception("AI provider '{$provider}' is not configured");
         }
 
+        $this->setProvider($provider);
+
+        return $this;
+    }
+
+    /**
+     * Set the provider and configure model
+     */
+    private function setProvider(string $provider): void
+    {
         $this->provider = $provider;
         $this->config = config("prism.providers.{$provider}", []);
 
@@ -52,10 +54,8 @@ class AIProviderService
         $this->model = match ($provider) {
             'ollama' => 'gemma3:4b',
             'openai' => 'gpt-4o-mini',
-            default => 'gpt-4o-mini'
+            default => 'gpt-4o-mini',
         };
-
-        return $this;
     }
 
     /**
@@ -77,7 +77,6 @@ class AIProviderService
 
         try {
             $response = $prism->withSystemPrompt(view('ai-prompts.transaction-extraction', [
-                'fileType' => $fileType,
                 'userInstructions' => $userInstructions,
                 'existingCategories' => $existingCategories,
             ]))
@@ -153,13 +152,8 @@ class AIProviderService
             default => Provider::OpenAI,
         };
 
-        $timeout = match ($this->provider) {
-            'ollama' => $this->config['timeout'] ?? 60,
-            default => $this->config['timeout'] ?? 30,
-        };
-
         $prism = $prism->using($provider, $this->model)
-            ->withClientOptions(['timeout' => $timeout]);
+            ->withClientOptions(['timeout' => 200]);
 
         // Only enable strict mode for OpenAI
         if ($this->provider === 'openai') {
