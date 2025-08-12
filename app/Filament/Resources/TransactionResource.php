@@ -6,13 +6,16 @@ use App\Filament\Resources\TransactionResource\Pages;
 use App\Models\Transaction;
 use Filament\Forms;
 use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
+use Filament\Forms\Components\SpatieTagsInput;
 use Filament\Forms\Form;
 use Filament\Forms\Get;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Columns\SpatieMediaLibraryImageColumn;
+use Filament\Tables\Columns\SpatieTagsColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Spatie\Tags\Tag;
 
 class TransactionResource extends Resource
 {
@@ -227,6 +230,14 @@ class TransactionResource extends Resource
                                             ->maxLength(65535)
                                             ->columnSpanFull(),
 
+                                        SpatieTagsInput::make('tags')
+                                            ->type(fn () => 'user_' . auth()->id())
+                                            ->suggestions(function () {
+                                                return Tag::getWithType('user_' . auth()->id())->pluck('name');
+                                            })
+                                            ->columnSpanFull()
+                                            ->placeholder('Add tags to organize transactions'),
+
                                         Forms\Components\Toggle::make('is_reconciled')
                                             ->label('Reconciled')
                                             ->helperText('Mark as reconciled when verified against bank statement'),
@@ -348,6 +359,10 @@ class TransactionResource extends Resource
                     ->badge()
                     ->color('info')
                     ->toggleable(isToggledHiddenByDefault: true),
+
+                SpatieTagsColumn::make('tags')
+                    ->type(fn () => 'user_' . auth()->id())
+                    ->toggleable(),
 
                 SpatieMediaLibraryImageColumn::make('receipts')
                     ->collection('receipts')

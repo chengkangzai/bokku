@@ -6,6 +6,7 @@ use App\Models\Transaction;
 use App\Models\TransactionRule;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Spatie\Tags\Tag;
 
 uses(RefreshDatabase::class);
 
@@ -226,6 +227,38 @@ describe('TransactionRule Actions', function () {
         expect($transaction->notes)->toBe('Large purchase - review needed');
     });
 
+    it('applies add_tag action to matching transaction', function () {
+        $rule = TransactionRule::factory()->create([
+            'user_id' => $this->user->id,
+            'conditions' => [
+                [
+                    'field' => 'description',
+                    'operator' => 'contains',
+                    'value' => 'Coffee',
+                ],
+            ],
+            'actions' => [
+                [
+                    'type' => 'add_tag',
+                    'tag' => 'coffee-shop',
+                ],
+            ],
+        ]);
+
+        $transaction = Transaction::factory()->create([
+            'user_id' => $this->user->id,
+            'account_id' => $this->account->id,
+            'description' => 'Coffee at Starbucks',
+        ]);
+
+        $rule->apply($transaction);
+        $transaction->refresh();
+
+        expect($transaction->tags)->toHaveCount(1);
+        expect($transaction->tags->first()->name)->toBe('coffee-shop');
+        expect($transaction->tags->first()->type)->toBe('user_' . $this->user->id);
+    });
+
     it('applies multiple actions to matching transaction', function () {
         $category = Category::factory()->expense()->create([
             'user_id' => $this->user->id,
@@ -250,6 +283,10 @@ describe('TransactionRule Actions', function () {
                     'type' => 'set_notes',
                     'notes' => 'Monthly subscription',
                 ],
+                [
+                    'type' => 'add_tag',
+                    'tag' => 'subscription',
+                ],
             ],
         ]);
 
@@ -264,6 +301,8 @@ describe('TransactionRule Actions', function () {
 
         expect($transaction->category_id)->toBe($category->id);
         expect($transaction->notes)->toBe('Monthly subscription');
+        expect($transaction->tags)->toHaveCount(1);
+        expect($transaction->tags->first()->name)->toBe('subscription');
     });
 
     it('records which rule was applied', function () {

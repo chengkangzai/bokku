@@ -143,6 +143,7 @@ class TransactionRule extends Model
             'set_category' => $this->setCategoryAction($action, $transaction),
             'set_account' => $this->setAccountAction($action, $transaction),
             'set_notes' => $this->setNotesAction($action, $transaction),
+            'add_tag' => $this->addTagAction($action, $transaction),
             default => null,
         };
     }
@@ -171,6 +172,15 @@ class TransactionRule extends Model
         if ($notes) {
             $transaction->notes = $notes;
             $transaction->saveQuietly();
+        }
+    }
+
+    protected function addTagAction(array $action, Transaction $transaction): void
+    {
+        $tag = $action['tag'] ?? '';
+        if ($tag) {
+            // Use user-scoped tag type
+            $transaction->attachTag($tag, 'user_' . $transaction->user_id);
         }
     }
 
