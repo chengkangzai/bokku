@@ -309,7 +309,13 @@ class TransactionRuleSeeder extends Seeder
         ];
 
         foreach ($rules as $rule) {
-            TransactionRule::create($rule);
+            TransactionRule::firstOrCreate(
+                [
+                    'user_id' => $rule['user_id'],
+                    'name' => $rule['name'],
+                ],
+                $rule
+            );
         }
     }
 }

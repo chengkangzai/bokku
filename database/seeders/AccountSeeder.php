@@ -136,19 +136,25 @@ class AccountSeeder extends Seeder
             [
                 'user_id' => $user->id,
                 'name' => 'StashAway Investment',
-                'type' => 'investment',
+                'type' => 'bank', // Investment accounts stored as bank type
                 'initial_balance' => 1000000, // RM10,000.00
                 'balance' => 1123450, // RM11,234.50
                 'currency' => 'MYR',
                 'account_number' => 'SA-MY-001234',
                 'color' => '#FFD700',
                 'is_active' => true,
-                'notes' => 'Risk Index 22%',
+                'notes' => 'Investment account - Risk Index 22%',
             ],
         ];
 
         foreach ($accounts as $account) {
-            Account::create($account);
+            Account::firstOrCreate(
+                [
+                    'user_id' => $account['user_id'],
+                    'name' => $account['name'],
+                ],
+                $account
+            );
         }
     }
 
@@ -194,7 +200,13 @@ class AccountSeeder extends Seeder
         ];
 
         foreach ($accounts as $account) {
-            Account::create($account);
+            Account::firstOrCreate(
+                [
+                    'user_id' => $account['user_id'],
+                    'name' => $account['name'],
+                ],
+                $account
+            );
         }
     }
 }

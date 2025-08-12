@@ -100,25 +100,33 @@ class CategorySeeder extends Seeder
         $sortOrder = 0;
 
         foreach ($incomeCategories as $category) {
-            Category::create([
-                'user_id' => $user->id,
-                'name' => $category['name'],
-                'type' => 'income',
-                'icon' => $category['icon'],
-                'color' => $category['color'],
-                'sort_order' => $sortOrder++,
-            ]);
+            Category::firstOrCreate(
+                [
+                    'user_id' => $user->id,
+                    'name' => $category['name'],
+                    'type' => 'income',
+                ],
+                [
+                    'icon' => $category['icon'],
+                    'color' => $category['color'],
+                    'sort_order' => $sortOrder++,
+                ]
+            );
         }
 
         foreach ($expenseCategories as $category) {
-            Category::create([
-                'user_id' => $user->id,
-                'name' => $category['name'],
-                'type' => 'expense',
-                'icon' => $category['icon'],
-                'color' => $category['color'],
-                'sort_order' => $sortOrder++,
-            ]);
+            Category::firstOrCreate(
+                [
+                    'user_id' => $user->id,
+                    'name' => $category['name'],
+                    'type' => 'expense',
+                ],
+                [
+                    'icon' => $category['icon'],
+                    'color' => $category['color'],
+                    'sort_order' => $sortOrder++,
+                ]
+            );
         }
     }
 }

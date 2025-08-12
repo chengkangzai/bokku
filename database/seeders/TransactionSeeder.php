@@ -49,7 +49,7 @@ class TransactionSeeder extends Seeder
                 'category_id' => $categories['Salary']->id,
                 'reference' => 'SAL-202501',
                 'is_reconciled' => true,
-                'tags' => ['monthly', 'salary'],
+                // 'tags' => ['monthly', 'salary'],
             ],
             // Transfer to spending account
             [
@@ -76,7 +76,7 @@ class TransactionSeeder extends Seeder
                 'category_id' => $categories['Loan Payment']->id,
                 'reference' => 'AUTO-PAY-202501',
                 'is_reconciled' => true,
-                'tags' => ['car-loan', 'monthly'],
+                // 'tags' => ['car-loan', 'monthly'],
             ],
             // TNB electricity bill
             [
@@ -89,7 +89,7 @@ class TransactionSeeder extends Seeder
                 'category_id' => $categories['Electricity (TNB)']->id,
                 'reference' => 'TNB-01-2025',
                 'is_reconciled' => true,
-                'tags' => ['utilities', 'monthly'],
+                // 'tags' => ['utilities', 'monthly'],
             ],
             // Unifi internet
             [
@@ -102,7 +102,7 @@ class TransactionSeeder extends Seeder
                 'category_id' => $categories['Internet/Unifi']->id,
                 'reference' => 'TM-UNI-202501',
                 'is_reconciled' => true,
-                'tags' => ['internet', 'monthly'],
+                // 'tags' => ['internet', 'monthly'],
             ],
             // Grab ride
             [
@@ -113,7 +113,7 @@ class TransactionSeeder extends Seeder
                 'date' => Carbon::now()->subDays(10),
                 'account_id' => $maybankVisa->id,
                 'category_id' => $categories['Grab/E-hailing']->id,
-                'tags' => ['transport', 'grab'],
+                // 'tags' => ['transport', 'grab'],
             ],
             // Petrol
             [
@@ -125,7 +125,7 @@ class TransactionSeeder extends Seeder
                 'account_id' => $maybankVisa->id,
                 'category_id' => $categories['Petrol']->id,
                 'reference' => 'PTN-983742',
-                'tags' => ['petrol', 'car'],
+                // 'tags' => ['petrol', 'car'],
             ],
             // TnG reload
             [
@@ -137,7 +137,7 @@ class TransactionSeeder extends Seeder
                 'account_id' => $tng->id,
                 'from_account_id' => $cimb->id,
                 'to_account_id' => $tng->id,
-                'tags' => ['ewallet', 'reload'],
+                // 'tags' => ['ewallet', 'reload'],
             ],
             // Toll payment
             [
@@ -148,7 +148,7 @@ class TransactionSeeder extends Seeder
                 'date' => Carbon::now()->subDays(8),
                 'account_id' => $tng->id,
                 'category_id' => $categories['Toll']->id,
-                'tags' => ['toll', 'highway'],
+                // 'tags' => ['toll', 'highway'],
             ],
             // Parking
             [
@@ -159,7 +159,7 @@ class TransactionSeeder extends Seeder
                 'date' => Carbon::now()->subDays(8),
                 'account_id' => $tng->id,
                 'category_id' => $categories['Parking']->id,
-                'tags' => ['parking'],
+                // 'tags' => ['parking'],
             ],
             // Starbucks coffee
             [
@@ -170,7 +170,7 @@ class TransactionSeeder extends Seeder
                 'date' => Carbon::now()->subDays(7),
                 'account_id' => $maybankVisa->id,
                 'category_id' => $categories['Restaurant']->id,
-                'tags' => ['coffee', 'starbucks'],
+                // 'tags' => ['coffee', 'starbucks'],
             ],
             // Lotus groceries
             [
@@ -182,7 +182,7 @@ class TransactionSeeder extends Seeder
                 'account_id' => $aeonCard->id,
                 'category_id' => $categories['Groceries']->id,
                 'reference' => 'LTS-492837',
-                'tags' => ['groceries', 'weekly'],
+                // 'tags' => ['groceries', 'weekly'],
             ],
             // GrabFood
             [
@@ -193,7 +193,7 @@ class TransactionSeeder extends Seeder
                 'date' => Carbon::now()->subDays(5),
                 'account_id' => $maybankVisa->id,
                 'category_id' => $categories['Food Delivery']->id,
-                'tags' => ['grabfood', 'delivery'],
+                // 'tags' => ['grabfood', 'delivery'],
             ],
             // Mamak breakfast
             [
@@ -204,7 +204,7 @@ class TransactionSeeder extends Seeder
                 'date' => Carbon::now()->subDays(4),
                 'account_id' => $cash->id,
                 'category_id' => $categories['Mamak/Kopitiam']->id,
-                'tags' => ['breakfast', 'mamak'],
+                // 'tags' => ['breakfast', 'mamak'],
             ],
             // ATM withdrawal
             [
@@ -217,7 +217,7 @@ class TransactionSeeder extends Seeder
                 'from_account_id' => $cimb->id,
                 'to_account_id' => $cash->id,
                 'reference' => 'ATM-938472',
-                'tags' => ['atm', 'withdrawal'],
+                // 'tags' => ['atm', 'withdrawal'],
             ],
             // Watsons
             [
@@ -228,7 +228,7 @@ class TransactionSeeder extends Seeder
                 'date' => Carbon::now()->subDays(3),
                 'account_id' => $maybankVisa->id,
                 'category_id' => $categories['Personal Care']->id,
-                'tags' => ['shopping', 'personal-care'],
+                // 'tags' => ['shopping', 'personal-care'],
             ],
             // Netflix subscription
             [
@@ -240,7 +240,7 @@ class TransactionSeeder extends Seeder
                 'account_id' => $maybankVisa->id,
                 'category_id' => $categories['Astro/Streaming']->id,
                 'reference' => 'NETFLIX-202501',
-                'tags' => ['subscription', 'netflix', 'monthly'],
+                // 'tags' => ['subscription', 'netflix', 'monthly'],
             ],
             // Shopee purchase
             [
@@ -252,7 +252,7 @@ class TransactionSeeder extends Seeder
                 'account_id' => $maybankVisa->id,
                 'category_id' => $categories['Online Shopping']->id,
                 'reference' => 'SPE-293847293',
-                'tags' => ['shopee', 'online-shopping'],
+                // 'tags' => ['shopee', 'online-shopping'],
             ],
             // Restaurant dinner
             [
@@ -263,7 +263,7 @@ class TransactionSeeder extends Seeder
                 'date' => Carbon::now()->subDays(2),
                 'account_id' => $maybankVisa->id,
                 'category_id' => $categories['Restaurant']->id,
-                'tags' => ['dinner', 'family'],
+                // 'tags' => ['dinner', 'family'],
             ],
             // Mobile phone bill
             [
@@ -276,7 +276,7 @@ class TransactionSeeder extends Seeder
                 'category_id' => $categories['Mobile Phone']->id,
                 'reference' => 'CEL-202501',
                 'is_reconciled' => true,
-                'tags' => ['phone', 'monthly'],
+                // 'tags' => ['phone', 'monthly'],
             ],
             // Gym membership
             [
@@ -287,7 +287,7 @@ class TransactionSeeder extends Seeder
                 'date' => Carbon::now()->subDay(),
                 'account_id' => $maybankVisa->id,
                 'category_id' => $categories['Gym/Fitness']->id,
-                'tags' => ['gym', 'monthly'],
+                // 'tags' => ['gym', 'monthly'],
             ],
             // Insurance payment
             [
@@ -300,7 +300,7 @@ class TransactionSeeder extends Seeder
                 'category_id' => $categories['Insurance']->id,
                 'reference' => 'GE-MED-202501',
                 'is_reconciled' => true,
-                'tags' => ['insurance', 'medical', 'monthly'],
+                // 'tags' => ['insurance', 'medical', 'monthly'],
             ],
             // Investment
             [
@@ -312,7 +312,7 @@ class TransactionSeeder extends Seeder
                 'account_id' => $maybank->id,
                 'category_id' => $categories['Investment']->id,
                 'reference' => 'SA-INV-202501',
-                'tags' => ['investment', 'stashaway', 'monthly'],
+                // 'tags' => ['investment', 'stashaway', 'monthly'],
             ],
         ];
 
@@ -330,7 +330,7 @@ class TransactionSeeder extends Seeder
                 'category_id' => $categories['Salary']->id,
                 'reference' => 'SAL-202412',
                 'is_reconciled' => true,
-                'tags' => ['monthly', 'salary'],
+                // 'tags' => ['monthly', 'salary'],
             ],
             [
                 'user_id' => $user->id,
@@ -342,12 +342,20 @@ class TransactionSeeder extends Seeder
                 'category_id' => $categories['Bonus']->id,
                 'reference' => 'BONUS-2024',
                 'is_reconciled' => true,
-                'tags' => ['bonus', 'year-end'],
+                // 'tags' => ['bonus', 'year-end'],
             ],
         ];
 
         foreach (array_merge($transactions, $previousMonthTransactions) as $transaction) {
-            Transaction::create($transaction);
+            Transaction::firstOrCreate(
+                [
+                    'user_id' => $transaction['user_id'],
+                    'description' => $transaction['description'],
+                    'date' => $transaction['date'],
+                    'amount' => $transaction['amount'],
+                ],
+                $transaction
+            );
         }
     }
 }
