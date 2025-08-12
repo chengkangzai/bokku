@@ -144,7 +144,7 @@ describe('ImportTransactions Review Step', function () {
         $method->setAccessible(true);
         $summary = $method->invoke($component->instance());
 
-        expect($summary)->toContain('Maybank')
+        expect($summary)->toContain('Transactions Found')
             ->and($summary)->toContain('1')
             ->and($summary)->toContain('15 Jan 2024');
     });

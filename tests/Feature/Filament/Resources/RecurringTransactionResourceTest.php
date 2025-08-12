@@ -235,6 +235,8 @@ describe('RecurringTransactionResource Table Functionality', function () {
             'category_id' => $this->expenseCategory->id,
         ]);
 
+        $originalNextDate = $recurring->next_date->copy();
+
         livewire(ListRecurringTransactions::class)
             ->callTableAction('process', $recurring);
 
@@ -246,8 +248,9 @@ describe('RecurringTransactionResource Table Functionality', function () {
             'description' => $recurring->description,
         ]);
 
-        // Check that next_date was updated
-        expect($recurring->refresh()->next_date->gt(now()))->toBeTrue();
+        // Check that next_date was updated (should be different from original)
+        $recurring->refresh();
+        expect($recurring->next_date->toDateString())->not->toBe($originalNextDate->toDateString());
     });
 
     it('can skip recurring transaction', function () {

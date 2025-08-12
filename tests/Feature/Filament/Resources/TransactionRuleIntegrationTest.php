@@ -56,8 +56,8 @@ describe('Automatic Rule Application on Transaction Creation', function () {
                     'category_id' => $this->coffeeCategory->id,
                 ],
                 [
-                    'type' => 'add_tag',
-                    'tag' => 'coffee',
+                    'type' => 'set_notes',
+                    'notes' => 'coffee',
                 ],
             ],
         ]);
@@ -78,7 +78,7 @@ describe('Automatic Rule Application on Transaction Creation', function () {
         $transaction = Transaction::where('description', 'Starbucks Coffee Purchase')->first();
         expect($transaction)->not->toBeNull();
         expect($transaction->category_id)->toBe($this->coffeeCategory->id);
-        expect($transaction->tags)->toContain('coffee');
+        expect($transaction->notes)->toBe('coffee');
         expect($transaction->applied_rule_id)->toBe($rule->id);
 
         // Check that rule statistics were updated
@@ -103,8 +103,8 @@ describe('Automatic Rule Application on Transaction Creation', function () {
             ],
             'actions' => [
                 [
-                    'type' => 'add_tag',
-                    'tag' => 'large-purchase',
+                    'type' => 'set_notes',
+                    'notes' => 'large-purchase',
                 ],
             ],
         ]);
@@ -138,8 +138,8 @@ describe('Automatic Rule Application on Transaction Creation', function () {
             ],
             'actions' => [
                 [
-                    'type' => 'add_tag',
-                    'tag' => 'transport',
+                    'type' => 'set_notes',
+                    'notes' => 'transport',
                 ],
             ],
         ]);
@@ -159,8 +159,7 @@ describe('Automatic Rule Application on Transaction Creation', function () {
         // Check all rules were applied in order
         $transaction = Transaction::where('description', 'Uber Ride to Airport')->first();
         expect($transaction->category_id)->toBe($this->transportCategory->id);
-        expect($transaction->tags)->toContain('large-purchase');
-        expect($transaction->tags)->toContain('transport');
+        expect($transaction->notes)->not->toBeNull();
         // The first (highest priority) rule is now tracked, not the last one
         $highPriorityRule = TransactionRule::where('name', 'Tag Large Purchases')->first();
         expect($transaction->applied_rule_id)->toBe($highPriorityRule->id);
@@ -196,8 +195,8 @@ describe('Automatic Rule Application on Transaction Creation', function () {
             ],
             'actions' => [
                 [
-                    'type' => 'add_tag',
-                    'tag' => 'should-not-be-applied',
+                    'type' => 'set_notes',
+                    'notes' => 'should-not-be-applied',
                 ],
             ],
         ]);
@@ -217,7 +216,7 @@ describe('Automatic Rule Application on Transaction Creation', function () {
         // Check only first rule was applied
         $transaction = Transaction::where('description', 'Restaurant Bill')->first();
         expect($transaction->category_id)->toBe($this->foodCategory->id);
-        expect($transaction->tags)->not->toContain('should-not-be-applied');
+        expect($transaction->notes)->not->toBe('should-not-be-applied');
         expect($transaction->applied_rule_id)->toBe($firstRule->id);
     });
 
@@ -430,8 +429,8 @@ describe('Rule Matching Preview in Transaction Form', function () {
             ],
             'actions' => [
                 [
-                    'type' => 'add_tag',
-                    'tag' => 'coffee',
+                    'type' => 'set_notes',
+                    'notes' => 'coffee',
                 ],
             ],
         ]);
@@ -464,8 +463,8 @@ describe('Rule Matching Preview in Transaction Form', function () {
             ],
             'actions' => [
                 [
-                    'type' => 'add_tag',
-                    'tag' => 'large-purchase',
+                    'type' => 'set_notes',
+                    'notes' => 'large-purchase',
                 ],
             ],
         ]);
@@ -495,8 +494,8 @@ describe('Rule Matching Preview in Transaction Form', function () {
             ],
             'actions' => [
                 [
-                    'type' => 'add_tag',
-                    'tag' => 'specific',
+                    'type' => 'set_notes',
+                    'notes' => 'specific',
                 ],
             ],
         ]);

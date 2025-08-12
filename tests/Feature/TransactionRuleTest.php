@@ -195,7 +195,7 @@ describe('TransactionRule Actions', function () {
         expect($rule->fresh()->times_applied)->toBe(1);
     });
 
-    it('adds tags to matching transaction', function () {
+    it('applies notes action to matching transaction', function () {
         $rule = TransactionRule::factory()->create([
             'user_id' => $this->user->id,
             'conditions' => [
@@ -207,8 +207,8 @@ describe('TransactionRule Actions', function () {
             ],
             'actions' => [
                 [
-                    'type' => 'add_tag',
-                    'tag' => 'large-purchase',
+                    'type' => 'set_notes',
+                    'notes' => 'Large purchase - review needed',
                 ],
             ],
         ]);
@@ -217,13 +217,13 @@ describe('TransactionRule Actions', function () {
             'user_id' => $this->user->id,
             'account_id' => $this->account->id,
             'amount' => 1500, // RM 1500
-            'tags' => null,
+            'notes' => null,
         ]);
 
         $rule->apply($transaction);
         $transaction->refresh();
 
-        expect($transaction->tags)->toBe(['large-purchase']);
+        expect($transaction->notes)->toBe('Large purchase - review needed');
     });
 
     it('applies multiple actions to matching transaction', function () {
@@ -247,12 +247,8 @@ describe('TransactionRule Actions', function () {
                     'category_id' => $category->id,
                 ],
                 [
-                    'type' => 'add_tag',
-                    'tag' => 'subscription',
-                ],
-                [
-                    'type' => 'add_tag',
-                    'tag' => 'entertainment',
+                    'type' => 'set_notes',
+                    'notes' => 'Monthly subscription',
                 ],
             ],
         ]);
@@ -267,8 +263,7 @@ describe('TransactionRule Actions', function () {
         $transaction->refresh();
 
         expect($transaction->category_id)->toBe($category->id);
-        expect($transaction->tags)->toContain('subscription');
-        expect($transaction->tags)->toContain('entertainment');
+        expect($transaction->notes)->toBe('Monthly subscription');
     });
 
     it('records which rule was applied', function () {
@@ -391,8 +386,8 @@ describe('Automatic Rule Application', function () {
             ],
             'actions' => [
                 [
-                    'type' => 'add_tag',
-                    'tag' => 'monthly',
+                    'type' => 'set_notes',
+                    'notes' => 'Monthly recurring payment',
                 ],
             ],
         ]);
@@ -414,7 +409,7 @@ describe('Automatic Rule Application', function () {
             'recurring_transaction_id' => $recurringTransaction->id, // Use the actual recurring transaction
         ]);
 
-        expect($transaction->tags)->toBeNull();
+        expect($transaction->notes)->toBeNull();
         expect($transaction->applied_rule_id)->toBeNull();
     });
 });
@@ -734,8 +729,8 @@ describe('Rule Priority and Stop Processing', function () {
             ],
             'actions' => [
                 [
-                    'type' => 'add_tag',
-                    'tag' => 'beverage',
+                    'type' => 'set_notes',
+                    'notes' => 'beverage',
                 ],
             ],
         ]);
@@ -754,8 +749,8 @@ describe('Rule Priority and Stop Processing', function () {
             ],
             'actions' => [
                 [
-                    'type' => 'add_tag',
-                    'tag' => 'small-purchase',
+                    'type' => 'set_notes',
+                    'notes' => 'small-purchase',
                 ],
             ],
         ]);
@@ -769,9 +764,8 @@ describe('Rule Priority and Stop Processing', function () {
             'date' => now(),
         ]);
 
-        // Both rules should have been applied
-        expect($transaction->tags)->toContain('beverage');
-        expect($transaction->tags)->toContain('small-purchase');
+        // Second rule should have been applied (last one wins for notes)
+        expect($transaction->notes)->toBe('small-purchase');
     });
 });
 
@@ -789,8 +783,8 @@ describe('Rule Statistics', function () {
             ],
             'actions' => [
                 [
-                    'type' => 'add_tag',
-                    'tag' => 'test',
+                    'type' => 'set_notes',
+                    'notes' => 'test',
                 ],
             ],
         ]);
