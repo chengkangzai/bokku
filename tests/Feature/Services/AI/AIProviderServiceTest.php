@@ -41,13 +41,11 @@ describe('AIProviderService Configuration', function () {
         expect($result)->toBeInstanceOf(AIProviderService::class);
     });
 
-    it('throws exception when switching to disabled provider', function () {
-        Config::set('ai.providers.openai.enabled', false);
-
+    it('throws exception when switching to non-configured provider', function () {
         $service = new AIProviderService;
 
-        expect(fn () => $service->useProvider('openai'))
-            ->toThrow(Exception::class, "AI provider 'openai' is not enabled");
+        expect(fn () => $service->useProvider('invalid_provider'))
+            ->toThrow(Exception::class, "AI provider 'invalid_provider' is not configured");
     });
 });
 
@@ -56,12 +54,10 @@ describe('Blade Template Rendering', function () {
         // Test that the service can access and render the Blade template
         // Since we can't easily mock Prism, we'll test the template rendering directly
         $promptContent = view('ai-prompts.transaction-extraction', [
-            'fileType' => 'pdf',
             'userInstructions' => 'This is a test instruction',
         ])->render();
 
         expect($promptContent)->toContain('financial data extraction specialist')
-            ->and($promptContent)->toContain('pdf')
             ->and($promptContent)->toContain('This is a test instruction')
             ->and($promptContent)->toContain('DD/MM/YYYY format')
             ->and($promptContent)->toContain('Maybank');
@@ -126,22 +122,20 @@ describe('Provider Model Configuration', function () {
 });
 
 describe('Error Handling', function () {
-    it('throws exception for disabled provider', function () {
-        Config::set('ai.providers.openai.enabled', false);
-
+    it('throws exception for non-configured provider', function () {
         $service = new AIProviderService;
 
-        expect(fn () => $service->useProvider('openai'))
-            ->toThrow(Exception::class, "AI provider 'openai' is not enabled");
+        expect(fn () => $service->useProvider('nonexistent'))
+            ->toThrow(Exception::class, "AI provider 'nonexistent' is not configured");
     });
 
     it('handles provider configuration gracefully', function () {
         // Test with missing provider configuration
-        Config::set('ai.providers.nonexistent', null);
+        Config::set('prism.providers.invalid', null);
 
         $service = new AIProviderService;
 
-        expect(fn () => $service->useProvider('nonexistent'))
+        expect(fn () => $service->useProvider('invalid'))
             ->toThrow(Exception::class);
     });
 });
