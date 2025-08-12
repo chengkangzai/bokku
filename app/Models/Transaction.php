@@ -29,7 +29,6 @@ class Transaction extends Model implements HasMedia
         'to_account_id',
         'reference',
         'notes',
-        'tags',
         'is_reconciled',
     ];
 
@@ -37,7 +36,6 @@ class Transaction extends Model implements HasMedia
         'amount' => MoneyCast::class,
         'date' => 'date',
         'is_reconciled' => 'boolean',
-        'tags' => 'array',
     ];
 
     protected static function booted(): void

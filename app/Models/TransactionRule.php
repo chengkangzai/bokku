@@ -141,7 +141,6 @@ class TransactionRule extends Model
 
         match ($type) {
             'set_category' => $this->setCategoryAction($action, $transaction),
-            'add_tag' => $this->addTagAction($action, $transaction),
             'set_account' => $this->setAccountAction($action, $transaction),
             'set_notes' => $this->setNotesAction($action, $transaction),
             default => null,
@@ -154,23 +153,6 @@ class TransactionRule extends Model
         if ($categoryId && Category::where('id', $categoryId)->where('user_id', $transaction->user_id)->exists()) {
             $transaction->category_id = $categoryId;
             $transaction->saveQuietly();
-        }
-    }
-
-    protected function addTagAction(array $action, Transaction $transaction): void
-    {
-        $tag = $action['tag'] ?? '';
-        if ($tag) {
-            // Ensure tags is always an array
-            $tags = $transaction->tags;
-            if (! is_array($tags)) {
-                $tags = [];
-            }
-            if (! in_array($tag, $tags)) {
-                $tags[] = $tag;
-                $transaction->tags = $tags;
-                $transaction->saveQuietly();
-            }
         }
     }
 

@@ -223,11 +223,6 @@ class TransactionResource extends Resource
                                             ->maxLength(255)
                                             ->placeholder('Check number, invoice #, etc.'),
 
-                                        Forms\Components\TagsInput::make('tags')
-                                            ->separator(',')
-                                            ->placeholder('Add tags...')
-                                            ->helperText('Press Enter or comma to add tags'),
-
                                         Forms\Components\Textarea::make('notes')
                                             ->maxLength(65535)
                                             ->columnSpanFull(),
@@ -346,12 +341,6 @@ class TransactionResource extends Resource
                 Tables\Columns\TextColumn::make('reference')
                     ->searchable()
                     ->placeholder('—')
-                    ->toggleable(isToggledHiddenByDefault: true),
-
-                Tables\Columns\TextColumn::make('tags')
-                    ->badge()
-                    ->separator(',')
-                    ->searchable()
                     ->toggleable(isToggledHiddenByDefault: true),
 
                 Tables\Columns\TextColumn::make('appliedRule.name')

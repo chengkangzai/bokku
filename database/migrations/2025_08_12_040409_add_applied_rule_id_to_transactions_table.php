@@ -6,18 +6,26 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+    /**
+     * Run the migrations.
+     */
     public function up(): void
     {
         Schema::table('transactions', function (Blueprint $table) {
-            $table->json('tags')->nullable()->after('notes');
-            $table->foreignId('applied_rule_id')->nullable()->constrained('transaction_rules')->nullOnDelete()->after('recurring_transaction_id');
+            $table->foreignId('applied_rule_id')
+                ->nullable()
+                ->after('category_id')
+                ->constrained('transaction_rules')
+                ->nullOnDelete();
         });
     }
 
+    /**
+     * Reverse the migrations.
+     */
     public function down(): void
     {
         Schema::table('transactions', function (Blueprint $table) {
-            $table->dropColumn('tags');
             $table->dropForeign(['applied_rule_id']);
             $table->dropColumn('applied_rule_id');
         });
