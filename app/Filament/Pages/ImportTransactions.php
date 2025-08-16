@@ -18,6 +18,7 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Schemas\Components\Actions;
@@ -113,8 +114,8 @@ class ImportTransactions extends Page implements HasForms
                                     ->visible(fn ($get) => ! empty($get('file')) && ! empty($get('account_id')) && empty($this->extractedData)),
                             ])->columnSpanFull(),
 
-                            Placeholder::make('processing_status')
-                                ->content(function () {
+                            TextEntry::make('processing_status')
+                                ->state(function () {
                                     if (! empty($this->extractedData)) {
                                         $count = count($this->extractedData['transactions'] ?? []);
 
@@ -132,8 +133,8 @@ class ImportTransactions extends Page implements HasForms
                     Step::make('Review Transactions')
                         ->description('Review and edit the extracted transactions')
                         ->schema([
-                            Placeholder::make('import_summary')
-                                ->content(fn () => new HtmlString($this->getImportSummary()))
+                            TextEntry::make('import_summary')
+                                ->state(fn () => new HtmlString($this->getImportSummary()))
                                 ->columnSpanFull(),
 
                             Repeater::make('transactions')
@@ -187,14 +188,13 @@ class ImportTransactions extends Page implements HasForms
                     Step::make('Import Results')
                         ->description('Review the import results and finish')
                         ->schema([
-                            Placeholder::make('results')
-                                ->content(fn () => new HtmlString($this->getResultsSummary()))
+                            TextEntry::make('results')
+                                ->state(fn () => new HtmlString($this->getResultsSummary()))
                                 ->columnSpanFull(),
                         ])
                         ->columns(1),
                 ])
                     ->columnSpanFull()
-                    ->submitAction(new HtmlString('<button type="submit" class="filament-button filament-button-size-sm inline-flex items-center justify-center py-1 gap-1 font-medium rounded-lg border transition-colors focus:outline-none focus:ring-offset-2 focus:ring-2 focus:ring-inset min-h-[2.25rem] px-3 text-sm text-white shadow focus:ring-white border-transparent bg-primary-600 hover:bg-primary-500 focus:bg-primary-700 focus:ring-offset-primary-700">Import Transactions</button>'))
                     ->skippable()
                     ->persistStepInQueryString(),
             ])
