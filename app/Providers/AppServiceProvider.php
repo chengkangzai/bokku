@@ -2,7 +2,7 @@
 
 namespace App\Providers;
 
-use Filament\Forms\Components\Section;
+use Filament\Schemas\Components\Section;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider

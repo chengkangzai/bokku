@@ -2,6 +2,7 @@
 
 namespace App\Traits;
 
+use Illuminate\Support\Collection;
 use Illuminate\Database\Eloquent\Builder;
 use Spatie\Tags\Tag;
 
@@ -72,7 +73,7 @@ trait HasUserScopedTags
     /**
      * Get all available tags for the current user
      */
-    public static function getAvailableUserTags(int $userId): \Illuminate\Support\Collection
+    public static function getAvailableUserTags(int $userId): Collection
     {
         return Tag::getWithType('user_' . $userId);
     }

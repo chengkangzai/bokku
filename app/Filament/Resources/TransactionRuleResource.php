@@ -2,11 +2,32 @@
 
 namespace App\Filament\Resources;
 
+use Filament\Schemas\Schema;
+use Filament\Schemas\Components\Section;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Toggle;
+use Filament\Forms\Components\Repeater;
+use Filament\Schemas\Components\Utilities\Get;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Columns\ToggleColumn;
+use Filament\Tables\Columns\IconColumn;
+use Filament\Tables\Filters\TernaryFilter;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Actions\EditAction;
+use Filament\Actions\Action;
+use Filament\Notifications\Notification;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\BulkAction;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteBulkAction;
+use App\Filament\Resources\TransactionRuleResource\Pages\ListTransactionRules;
+use App\Filament\Resources\TransactionRuleResource\Pages\CreateTransactionRule;
+use App\Filament\Resources\TransactionRuleResource\Pages\EditTransactionRule;
 use App\Filament\Resources\TransactionRuleResource\Pages;
 use App\Models\TransactionRule;
 use Filament\Forms;
-use Filament\Forms\Form;
-use Filament\Forms\Get;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -16,28 +37,28 @@ class TransactionRuleResource extends Resource
 {
     protected static ?string $model = TransactionRule::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-cog-6-tooth';
+    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-cog-6-tooth';
 
-    protected static ?string $navigationGroup = 'Automation';
+    protected static string | \UnitEnum | null $navigationGroup = 'Automation';
 
     protected static ?int $navigationSort = 1;
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
-            ->schema([
-                Forms\Components\Section::make('Rule Information')
+        return $schema
+            ->components([
+                Section::make('Rule Information')
                     ->schema([
-                        Forms\Components\TextInput::make('name')
+                        TextInput::make('name')
                             ->required()
                             ->maxLength(255)
                             ->placeholder('e.g., Categorize Starbucks'),
 
-                        Forms\Components\Textarea::make('description')
+                        Textarea::make('description')
                             ->rows(2)
                             ->placeholder('Optional description of what this rule does'),
 
-                        Forms\Components\Select::make('apply_to')
+                        Select::make('apply_to')
                             ->label('Apply To')
                             ->options([
                                 'all' => 'All Transactions',
@@ -48,28 +69,28 @@ class TransactionRuleResource extends Resource
                             ->default('all')
                             ->required(),
 
-                        Forms\Components\TextInput::make('priority')
+                        TextInput::make('priority')
                             ->numeric()
                             ->default(0)
                             ->helperText('Higher priority rules run first'),
 
-                        Forms\Components\Toggle::make('is_active')
+                        Toggle::make('is_active')
                             ->label('Active')
                             ->default(true),
 
-                        Forms\Components\Toggle::make('stop_processing')
+                        Toggle::make('stop_processing')
                             ->label('Stop Processing Other Rules')
                             ->helperText('If this rule matches, don\'t apply any other rules')
                             ->default(false),
                     ])
                     ->columns(2),
 
-                Forms\Components\Section::make('Conditions')
+                Section::make('Conditions')
                     ->description('All conditions must match for the rule to apply')
                     ->schema([
-                        Forms\Components\Repeater::make('conditions')
+                        Repeater::make('conditions')
                             ->schema([
-                                Forms\Components\Select::make('field')
+                                Select::make('field')
                                     ->options([
                                         'description' => 'Description',
                                         'amount' => 'Amount',
@@ -78,7 +99,7 @@ class TransactionRuleResource extends Resource
                                     ->required()
                                     ->reactive(),
 
-                                Forms\Components\Select::make('operator')
+                                Select::make('operator')
                                     ->options(fn (Get $get) => match ($get('field')) {
                                         'description' => [
                                             'contains' => 'Contains',
@@ -105,12 +126,12 @@ class TransactionRuleResource extends Resource
                                     })
                                     ->required(),
 
-                                Forms\Components\TextInput::make('value')
+                                TextInput::make('value')
                                     ->label('Value')
                                     ->required()
                                     ->visible(fn (Get $get) => $get('field') !== 'category_id'),
 
-                                Forms\Components\Select::make('value')
+                                Select::make('value')
                                     ->label('Category')
                                     ->options(fn () => auth()->user()->categories()->pluck('name', 'id'))
                                     ->searchable()
@@ -124,12 +145,12 @@ class TransactionRuleResource extends Resource
                             ->minItems(1),
                     ]),
 
-                Forms\Components\Section::make('Actions')
+                Section::make('Actions')
                     ->description('What to do when conditions match')
                     ->schema([
-                        Forms\Components\Repeater::make('actions')
+                        Repeater::make('actions')
                             ->schema([
-                                Forms\Components\Select::make('type')
+                                Select::make('type')
                                     ->label('Action Type')
                                     ->options([
                                         'set_category' => 'Set Category',
@@ -139,20 +160,20 @@ class TransactionRuleResource extends Resource
                                     ->required()
                                     ->reactive(),
 
-                                Forms\Components\Select::make('category_id')
+                                Select::make('category_id')
                                     ->label('Category')
                                     ->options(fn () => auth()->user()->categories()->pluck('name', 'id'))
                                     ->searchable()
                                     ->required()
                                     ->visible(fn (Get $get) => $get('type') === 'set_category'),
 
-                                Forms\Components\TextInput::make('tag')
+                                TextInput::make('tag')
                                     ->label('Tag')
                                     ->required()
                                     ->visible(fn (Get $get) => $get('type') === 'add_tag')
                                     ->placeholder('e.g., subscription'),
 
-                                Forms\Components\TextInput::make('notes')
+                                TextInput::make('notes')
                                     ->label('Notes')
                                     ->required()
                                     ->visible(fn (Get $get) => $get('type') === 'set_notes')
@@ -171,11 +192,11 @@ class TransactionRuleResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('name')
+                TextColumn::make('name')
                     ->searchable()
                     ->sortable(),
 
-                Tables\Columns\TextColumn::make('apply_to')
+                TextColumn::make('apply_to')
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
                         'all' => 'gray',
@@ -184,32 +205,32 @@ class TransactionRuleResource extends Resource
                         'transfer' => 'info',
                     }),
 
-                Tables\Columns\TextColumn::make('conditions')
+                TextColumn::make('conditions')
                     ->label('Conditions')
                     ->formatStateUsing(fn ($state) => count($state).' condition(s)')
                     ->badge()
                     ->color('gray'),
 
-                Tables\Columns\TextColumn::make('actions')
+                TextColumn::make('actions')
                     ->label('Actions')
                     ->formatStateUsing(fn ($state) => count($state).' action(s)')
                     ->badge()
                     ->color('primary'),
 
-                Tables\Columns\TextColumn::make('priority')
+                TextColumn::make('priority')
                     ->sortable()
                     ->badge()
                     ->color('warning'),
 
-                Tables\Columns\ToggleColumn::make('is_active')
+                ToggleColumn::make('is_active')
                     ->label('Active'),
 
-                Tables\Columns\IconColumn::make('stop_processing')
+                IconColumn::make('stop_processing')
                     ->label('Stop')
                     ->boolean()
                     ->tooltip('Stops processing other rules'),
 
-                Tables\Columns\TextColumn::make('times_applied')
+                TextColumn::make('times_applied')
                     ->label('Applied')
                     ->formatStateUsing(fn ($state) => number_format($state).' times')
                     ->badge()
@@ -221,7 +242,7 @@ class TransactionRuleResource extends Resource
                     })
                     ->sortable(),
 
-                Tables\Columns\TextColumn::make('last_applied_at')
+                TextColumn::make('last_applied_at')
                     ->label('Last Applied')
                     ->dateTime('M j, Y')
                     ->sortable()
@@ -230,10 +251,10 @@ class TransactionRuleResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: false),
             ])
             ->filters([
-                Tables\Filters\TernaryFilter::make('is_active')
+                TernaryFilter::make('is_active')
                     ->label('Active'),
 
-                Tables\Filters\SelectFilter::make('apply_to')
+                SelectFilter::make('apply_to')
                     ->options([
                         'all' => 'All Transactions',
                         'income' => 'Income Only',
@@ -241,9 +262,9 @@ class TransactionRuleResource extends Resource
                         'transfer' => 'Transfer Only',
                     ]),
             ])
-            ->actions([
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\Action::make('duplicate')
+            ->recordActions([
+                EditAction::make(),
+                Action::make('duplicate')
                     ->label('Duplicate')
                     ->icon('heroicon-o-document-duplicate')
                     ->color('gray')
@@ -254,13 +275,13 @@ class TransactionRuleResource extends Resource
                         $newRule->last_applied_at = null;
                         $newRule->save();
 
-                        \Filament\Notifications\Notification::make()
+                        Notification::make()
                             ->title('Rule Duplicated')
                             ->success()
                             ->body("Created copy: {$newRule->name}")
                             ->send();
                     }),
-                Tables\Actions\Action::make('test')
+                Action::make('test')
                     ->label('Test')
                     ->icon('heroicon-o-beaker')
                     ->color('info')
@@ -276,10 +297,10 @@ class TransactionRuleResource extends Resource
                             ->get()
                             ->filter(fn ($transaction) => $record->matches($transaction)),
                     ])),
-                Tables\Actions\DeleteAction::make(),
+                DeleteAction::make(),
             ])
-            ->bulkActions([
-                Tables\Actions\BulkAction::make('apply_to_all')
+            ->toolbarActions([
+                BulkAction::make('apply_to_all')
                     ->label('Apply to All Transactions')
                     ->icon('heroicon-o-play')
                     ->color('success')
@@ -299,7 +320,7 @@ class TransactionRuleResource extends Resource
                             }
                         }
 
-                        \Filament\Notifications\Notification::make()
+                        Notification::make()
                             ->title('Rules Applied')
                             ->success()
                             ->body("Applied rules to {$totalApplied} transactions.")
@@ -307,8 +328,8 @@ class TransactionRuleResource extends Resource
                     })
                     ->deselectRecordsAfterCompletion(),
 
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
                 ]),
             ])
             ->defaultSort('priority', 'desc')
@@ -325,9 +346,9 @@ class TransactionRuleResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListTransactionRules::route('/'),
-            'create' => Pages\CreateTransactionRule::route('/create'),
-            'edit' => Pages\EditTransactionRule::route('/{record}/edit'),
+            'index' => ListTransactionRules::route('/'),
+            'create' => CreateTransactionRule::route('/create'),
+            'edit' => EditTransactionRule::route('/{record}/edit'),
         ];
     }
 

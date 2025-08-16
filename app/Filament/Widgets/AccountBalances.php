@@ -2,6 +2,9 @@
 
 namespace App\Filament\Widgets;
 
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Columns\BadgeColumn;
+use Filament\Actions\Action;
 use App\Models\Account;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -24,9 +27,10 @@ class AccountBalances extends BaseWidget
                     ->where('is_active', true)
             )
             ->columns([
-                Tables\Columns\TextColumn::make('name'),
+                TextColumn::make('name'),
 
-                Tables\Columns\BadgeColumn::make('type')
+                TextColumn::make('type')
+                    ->badge()
                     ->colors([
                         'primary' => 'bank',
                         'success' => 'cash',
@@ -35,13 +39,13 @@ class AccountBalances extends BaseWidget
                     ])
                     ->formatStateUsing(fn (string $state): string => ucwords(str_replace('_', ' ', $state))),
 
-                Tables\Columns\TextColumn::make('balance')
+                TextColumn::make('balance')
                     ->label('Balance/Outstanding')
                     ->formatStateUsing(fn (Account $record) => $record->formatted_balance)
                     ->color(fn (Account $record) => $record->type === 'loan' ? 'danger' : ($record->balance >= 0 ? 'success' : 'danger')),
             ])
-            ->actions([
-                Tables\Actions\Action::make('view')
+            ->recordActions([
+                Action::make('view')
                     ->url(fn (Account $record): string => route('filament.admin.resources.accounts.edit', $record))
                     ->icon('heroicon-m-eye'),
             ])

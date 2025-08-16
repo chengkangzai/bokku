@@ -2,13 +2,41 @@
 
 namespace App\Filament\Resources;
 
+use Filament\Schemas\Schema;
+use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Section;
+use Filament\Forms\Components\Radio;
+use Filament\Forms\Components\TextInput;
+use Filament\Schemas\Components\Utilities\Get;
+use App\Models\Account;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Select;
+use App\Models\Category;
+use Filament\Forms\Components\ColorPicker;
+use Filament\Forms\Components\Hidden;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\Toggle;
+use Filament\Forms\Components\Placeholder;
+use App\Models\TransactionRule;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Columns\IconColumn;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Filters\TernaryFilter;
+use Filament\Actions\Action;
+use Filament\Notifications\Notification;
+use Filament\Actions\EditAction;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\BulkAction;
+use Filament\Actions\DeleteBulkAction;
+use App\Filament\Resources\TransactionResource\Pages\ListTransactions;
+use App\Filament\Resources\TransactionResource\Pages\CreateTransaction;
+use App\Filament\Resources\TransactionResource\Pages\EditTransaction;
 use App\Filament\Resources\TransactionResource\Pages;
 use App\Models\Transaction;
 use Filament\Forms;
 use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
 use Filament\Forms\Components\SpatieTagsInput;
-use Filament\Forms\Form;
-use Filament\Forms\Get;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Columns\SpatieMediaLibraryImageColumn;
@@ -21,26 +49,26 @@ class TransactionResource extends Resource
 {
     protected static ?string $model = Transaction::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-arrows-right-left';
+    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-arrows-right-left';
 
-    protected static ?string $navigationGroup = 'Finance';
+    protected static string | \UnitEnum | null $navigationGroup = 'Finance';
 
     protected static ?int $navigationSort = 2;
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
-            ->schema([
-                Forms\Components\Grid::make([
+        return $schema
+            ->components([
+                Grid::make([
                     'default' => 1,
                     'lg' => 3,
                 ])
                     ->schema([
-                        Forms\Components\Grid::make(1)
+                        Grid::make(1)
                             ->schema([
-                                Forms\Components\Section::make('Transaction Details')
+                                Section::make('Transaction Details')
                                     ->schema([
-                                        Forms\Components\Radio::make('type')
+                                        Radio::make('type')
                                             ->required()
                                             ->options([
                                                 'income' => '💰 Income',
@@ -59,7 +87,7 @@ class TransactionResource extends Resource
                                             ->afterStateUpdated(fn (callable $set) => $set('category_id', null))
                                             ->columnSpanFull(),
 
-                                        Forms\Components\TextInput::make('amount')
+                                        TextInput::make('amount')
                                             ->required()
                                             ->numeric()
                                             ->prefix('RM')
@@ -74,7 +102,7 @@ class TransactionResource extends Resource
                                                     return null;
                                                 }
 
-                                                $account = \App\Models\Account::find($accountId);
+                                                $account = Account::find($accountId);
 
                                                 if (! $account) {
                                                     return null;
@@ -83,12 +111,12 @@ class TransactionResource extends Resource
                                                 return $account->getBalanceWarningMessage($amount, $type);
                                             }),
 
-                                        Forms\Components\DatePicker::make('date')
+                                        DatePicker::make('date')
                                             ->required()
                                             ->default(now())
                                             ->maxDate(now()),
 
-                                        Forms\Components\TextInput::make('description')
+                                        TextInput::make('description')
                                             ->required()
                                             ->maxLength(255)
                                             ->placeholder('e.g., Grocery shopping at Walmart'),
@@ -97,9 +125,9 @@ class TransactionResource extends Resource
                                         'sm' => 2,
                                     ]),
 
-                                Forms\Components\Section::make('Accounts & Category')
+                                Section::make('Accounts & Category')
                                     ->schema([
-                                        Forms\Components\Select::make('account_id')
+                                        Select::make('account_id')
                                             ->label(fn (Get $get) => match ($get('type')) {
                                                 'income' => 'To Account',
                                                 'expense', 'transfer' => 'From Account',
@@ -117,7 +145,7 @@ class TransactionResource extends Resource
                                             ->helperText(fn (Get $get) => empty($get('type')) ? 'Please select a transaction type first' : null
                                             ),
 
-                                        Forms\Components\Select::make('to_account_id')
+                                        Select::make('to_account_id')
                                             ->label('To Account')
                                             ->relationship(
                                                 'toAccount',
@@ -128,7 +156,7 @@ class TransactionResource extends Resource
                                             ->native(false)
                                             ->visible(fn (Get $get) => $get('type') === 'transfer'),
 
-                                        Forms\Components\Select::make('category_id')
+                                        Select::make('category_id')
                                             ->relationship(
                                                 'category',
                                                 'name',
@@ -149,7 +177,7 @@ class TransactionResource extends Resource
                                                     return null;
                                                 }
 
-                                                $category = \App\Models\Category::find($categoryId);
+                                                $category = Category::find($categoryId);
 
                                                 if (! $category) {
                                                     return null;
@@ -158,11 +186,11 @@ class TransactionResource extends Resource
                                                 return $category->getBudgetWarning($amount);
                                             })
                                             ->createOptionForm(fn (Get $get) => [
-                                                Forms\Components\TextInput::make('name')
+                                                TextInput::make('name')
                                                     ->required()
                                                     ->maxLength(255)
                                                     ->placeholder('e.g., Groceries, Salary'),
-                                                Forms\Components\Select::make('type')
+                                                Select::make('type')
                                                     ->required()
                                                     ->options([
                                                         'income' => 'Income',
@@ -171,19 +199,19 @@ class TransactionResource extends Resource
                                                     ->default($get('type'))
                                                     ->disabled()
                                                     ->dehydrated(),
-                                                Forms\Components\ColorPicker::make('color')
+                                                ColorPicker::make('color')
                                                     ->required()
                                                     ->default('#6b7280'),
-                                                Forms\Components\Hidden::make('user_id')
+                                                Hidden::make('user_id')
                                                     ->default(auth()->id()),
-                                                Forms\Components\Hidden::make('sort_order')
+                                                Hidden::make('sort_order')
                                                     ->default(0),
                                             ])
                                             ->createOptionUsing(function (array $data, Get $get) {
                                                 $data['user_id'] = auth()->id();
                                                 $data['type'] = $get('type');
 
-                                                return \App\Models\Category::create($data)->getKey();
+                                                return Category::create($data)->getKey();
                                             })
                                             ->createOptionModalHeading('Create New Category')
                                             ->visible(fn (Get $get) => ! empty($get('type')) && in_array($get('type'), ['income', 'expense'])),
@@ -197,9 +225,9 @@ class TransactionResource extends Resource
                                 'lg' => 2,
                             ]),
 
-                        Forms\Components\Grid::make(1)
+                        Grid::make(1)
                             ->schema([
-                                Forms\Components\Section::make('Attachments')
+                                Section::make('Attachments')
                                     ->schema([
                                         SpatieMediaLibraryFileUpload::make('receipts')
                                             ->collection('receipts')
@@ -220,13 +248,13 @@ class TransactionResource extends Resource
                                             ->conversion('thumb'),
                                     ]),
 
-                                Forms\Components\Section::make('Additional Information')
+                                Section::make('Additional Information')
                                     ->schema([
-                                        Forms\Components\TextInput::make('reference')
+                                        TextInput::make('reference')
                                             ->maxLength(255)
                                             ->placeholder('Check number, invoice #, etc.'),
 
-                                        Forms\Components\Textarea::make('notes')
+                                        Textarea::make('notes')
                                             ->maxLength(65535)
                                             ->columnSpanFull(),
 
@@ -238,14 +266,14 @@ class TransactionResource extends Resource
                                             ->columnSpanFull()
                                             ->placeholder('Add tags to organize transactions'),
 
-                                        Forms\Components\Toggle::make('is_reconciled')
+                                        Toggle::make('is_reconciled')
                                             ->label('Reconciled')
                                             ->helperText('Mark as reconciled when verified against bank statement'),
                                     ]),
 
-                                Forms\Components\Section::make('Automation')
+                                Section::make('Automation')
                                     ->schema([
-                                        Forms\Components\Placeholder::make('matching_rules')
+                                        Placeholder::make('matching_rules')
                                             ->label('Matching Rules')
                                             ->content(function ($get) {
                                                 $description = $get('description');
@@ -257,7 +285,7 @@ class TransactionResource extends Resource
                                                 }
 
                                                 // Find matching rules
-                                                $rules = \App\Models\TransactionRule::where('user_id', auth()->id())
+                                                $rules = TransactionRule::where('user_id', auth()->id())
                                                     ->where('is_active', true)
                                                     ->where(function ($query) use ($type) {
                                                         $query->where('apply_to', 'all')
@@ -269,7 +297,7 @@ class TransactionResource extends Resource
                                                 $matchingRules = [];
                                                 foreach ($rules as $rule) {
                                                     // Create a temporary transaction object for matching
-                                                    $tempTransaction = new \App\Models\Transaction([
+                                                    $tempTransaction = new Transaction([
                                                         'description' => $description ?? '',
                                                         'amount' => $amount ?? 0,
                                                         'type' => $type ?? 'expense',
@@ -305,12 +333,12 @@ class TransactionResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('date')
+                TextColumn::make('date')
                     ->date()
                     ->sortable()
                     ->searchable(),
 
-                Tables\Columns\TextColumn::make('type')
+                TextColumn::make('type')
                     ->badge()
                     ->colors([
                         'success' => 'income',
@@ -318,11 +346,11 @@ class TransactionResource extends Resource
                         'primary' => 'transfer',
                     ]),
 
-                Tables\Columns\TextColumn::make('description')
+                TextColumn::make('description')
                     ->searchable()
                     ->limit(30),
 
-                Tables\Columns\TextColumn::make('amount')
+                TextColumn::make('amount')
                     ->money('myr')
                     ->sortable()
                     ->color(fn (Transaction $record) => match ($record->type) {
@@ -331,30 +359,30 @@ class TransactionResource extends Resource
                         'transfer' => 'primary',
                     }),
 
-                Tables\Columns\TextColumn::make('account.name')
+                TextColumn::make('account.name')
                     ->label('Account')
                     ->sortable()
                     ->visible(fn () => true),
 
-                Tables\Columns\TextColumn::make('category.name')
+                TextColumn::make('category.name')
                     ->placeholder('—')
                     ->sortable(),
 
-                Tables\Columns\TextColumn::make('toAccount.name')
+                TextColumn::make('toAccount.name')
                     ->label('To')
                     ->placeholder('—')
                     ->toggleable(),
 
-                Tables\Columns\IconColumn::make('is_reconciled')
+                IconColumn::make('is_reconciled')
                     ->boolean()
                     ->label('✓'),
 
-                Tables\Columns\TextColumn::make('reference')
+                TextColumn::make('reference')
                     ->searchable()
                     ->placeholder('—')
                     ->toggleable(isToggledHiddenByDefault: true),
 
-                Tables\Columns\TextColumn::make('appliedRule.name')
+                TextColumn::make('appliedRule.name')
                     ->label('Applied Rule')
                     ->badge()
                     ->color('info')
@@ -373,14 +401,14 @@ class TransactionResource extends Resource
                     ->limitedRemainingText(),
             ])
             ->filters([
-                Tables\Filters\SelectFilter::make('type')
+                SelectFilter::make('type')
                     ->options([
                         'income' => 'Income',
                         'expense' => 'Expense',
                         'transfer' => 'Transfer',
                     ]),
 
-                Tables\Filters\SelectFilter::make('account_id')
+                SelectFilter::make('account_id')
                     ->label('Account')
                     ->relationship(
                         'account',
@@ -388,7 +416,7 @@ class TransactionResource extends Resource
                         fn (Builder $query) => $query->where('user_id', auth()->id())
                     ),
 
-                Tables\Filters\SelectFilter::make('category_id')
+                SelectFilter::make('category_id')
                     ->label('Category')
                     ->relationship(
                         'category',
@@ -396,14 +424,14 @@ class TransactionResource extends Resource
                         fn (Builder $query) => $query->where('user_id', auth()->id())
                     ),
 
-                Tables\Filters\TernaryFilter::make('is_reconciled')
+                TernaryFilter::make('is_reconciled')
                     ->label('Reconciled')
                     ->placeholder('All transactions')
                     ->trueLabel('Reconciled only')
                     ->falseLabel('Unreconciled only'),
             ])
-            ->actions([
-                Tables\Actions\Action::make('apply_rules')
+            ->recordActions([
+                Action::make('apply_rules')
                     ->label('Apply Rules')
                     ->icon('heroicon-o-sparkles')
                     ->color('info')
@@ -411,17 +439,17 @@ class TransactionResource extends Resource
                     ->modalHeading('Apply Rules')
                     ->modalDescription('This will apply matching automation rules to this transaction.')
                     ->action(function ($record) {
-                        \App\Models\TransactionRule::applyRules($record);
+                        TransactionRule::applyRules($record);
                         $record->refresh();
 
                         if ($record->applied_rule_id) {
-                            \Filament\Notifications\Notification::make()
+                            Notification::make()
                                 ->title('Rules Applied')
                                 ->success()
                                 ->body("Applied rule: {$record->appliedRule->name}")
                                 ->send();
                         } else {
-                            \Filament\Notifications\Notification::make()
+                            Notification::make()
                                 ->title('No Rules Applied')
                                 ->warning()
                                 ->body('No matching rules found for this transaction.')
@@ -429,12 +457,12 @@ class TransactionResource extends Resource
                         }
                     })
                     ->visible(fn ($record) => ! $record->applied_rule_id),
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
+                EditAction::make(),
+                DeleteAction::make(),
             ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\BulkAction::make('apply_rules_bulk')
+            ->toolbarActions([
+                BulkActionGroup::make([
+                    BulkAction::make('apply_rules_bulk')
                         ->label('Apply Rules')
                         ->icon('heroicon-o-sparkles')
                         ->color('info')
@@ -447,7 +475,7 @@ class TransactionResource extends Resource
 
                             foreach ($records as $transaction) {
                                 if (! $transaction->applied_rule_id) {
-                                    \App\Models\TransactionRule::applyRules($transaction);
+                                    TransactionRule::applyRules($transaction);
                                     $transaction->refresh();
 
                                     if ($transaction->applied_rule_id) {
@@ -460,14 +488,14 @@ class TransactionResource extends Resource
                                 }
                             }
 
-                            \Filament\Notifications\Notification::make()
+                            Notification::make()
                                 ->title('Rules Applied')
                                 ->success()
                                 ->body("Applied rules to {$applied} transaction(s). Skipped {$skipped}.")
                                 ->send();
                         })
                         ->deselectRecordsAfterCompletion(),
-                    Tables\Actions\DeleteBulkAction::make(),
+                    DeleteBulkAction::make(),
                 ]),
             ])
             ->defaultSort('date', 'desc')
@@ -484,9 +512,9 @@ class TransactionResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListTransactions::route('/'),
-            'create' => Pages\CreateTransaction::route('/create'),
-            'edit' => Pages\EditTransaction::route('/{record}/edit'),
+            'index' => ListTransactions::route('/'),
+            'create' => CreateTransaction::route('/create'),
+            'edit' => EditTransaction::route('/{record}/edit'),
         ];
     }
 

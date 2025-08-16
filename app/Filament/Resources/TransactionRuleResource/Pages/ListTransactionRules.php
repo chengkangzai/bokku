@@ -2,6 +2,10 @@
 
 namespace App\Filament\Resources\TransactionRuleResource\Pages;
 
+use Filament\Actions\Action;
+use Filament\Forms\Components\Select;
+use Filament\Notifications\Notification;
+use Filament\Actions\CreateAction;
 use App\Filament\Resources\TransactionRuleResource;
 use App\Models\TransactionRule;
 use Filament\Actions;
@@ -14,15 +18,15 @@ class ListTransactionRules extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            Actions\Action::make('templates')
+            Action::make('templates')
                 ->label('Use Template')
                 ->icon('heroicon-o-document-text')
                 ->color('info')
                 ->modalHeading('Create Rule from Template')
                 ->modalDescription('Choose a template to quickly create a common rule')
                 ->modalSubmitActionLabel('Create Rule')
-                ->form([
-                    \Filament\Forms\Components\Select::make('template')
+                ->schema([
+                    Select::make('template')
                         ->label('Template')
                         ->options([
                             'ride_sharing' => '🚗 Categorize Ride Sharing (Uber/Grab)',
@@ -142,7 +146,7 @@ class ListTransactionRules extends ListRecords
                             'stop_processing' => false,
                         ]);
 
-                        \Filament\Notifications\Notification::make()
+                        Notification::make()
                             ->title('Rule Created from Template')
                             ->success()
                             ->body("Created rule: {$rule->name}")
@@ -151,7 +155,7 @@ class ListTransactionRules extends ListRecords
                         return redirect(TransactionRuleResource::getUrl('edit', ['record' => $rule]));
                     }
                 }),
-            Actions\CreateAction::make(),
+            CreateAction::make(),
         ];
     }
 }

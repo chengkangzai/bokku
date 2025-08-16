@@ -2,10 +2,27 @@
 
 namespace App\Filament\Resources;
 
+use Filament\Schemas\Schema;
+use Filament\Schemas\Components\Section;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\ColorPicker;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Columns\BadgeColumn;
+use Filament\Tables\Columns\ColorColumn;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Actions\EditAction;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteBulkAction;
+use Illuminate\Database\Eloquent\Builder;
+use App\Filament\Resources\CategoryResource\RelationManagers\TransactionsRelationManager;
+use App\Filament\Resources\CategoryResource\Pages\ListCategories;
+use App\Filament\Resources\CategoryResource\Pages\CreateCategory;
+use App\Filament\Resources\CategoryResource\Pages\EditCategory;
 use App\Filament\Resources\CategoryResource\Pages;
 use App\Models\Category;
 use Filament\Forms;
-use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -14,24 +31,24 @@ class CategoryResource extends Resource
 {
     protected static ?string $model = Category::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-tag';
+    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-tag';
 
-    protected static ?string $navigationGroup = 'Finance';
+    protected static string | \UnitEnum | null $navigationGroup = 'Finance';
 
     protected static ?int $navigationSort = 3;
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
-            ->schema([
-                Forms\Components\Section::make('Category Information')
+        return $schema
+            ->components([
+                Section::make('Category Information')
                     ->schema([
-                        Forms\Components\TextInput::make('name')
+                        TextInput::make('name')
                             ->required()
                             ->maxLength(255)
                             ->placeholder('e.g., Groceries, Salary, Entertainment'),
 
-                        Forms\Components\Select::make('type')
+                        Select::make('type')
                             ->required()
                             ->options([
                                 'income' => 'Income',
@@ -39,16 +56,16 @@ class CategoryResource extends Resource
                             ])
                             ->native(false),
 
-                        Forms\Components\TextInput::make('icon')
+                        TextInput::make('icon')
                             ->maxLength(255)
                             ->placeholder('e.g., shopping-cart')
                             ->helperText('Optional: Heroicon name for display'),
 
-                        Forms\Components\ColorPicker::make('color')
+                        ColorPicker::make('color')
                             ->required()
                             ->default('#6b7280'),
 
-                        Forms\Components\TextInput::make('sort_order')
+                        TextInput::make('sort_order')
                             ->numeric()
                             ->default(0)
                             ->helperText('Lower numbers appear first'),
@@ -60,70 +77,70 @@ class CategoryResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('name')
+                TextColumn::make('name')
                     ->searchable()
                     ->sortable(),
 
-                Tables\Columns\BadgeColumn::make('type')
+                BadgeColumn::make('type')
                     ->colors([
                         'success' => 'income',
                         'danger' => 'expense',
                     ]),
 
-                Tables\Columns\ColorColumn::make('color')
+                ColorColumn::make('color')
                     ->copyable()
                     ->copyMessage('Color copied')
                     ->copyMessageDuration(1500),
 
-                Tables\Columns\TextColumn::make('icon')
+                TextColumn::make('icon')
                     ->placeholder('—')
                     ->toggleable(),
 
-                Tables\Columns\TextColumn::make('transactions_count')
+                TextColumn::make('transactions_count')
                     ->counts('transactions')
                     ->label('Transactions')
                     ->sortable(),
 
-                Tables\Columns\TextColumn::make('sort_order')
+                TextColumn::make('sort_order')
                     ->numeric()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                Tables\Filters\SelectFilter::make('type')
+                SelectFilter::make('type')
                     ->options([
                         'income' => 'Income',
                         'expense' => 'Expense',
                     ]),
             ])
-            ->actions([
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make()
+            ->recordActions([
+                EditAction::make(),
+                DeleteAction::make()
                     ->requiresConfirmation(),
             ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+            ->toolbarActions([
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
                 ]),
             ])
             ->defaultSort('sort_order')
             ->reorderable('sort_order')
-            ->modifyQueryUsing(fn (\Illuminate\Database\Eloquent\Builder $query) => $query->where('user_id', auth()->id()));
+            ->modifyQueryUsing(fn (Builder $query) => $query->where('user_id', auth()->id()));
     }
 
     public static function getRelations(): array
     {
         return [
-            CategoryResource\RelationManagers\TransactionsRelationManager::class,
+            TransactionsRelationManager::class,
         ];
     }
 
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListCategories::route('/'),
-            'create' => Pages\CreateCategory::route('/create'),
-            'edit' => Pages\EditCategory::route('/{record}/edit'),
+            'index' => ListCategories::route('/'),
+            'create' => CreateCategory::route('/create'),
+            'edit' => EditCategory::route('/{record}/edit'),
         ];
     }
 

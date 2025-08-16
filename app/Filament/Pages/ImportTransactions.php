@@ -2,14 +2,17 @@
 
 namespace App\Filament\Pages;
 
+use Filament\Forms\Components\Repeater;
+use Filament\Schemas\Schema;
+use Filament\Schemas\Components\Wizard;
+use Filament\Schemas\Components\Wizard\Step;
+use Filament\Schemas\Components\Actions;
+use Filament\Actions\Action;
+use Exception;
 use App\Models\Account;
 use App\Models\Category;
 use App\Models\Transaction;
 use App\Services\Import\UnifiedImportHandler;
-use Awcodes\TableRepeater\Components\TableRepeater;
-use Awcodes\TableRepeater\Header;
-use Filament\Forms\Components\Actions;
-use Filament\Forms\Components\Actions\Action;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Hidden;
@@ -17,11 +20,8 @@ use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Wizard;
-use Filament\Forms\Components\Wizard\Step;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
-use Filament\Forms\Form;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Illuminate\Support\Facades\Auth;
@@ -32,7 +32,7 @@ class ImportTransactions extends Page implements HasForms
 {
     use InteractsWithForms;
 
-    protected static ?string $navigationIcon = 'heroicon-o-arrow-down-tray';
+    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-arrow-down-tray';
 
     protected static ?string $navigationLabel = 'Import Transactions';
 
@@ -40,11 +40,11 @@ class ImportTransactions extends Page implements HasForms
 
     protected static ?string $slug = 'import-transactions';
 
-    protected static ?string $navigationGroup = 'Finance';
+    protected static string | \UnitEnum | null $navigationGroup = 'Finance';
 
     protected static ?int $navigationSort = 50;
 
-    protected static string $view = 'filament.pages.import-transactions-wizard';
+    protected string $view = 'filament.pages.import-transactions-wizard';
 
     // Wizard form state
     public ?array $data = [];
@@ -68,10 +68,10 @@ class ImportTransactions extends Page implements HasForms
         $this->form->fill();
     }
 
-    public function form(Form $form): Form
+    public function form(Schema $schema): Schema
     {
-        return $form
-            ->schema([
+        return $schema
+            ->components([
                 Wizard::make([
                     Step::make('Upload & Configure')
                         ->description('Upload your bank statement and select import settings')
@@ -136,22 +136,22 @@ class ImportTransactions extends Page implements HasForms
                                 ->content(fn () => new HtmlString($this->getImportSummary()))
                                 ->columnSpanFull(),
 
-                            TableRepeater::make('transactions')
+                            Repeater::make('transactions')
                                 ->label('Extracted Transactions')
-                                ->headers([
-                                    Header::make('date')
+                                ->table([
+                                    Repeater\TableColumn::make('date')
                                         ->width('120px')
                                         ->markAsRequired(),
-                                    Header::make('description')
+                                    Repeater\TableColumn::make('description')
                                         ->width('300px')
                                         ->markAsRequired(),
-                                    Header::make('amount')
+                                    Repeater\TableColumn::make('amount')
                                         ->width('120px')
                                         ->markAsRequired(),
-                                    Header::make('type')
+                                    Repeater\TableColumn::make('type')
                                         ->width('120px')
                                         ->markAsRequired(),
-                                    Header::make('category')
+                                    Repeater\TableColumn::make('category')
                                         ->width('150px'),
                                 ])
                                 ->schema([
@@ -238,7 +238,7 @@ class ImportTransactions extends Page implements HasForms
             }
 
             if (! $uploadedFile) {
-                throw new \Exception('Unable to process the uploaded file');
+                throw new Exception('Unable to process the uploaded file');
             }
 
             // Get file content
@@ -263,7 +263,7 @@ class ImportTransactions extends Page implements HasForms
                 ->success()
                 ->send();
 
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             Notification::make()
                 ->title('Processing failed')
                 ->body($e->getMessage())
@@ -336,7 +336,7 @@ class ImportTransactions extends Page implements HasForms
                     ]);
 
                     $imported++;
-                } catch (\Exception $e) {
+                } catch (Exception $e) {
                     $errors[] = 'Row '.($index + 1).": {$e->getMessage()}";
                 }
             }
@@ -363,7 +363,7 @@ class ImportTransactions extends Page implements HasForms
                     ->send();
             }
 
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             Notification::make()
                 ->title('Import failed')
                 ->body($e->getMessage())

@@ -2,6 +2,9 @@
 
 namespace App\Filament\Widgets;
 
+use Filament\Tables\Columns\TextColumn;
+use Filament\Actions\Action;
+use Filament\Notifications\Notification;
 use App\Models\RecurringTransaction;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -26,7 +29,7 @@ class UpcomingRecurringTransactions extends BaseWidget
                     ->orderBy('next_date')
             )
             ->columns([
-                Tables\Columns\TextColumn::make('type')
+                TextColumn::make('type')
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
                         'income' => 'success',
@@ -39,10 +42,10 @@ class UpcomingRecurringTransactions extends BaseWidget
                         'transfer' => 'heroicon-o-arrow-right-circle',
                     }),
 
-                Tables\Columns\TextColumn::make('description')
+                TextColumn::make('description')
                     ->weight('semibold'),
 
-                Tables\Columns\TextColumn::make('amount')
+                TextColumn::make('amount')
                     ->formatStateUsing(fn ($state) => 'RM '.number_format($state, 2))
                     ->color(fn ($record) => match ($record->type) {
                         'income' => 'success',
@@ -50,22 +53,22 @@ class UpcomingRecurringTransactions extends BaseWidget
                         default => 'gray',
                     }),
 
-                Tables\Columns\TextColumn::make('next_date')
+                TextColumn::make('next_date')
                     ->label('Due')
                     ->date()
                     ->description(fn ($record) => $record->next_date->diffForHumans())
                     ->color(fn ($record) => $record->isDue() ? 'danger' : 'gray'),
 
-                Tables\Columns\TextColumn::make('frequency_label')
+                TextColumn::make('frequency_label')
                     ->label('Frequency')
                     ->badge()
                     ->color('gray'),
 
-                Tables\Columns\TextColumn::make('account.name')
+                TextColumn::make('account.name')
                     ->label('Account'),
             ])
-            ->actions([
-                Tables\Actions\Action::make('process')
+            ->recordActions([
+                Action::make('process')
                     ->label('Run')
                     ->icon('heroicon-o-play')
                     ->color('success')
@@ -76,7 +79,7 @@ class UpcomingRecurringTransactions extends BaseWidget
                     ->action(function (RecurringTransaction $record) {
                         $transaction = $record->generateTransaction();
                         if ($transaction) {
-                            \Filament\Notifications\Notification::make()
+                            Notification::make()
                                 ->title('Transaction Created')
                                 ->success()
                                 ->body("Transaction for {$record->description} has been created.")
@@ -84,7 +87,7 @@ class UpcomingRecurringTransactions extends BaseWidget
                         }
                     }),
 
-                Tables\Actions\Action::make('skip')
+                Action::make('skip')
                     ->label('Skip')
                     ->icon('heroicon-o-forward')
                     ->color('warning')
@@ -94,7 +97,7 @@ class UpcomingRecurringTransactions extends BaseWidget
                     ->modalDescription('Skip this occurrence and move to the next date?')
                     ->action(function (RecurringTransaction $record) {
                         $record->skipOnce();
-                        \Filament\Notifications\Notification::make()
+                        Notification::make()
                             ->title('Skipped')
                             ->success()
                             ->body("Next: {$record->next_date->format('M d, Y')}")
@@ -106,7 +109,7 @@ class UpcomingRecurringTransactions extends BaseWidget
             ->emptyStateDescription('Your recurring transactions will appear here when they are due')
             ->emptyStateIcon('heroicon-o-arrow-path')
             ->emptyStateActions([
-                Tables\Actions\Action::make('create')
+                Action::make('create')
                     ->label('Create Recurring Transaction')
                     ->url(route('filament.admin.resources.recurring-transactions.create'))
                     ->icon('heroicon-o-plus')

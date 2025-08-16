@@ -2,9 +2,16 @@
 
 namespace App\Filament\Resources\AccountResource\RelationManagers;
 
+use Filament\Schemas\Schema;
+use Filament\Forms\Components\TextInput;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Columns\IconColumn;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Filters\TernaryFilter;
+use Filament\Actions\ViewAction;
+use Filament\Actions\EditAction;
 use App\Models\Transaction;
 use Filament\Forms;
-use Filament\Forms\Form;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -18,11 +25,11 @@ class TransactionsRelationManager extends RelationManager
 
     protected static ?string $recordTitleAttribute = 'description';
 
-    public function form(Form $form): Form
+    public function form(Schema $schema): Schema
     {
-        return $form
-            ->schema([
-                Forms\Components\TextInput::make('description')
+        return $schema
+            ->components([
+                TextInput::make('description')
                     ->required()
                     ->maxLength(255),
             ]);
@@ -43,12 +50,12 @@ class TransactionsRelationManager extends RelationManager
                 });
             })
             ->columns([
-                Tables\Columns\TextColumn::make('date')
+                TextColumn::make('date')
                     ->date()
                     ->sortable()
                     ->searchable(),
 
-                Tables\Columns\TextColumn::make('type')
+                TextColumn::make('type')
                     ->badge()
                     ->colors([
                         'success' => 'income',
@@ -56,11 +63,11 @@ class TransactionsRelationManager extends RelationManager
                         'primary' => 'transfer',
                     ]),
 
-                Tables\Columns\TextColumn::make('description')
+                TextColumn::make('description')
                     ->searchable()
                     ->limit(30),
 
-                Tables\Columns\TextColumn::make('amount')
+                TextColumn::make('amount')
                     ->money('myr')
                     ->sortable()
                     ->color(fn (Transaction $record) => match ($record->type) {
@@ -88,12 +95,12 @@ class TransactionsRelationManager extends RelationManager
                         };
                     }),
 
-                Tables\Columns\TextColumn::make('category.name')
+                TextColumn::make('category.name')
                     ->placeholder('—')
                     ->sortable()
                     ->visible(fn () => true),
 
-                Tables\Columns\TextColumn::make('transfer_info')
+                TextColumn::make('transfer_info')
                     ->label('Transfer Details')
                     ->getStateUsing(function (Transaction $record) {
                         if ($record->type !== 'transfer') {
@@ -113,24 +120,24 @@ class TransactionsRelationManager extends RelationManager
                     ->placeholder('—')
                     ->visible(fn () => true),
 
-                Tables\Columns\IconColumn::make('is_reconciled')
+                IconColumn::make('is_reconciled')
                     ->boolean()
                     ->label('✓'),
 
-                Tables\Columns\TextColumn::make('reference')
+                TextColumn::make('reference')
                     ->searchable()
                     ->placeholder('—')
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                Tables\Filters\SelectFilter::make('type')
+                SelectFilter::make('type')
                     ->options([
                         'income' => 'Income',
                         'expense' => 'Expense',
                         'transfer' => 'Transfer',
                     ]),
 
-                Tables\Filters\TernaryFilter::make('is_reconciled')
+                TernaryFilter::make('is_reconciled')
                     ->label('Reconciled')
                     ->placeholder('All transactions')
                     ->trueLabel('Reconciled only')
@@ -139,15 +146,15 @@ class TransactionsRelationManager extends RelationManager
             ->headerActions([
                 // Remove create action as transactions should be created from the main transaction resource
             ])
-            ->actions([
-                Tables\Actions\ViewAction::make()
+            ->recordActions([
+                ViewAction::make()
                     ->url(fn (Transaction $record): string => route('filament.admin.resources.transactions.edit', ['record' => $record])
                     ),
-                Tables\Actions\EditAction::make()
+                EditAction::make()
                     ->url(fn (Transaction $record): string => route('filament.admin.resources.transactions.edit', ['record' => $record])
                     ),
             ])
-            ->bulkActions([
+            ->toolbarActions([
                 // Remove bulk actions for safety
             ])
             ->defaultSort('date', 'desc');

@@ -2,6 +2,9 @@
 
 namespace App\Filament\Widgets;
 
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Columns\BadgeColumn;
+use Filament\Actions\Action;
 use App\Models\Transaction;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -26,21 +29,21 @@ class RecentTransactions extends BaseWidget
                     ->limit(10)
             )
             ->columns([
-                Tables\Columns\TextColumn::make('date')
+                TextColumn::make('date')
                     ->date()
                     ->sortable(),
 
-                Tables\Columns\BadgeColumn::make('type')
+                BadgeColumn::make('type')
                     ->colors([
                         'success' => 'income',
                         'danger' => 'expense',
                         'primary' => 'transfer',
                     ]),
 
-                Tables\Columns\TextColumn::make('description')
+                TextColumn::make('description')
                     ->limit(30),
 
-                Tables\Columns\TextColumn::make('amount')
+                TextColumn::make('amount')
                     ->money('myr')
                     ->color(fn (Transaction $record) => match ($record->type) {
                         'income' => 'success',
@@ -48,14 +51,14 @@ class RecentTransactions extends BaseWidget
                         'transfer' => 'primary',
                     }),
 
-                Tables\Columns\TextColumn::make('account.name')
+                TextColumn::make('account.name')
                     ->label('Account'),
 
-                Tables\Columns\TextColumn::make('category.name')
+                TextColumn::make('category.name')
                     ->placeholder('—'),
             ])
-            ->actions([
-                Tables\Actions\Action::make('view')
+            ->recordActions([
+                Action::make('view')
                     ->url(fn (Transaction $record): string => route('filament.admin.resources.transactions.edit', $record))
                     ->icon('heroicon-m-eye'),
             ])

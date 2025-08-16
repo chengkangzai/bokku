@@ -2,6 +2,8 @@
 
 namespace App\Console\Commands;
 
+use Exception;
+use Log;
 use App\Models\RecurringTransaction;
 use Illuminate\Console\Command;
 
@@ -70,13 +72,13 @@ class ProcessRecurringTransactions extends Command
                         $this->warn("⚠ Skipped (not due): {$recurring->description}");
                     }
                 }
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 $this->error("✗ Failed to process: {$recurring->description}");
                 $this->error("  Error: {$e->getMessage()}");
                 $failed++;
 
                 // Log the error for debugging
-                \Log::error('Failed to process recurring transaction', [
+                Log::error('Failed to process recurring transaction', [
                     'recurring_id' => $recurring->id,
                     'description' => $recurring->description,
                     'error' => $e->getMessage(),

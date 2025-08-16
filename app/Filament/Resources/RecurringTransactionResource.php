@@ -2,10 +2,32 @@
 
 namespace App\Filament\Resources;
 
+use Filament\Schemas\Schema;
+use Filament\Schemas\Components\Section;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\DateTimePicker;
+use Filament\Forms\Components\Toggle;
+use Filament\Forms\Components\Textarea;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Columns\IconColumn;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Filters\TernaryFilter;
+use Filament\Tables\Filters\Filter;
+use Filament\Actions\Action;
+use Filament\Notifications\Notification;
+use Filament\Actions\EditAction;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\BulkAction;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteBulkAction;
+use App\Filament\Resources\RecurringTransactionResource\Pages\ListRecurringTransactions;
+use App\Filament\Resources\RecurringTransactionResource\Pages\CreateRecurringTransaction;
+use App\Filament\Resources\RecurringTransactionResource\Pages\EditRecurringTransaction;
 use App\Filament\Resources\RecurringTransactionResource\Pages;
 use App\Models\RecurringTransaction;
 use Filament\Forms;
-use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -15,21 +37,21 @@ class RecurringTransactionResource extends Resource
 {
     protected static ?string $model = RecurringTransaction::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-arrow-path';
+    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-arrow-path';
 
-    protected static ?string $navigationGroup = 'Finance';
+    protected static string | \UnitEnum | null $navigationGroup = 'Finance';
 
     protected static ?int $navigationSort = 4;
 
     protected static ?string $recordTitleAttribute = 'description';
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
-            ->schema([
-                Forms\Components\Section::make('Transaction Details')
+        return $schema
+            ->components([
+                Section::make('Transaction Details')
                     ->schema([
-                        Forms\Components\Select::make('type')
+                        Select::make('type')
                             ->required()
                             ->options([
                                 'income' => 'Income',
@@ -40,17 +62,17 @@ class RecurringTransactionResource extends Resource
                             ->afterStateUpdated(fn (callable $set) => $set('category_id', null))
                             ->native(false),
 
-                        Forms\Components\TextInput::make('amount')
+                        TextInput::make('amount')
                             ->required()
                             ->numeric()
                             ->prefix('RM')
                             ->minValue(0.01),
 
-                        Forms\Components\TextInput::make('description')
+                        TextInput::make('description')
                             ->required()
                             ->maxLength(255),
 
-                        Forms\Components\Select::make('account_id')
+                        Select::make('account_id')
                             ->label(fn (callable $get) => $get('type') === 'transfer' ? 'From Account' : 'Account')
                             ->relationship(
                                 'account',
@@ -62,7 +84,7 @@ class RecurringTransactionResource extends Resource
                             ->searchable()
                             ->preload(),
 
-                        Forms\Components\Select::make('to_account_id')
+                        Select::make('to_account_id')
                             ->label('To Account')
                             ->relationship(
                                 'toAccount',
@@ -75,7 +97,7 @@ class RecurringTransactionResource extends Resource
                             ->searchable()
                             ->preload(),
 
-                        Forms\Components\Select::make('category_id')
+                        Select::make('category_id')
                             ->label('Category')
                             ->relationship(
                                 'category',
@@ -94,9 +116,9 @@ class RecurringTransactionResource extends Resource
                             ->preload(),
                     ])->columns(2),
 
-                Forms\Components\Section::make('Recurrence Settings')
+                Section::make('Recurrence Settings')
                     ->schema([
-                        Forms\Components\Select::make('frequency')
+                        Select::make('frequency')
                             ->required()
                             ->options([
                                 'daily' => 'Daily',
@@ -113,7 +135,7 @@ class RecurringTransactionResource extends Resource
                             })
                             ->native(false),
 
-                        Forms\Components\TextInput::make('interval')
+                        TextInput::make('interval')
                             ->label('Repeat Every')
                             ->numeric()
                             ->default(1)
@@ -127,7 +149,7 @@ class RecurringTransactionResource extends Resource
                                 default => '',
                             }),
 
-                        Forms\Components\Select::make('day_of_week')
+                        Select::make('day_of_week')
                             ->label('Day of Week')
                             ->options([
                                 0 => 'Sunday',
@@ -142,7 +164,7 @@ class RecurringTransactionResource extends Resource
                             ->required(fn (callable $get) => $get('frequency') === 'weekly')
                             ->native(false),
 
-                        Forms\Components\TextInput::make('day_of_month')
+                        TextInput::make('day_of_month')
                             ->label('Day of Month')
                             ->numeric()
                             ->minValue(1)
@@ -151,7 +173,7 @@ class RecurringTransactionResource extends Resource
                             ->required(fn (callable $get) => $get('frequency') === 'monthly')
                             ->helperText('Enter 31 for last day of month'),
 
-                        Forms\Components\Select::make('month_of_year')
+                        Select::make('month_of_year')
                             ->label('Month')
                             ->options([
                                 1 => 'January',
@@ -172,42 +194,42 @@ class RecurringTransactionResource extends Resource
                             ->native(false),
                     ])->columns(2),
 
-                Forms\Components\Section::make('Schedule')
+                Section::make('Schedule')
                     ->description('Optional: Override automatic scheduling')
                     ->collapsed()
                     ->schema([
-                        Forms\Components\DatePicker::make('start_date')
+                        DatePicker::make('start_date')
                             ->default(now())
                             ->helperText('When this recurring transaction should begin'),
 
-                        Forms\Components\DatePicker::make('next_date')
+                        DatePicker::make('next_date')
                             ->label('Next Occurrence')
                             ->helperText('Leave empty to auto-calculate from start date')
                             ->placeholder('Auto-calculated if empty'),
 
-                        Forms\Components\DatePicker::make('end_date')
+                        DatePicker::make('end_date')
                             ->label('End Date')
                             ->helperText('Leave empty for indefinite recurrence'),
 
-                        Forms\Components\DateTimePicker::make('last_processed')
+                        DateTimePicker::make('last_processed')
                             ->label('Last Processed')
                             ->disabled()
                             ->helperText('Last time a transaction was generated'),
                     ])->columns(2),
 
-                Forms\Components\Section::make('Options')
+                Section::make('Options')
                     ->schema([
-                        Forms\Components\Toggle::make('is_active')
+                        Toggle::make('is_active')
                             ->label('Active')
                             ->default(true)
                             ->helperText('Enable/disable this recurring transaction'),
 
-                        Forms\Components\Toggle::make('auto_process')
+                        Toggle::make('auto_process')
                             ->label('Auto Process')
                             ->default(true)
                             ->helperText('Automatically create transactions on schedule'),
 
-                        Forms\Components\Textarea::make('notes')
+                        Textarea::make('notes')
                             ->columnSpanFull()
                             ->rows(2),
                     ])->columns(2),
@@ -218,7 +240,7 @@ class RecurringTransactionResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('type')
+                TextColumn::make('type')
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
                         'income' => 'success',
@@ -231,53 +253,53 @@ class RecurringTransactionResource extends Resource
                         'transfer' => 'heroicon-o-arrow-right-circle',
                     }),
 
-                Tables\Columns\TextColumn::make('description')
+                TextColumn::make('description')
                     ->searchable()
                     ->sortable(),
 
-                Tables\Columns\TextColumn::make('amount')
+                TextColumn::make('amount')
                     ->formatStateUsing(fn ($state) => 'RM '.number_format($state, 2))
                     ->sortable(),
 
-                Tables\Columns\TextColumn::make('frequency_label')
+                TextColumn::make('frequency_label')
                     ->label('Frequency')
                     ->badge()
                     ->color('gray')
                     ->toggleable(isToggledHiddenByDefault: true),
 
-                Tables\Columns\TextColumn::make('next_date')
+                TextColumn::make('next_date')
                     ->label('Next Occurrence')
                     ->date()
                     ->sortable()
                     ->color(fn ($record) => $record->isDue() ? 'danger' : 'gray'),
 
-                Tables\Columns\TextColumn::make('account.name')
+                TextColumn::make('account.name')
                     ->label('Account')
                     ->toggleable(isToggledHiddenByDefault: true),
 
-                Tables\Columns\TextColumn::make('category.name')
+                TextColumn::make('category.name')
                     ->label('Category')
                     ->toggleable(isToggledHiddenByDefault: true),
 
-                Tables\Columns\IconColumn::make('is_active')
+                IconColumn::make('is_active')
                     ->label('Active')
                     ->boolean()
                     ->sortable(),
 
-                Tables\Columns\IconColumn::make('auto_process')
+                IconColumn::make('auto_process')
                     ->label('Auto')
                     ->boolean()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                Tables\Filters\SelectFilter::make('type')
+                SelectFilter::make('type')
                     ->options([
                         'income' => 'Income',
                         'expense' => 'Expense',
                         'transfer' => 'Transfer',
                     ]),
 
-                Tables\Filters\SelectFilter::make('frequency')
+                SelectFilter::make('frequency')
                     ->options([
                         'daily' => 'Daily',
                         'weekly' => 'Weekly',
@@ -285,19 +307,19 @@ class RecurringTransactionResource extends Resource
                         'annual' => 'Annual',
                     ]),
 
-                Tables\Filters\TernaryFilter::make('is_active')
+                TernaryFilter::make('is_active')
                     ->label('Active'),
 
-                Tables\Filters\Filter::make('due')
+                Filter::make('due')
                     ->query(fn (Builder $query): Builder => $query->due())
                     ->label('Due Now'),
 
-                Tables\Filters\Filter::make('upcoming')
+                Filter::make('upcoming')
                     ->query(fn (Builder $query): Builder => $query->upcoming(7))
                     ->label('Next 7 Days'),
             ])
-            ->actions([
-                Tables\Actions\Action::make('process')
+            ->recordActions([
+                Action::make('process')
                     ->label('Run Now')
                     ->icon('heroicon-o-play')
                     ->color('success')
@@ -307,13 +329,13 @@ class RecurringTransactionResource extends Resource
                     ->action(function (RecurringTransaction $record) {
                         $transaction = $record->generateTransaction();
                         if ($transaction) {
-                            \Filament\Notifications\Notification::make()
+                            Notification::make()
                                 ->title('Transaction Created')
                                 ->success()
                                 ->body("Transaction for {$record->description} has been created.")
                                 ->send();
                         } else {
-                            \Filament\Notifications\Notification::make()
+                            Notification::make()
                                 ->title('Transaction Not Due')
                                 ->warning()
                                 ->body('This recurring transaction is not due yet.')
@@ -321,7 +343,7 @@ class RecurringTransactionResource extends Resource
                         }
                     }),
 
-                Tables\Actions\Action::make('skip')
+                Action::make('skip')
                     ->label('Skip Once')
                     ->icon('heroicon-o-forward')
                     ->color('warning')
@@ -330,18 +352,18 @@ class RecurringTransactionResource extends Resource
                     ->modalDescription('This will skip the current occurrence and move to the next scheduled date.')
                     ->action(function (RecurringTransaction $record) {
                         $record->skipOnce();
-                        \Filament\Notifications\Notification::make()
+                        Notification::make()
                             ->title('Occurrence Skipped')
                             ->success()
                             ->body("Next occurrence: {$record->next_date->format('M d, Y')}")
                             ->send();
                     }),
 
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
+                EditAction::make(),
+                DeleteAction::make(),
             ])
-            ->bulkActions([
-                Tables\Actions\BulkAction::make('process_now')
+            ->toolbarActions([
+                BulkAction::make('process_now')
                     ->label('Run Now')
                     ->icon('heroicon-o-play')
                     ->color('success')
@@ -366,13 +388,13 @@ class RecurringTransactionResource extends Resource
                         }
 
                         if ($processed > 0) {
-                            \Filament\Notifications\Notification::make()
+                            Notification::make()
                                 ->title('Transactions Created')
                                 ->success()
                                 ->body("Created {$processed} transaction(s). Skipped {$skipped}.")
                                 ->send();
                         } else {
-                            \Filament\Notifications\Notification::make()
+                            Notification::make()
                                 ->title('No Transactions Created')
                                 ->warning()
                                 ->body('All selected recurring transactions were either not due or inactive.')
@@ -381,7 +403,7 @@ class RecurringTransactionResource extends Resource
                     })
                     ->deselectRecordsAfterCompletion(),
 
-                Tables\Actions\BulkAction::make('toggle_active')
+                BulkAction::make('toggle_active')
                     ->label('Toggle Active')
                     ->icon('heroicon-o-arrow-path')
                     ->action(function ($records) {
@@ -391,8 +413,8 @@ class RecurringTransactionResource extends Resource
                     })
                     ->deselectRecordsAfterCompletion(),
 
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
                 ]),
             ])
             ->defaultSort('next_date', 'asc')
@@ -409,9 +431,9 @@ class RecurringTransactionResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListRecurringTransactions::route('/'),
-            'create' => Pages\CreateRecurringTransaction::route('/create'),
-            'edit' => Pages\EditRecurringTransaction::route('/{record}/edit'),
+            'index' => ListRecurringTransactions::route('/'),
+            'create' => CreateRecurringTransaction::route('/create'),
+            'edit' => EditRecurringTransaction::route('/{record}/edit'),
         ];
     }
 

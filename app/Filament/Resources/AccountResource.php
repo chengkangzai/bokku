@@ -2,10 +2,29 @@
 
 namespace App\Filament\Resources;
 
+use Filament\Schemas\Schema;
+use Filament\Schemas\Components\Section;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Select;
+use Filament\Schemas\Components\Utilities\Get;
+use Filament\Forms\Components\ColorPicker;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\Toggle;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Columns\BadgeColumn;
+use Filament\Tables\Columns\IconColumn;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Filters\TernaryFilter;
+use Filament\Actions\EditAction;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteBulkAction;
+use App\Filament\Resources\AccountResource\RelationManagers\TransactionsRelationManager;
+use App\Filament\Resources\AccountResource\Pages\ListAccounts;
+use App\Filament\Resources\AccountResource\Pages\CreateAccount;
+use App\Filament\Resources\AccountResource\Pages\EditAccount;
 use App\Filament\Resources\AccountResource\Pages;
 use App\Models\Account;
 use Filament\Forms;
-use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -15,24 +34,24 @@ class AccountResource extends Resource
 {
     protected static ?string $model = Account::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-wallet';
+    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-wallet';
 
-    protected static ?string $navigationGroup = 'Finance';
+    protected static string | \UnitEnum | null $navigationGroup = 'Finance';
 
     protected static ?int $navigationSort = 1;
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
-            ->schema([
-                Forms\Components\Section::make('Account Information')
+        return $schema
+            ->components([
+                Section::make('Account Information')
                     ->schema([
-                        Forms\Components\TextInput::make('name')
+                        TextInput::make('name')
                             ->required()
                             ->maxLength(255)
                             ->placeholder('e.g., Main Checking Account'),
 
-                        Forms\Components\Select::make('type')
+                        Select::make('type')
                             ->required()
                             ->options([
                                 'bank' => 'Bank Account',
@@ -42,17 +61,17 @@ class AccountResource extends Resource
                             ])
                             ->native(false),
 
-                        Forms\Components\TextInput::make('initial_balance')
+                        TextInput::make('initial_balance')
                             ->required()
                             ->numeric()
                             ->default(0)
                             ->prefix('RM')
-                            ->label(fn (Forms\Get $get) => $get('type') === 'loan' ? 'Total Amount Owed' : 'Initial Balance')
-                            ->helperText(fn (Forms\Get $get) => $get('type') === 'loan'
+                            ->label(fn (Get $get) => $get('type') === 'loan' ? 'Total Amount Owed' : 'Initial Balance')
+                            ->helperText(fn (Get $get) => $get('type') === 'loan'
                                 ? 'Enter as negative amount (e.g., -60000 for RM 60,000 loan)'
                                 : 'Starting balance for this account'),
 
-                        Forms\Components\Select::make('currency')
+                        Select::make('currency')
                             ->required()
                             ->options([
                                 'MYR' => 'MYR - Malaysian Ringgit',
@@ -65,24 +84,24 @@ class AccountResource extends Resource
                             ->native(false),
                     ])->columns(2),
 
-                Forms\Components\Section::make('Additional Details')
+                Section::make('Additional Details')
                     ->schema([
-                        Forms\Components\TextInput::make('account_number')
+                        TextInput::make('account_number')
                             ->maxLength(255)
                             ->placeholder('Last 4 digits for reference'),
 
-                        Forms\Components\ColorPicker::make('color')
+                        ColorPicker::make('color')
                             ->required()
                             ->default('#3b82f6'),
 
-                        Forms\Components\Textarea::make('notes')
+                        Textarea::make('notes')
                             ->maxLength(65535)
                             ->columnSpanFull()
-                            ->placeholder(fn (Forms\Get $get) => $get('type') === 'loan'
+                            ->placeholder(fn (Get $get) => $get('type') === 'loan'
                                 ? 'e.g., Monthly payment: RM 1,200, Due on 15th of each month, Loan ref: HP123456'
                                 : 'Additional notes about this account'),
 
-                        Forms\Components\Toggle::make('is_active')
+                        Toggle::make('is_active')
                             ->required()
                             ->default(true)
                             ->label('Active Account'),
@@ -94,11 +113,11 @@ class AccountResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('name')
+                TextColumn::make('name')
                     ->searchable()
                     ->sortable(),
 
-                Tables\Columns\BadgeColumn::make('type')
+                BadgeColumn::make('type')
                     ->colors([
                         'primary' => 'bank',
                         'success' => 'cash',
@@ -107,33 +126,33 @@ class AccountResource extends Resource
                     ])
                     ->formatStateUsing(fn (string $state): string => ucwords(str_replace('_', ' ', $state))),
 
-                Tables\Columns\TextColumn::make('balance')
+                TextColumn::make('balance')
                     ->label('Balance/Outstanding')
                     ->money(fn (Account $record) => strtolower($record->currency))
                     ->sortable()
                     ->formatStateUsing(fn (Account $record) => $record->formatted_balance)
                     ->color(fn (Account $record) => $record->type === 'loan' ? 'danger' : ($record->balance >= 0 ? 'success' : 'danger')),
 
-                Tables\Columns\TextColumn::make('currency')
+                TextColumn::make('currency')
                     ->badge()
                     ->color('gray'),
 
-                Tables\Columns\TextColumn::make('account_number')
+                TextColumn::make('account_number')
                     ->searchable()
                     ->placeholder('—')
                     ->toggleable(),
 
-                Tables\Columns\IconColumn::make('is_active')
+                IconColumn::make('is_active')
                     ->boolean()
                     ->label('Active'),
 
-                Tables\Columns\TextColumn::make('updated_at')
+                TextColumn::make('updated_at')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                Tables\Filters\SelectFilter::make('type')
+                SelectFilter::make('type')
                     ->options([
                         'bank' => 'Bank Account',
                         'cash' => 'Cash',
@@ -141,18 +160,18 @@ class AccountResource extends Resource
                         'loan' => 'Loan',
                     ]),
 
-                Tables\Filters\TernaryFilter::make('is_active')
+                TernaryFilter::make('is_active')
                     ->label('Active')
                     ->placeholder('All accounts')
                     ->trueLabel('Active only')
                     ->falseLabel('Inactive only'),
             ])
-            ->actions([
-                Tables\Actions\EditAction::make(),
+            ->recordActions([
+                EditAction::make(),
             ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+            ->toolbarActions([
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
                 ]),
             ])
             ->defaultSort('name')
@@ -162,16 +181,16 @@ class AccountResource extends Resource
     public static function getRelations(): array
     {
         return [
-            AccountResource\RelationManagers\TransactionsRelationManager::class,
+            TransactionsRelationManager::class,
         ];
     }
 
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListAccounts::route('/'),
-            'create' => Pages\CreateAccount::route('/create'),
-            'edit' => Pages\EditAccount::route('/{record}/edit'),
+            'index' => ListAccounts::route('/'),
+            'create' => CreateAccount::route('/create'),
+            'edit' => EditAccount::route('/{record}/edit'),
         ];
     }
 

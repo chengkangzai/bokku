@@ -2,10 +2,27 @@
 
 namespace App\Filament\Resources;
 
+use Filament\Schemas\Schema;
+use Filament\Schemas\Components\Section;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Toggle;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Columns\IconColumn;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Filters\TernaryFilter;
+use Filament\Actions\EditAction;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\BulkAction;
+use App\Filament\Resources\BudgetResource\Pages\ListBudgets;
+use App\Filament\Resources\BudgetResource\Pages\CreateBudget;
+use App\Filament\Resources\BudgetResource\Pages\EditBudget;
 use App\Filament\Resources\BudgetResource\Pages;
 use App\Models\Budget;
 use Filament\Forms;
-use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -15,21 +32,21 @@ class BudgetResource extends Resource
 {
     protected static ?string $model = Budget::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-banknotes';
+    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-banknotes';
 
-    protected static ?string $navigationGroup = 'Finance';
+    protected static string | \UnitEnum | null $navigationGroup = 'Finance';
 
     protected static ?int $navigationSort = 3;
 
     protected static ?string $recordTitleAttribute = 'category.name';
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
-            ->schema([
-                Forms\Components\Section::make('Budget Details')
+        return $schema
+            ->components([
+                Section::make('Budget Details')
                     ->schema([
-                        Forms\Components\Select::make('category_id')
+                        Select::make('category_id')
                             ->label('Category')
                             ->relationship(
                                 'category',
@@ -45,14 +62,14 @@ class BudgetResource extends Resource
                             ->preload()
                             ->helperText('Only expense categories without existing budgets are shown'),
 
-                        Forms\Components\TextInput::make('amount')
+                        TextInput::make('amount')
                             ->required()
                             ->numeric()
                             ->prefix('RM')
                             ->minValue(0.01)
                             ->helperText('Budget amount for the selected period'),
 
-                        Forms\Components\Select::make('period')
+                        Select::make('period')
                             ->required()
                             ->options([
                                 'weekly' => 'Weekly',
@@ -62,20 +79,20 @@ class BudgetResource extends Resource
                             ->default('monthly')
                             ->native(false),
 
-                        Forms\Components\DatePicker::make('start_date')
+                        DatePicker::make('start_date')
                             ->required()
                             ->default(now()->startOfMonth())
                             ->helperText('When this budget period starts'),
                     ])->columns(2),
 
-                Forms\Components\Section::make('Budget Options')
+                Section::make('Budget Options')
                     ->schema([
-                        Forms\Components\Toggle::make('is_active')
+                        Toggle::make('is_active')
                             ->label('Active')
                             ->default(true)
                             ->helperText('Enable/disable budget tracking'),
 
-                        Forms\Components\Toggle::make('auto_rollover')
+                        Toggle::make('auto_rollover')
                             ->label('Auto Rollover')
                             ->helperText('Unused budget carries over to next period'),
                     ])->columns(2),
@@ -86,54 +103,54 @@ class BudgetResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('category.name')
+                TextColumn::make('category.name')
                     ->label('Category')
                     ->sortable()
                     ->searchable(),
 
-                Tables\Columns\TextColumn::make('amount')
+                TextColumn::make('amount')
                     ->label('Budget')
                     ->formatStateUsing(fn ($state) => 'RM '.number_format($state, 2))
                     ->sortable(),
 
-                Tables\Columns\TextColumn::make('spent')
+                TextColumn::make('spent')
                     ->label('Spent')
                     ->getStateUsing(fn (Budget $record): string => $record->getFormattedSpent())
                     ->color(fn (Budget $record): string => $record->getStatusColor()),
 
-                Tables\Columns\TextColumn::make('progress')
+                TextColumn::make('progress')
                     ->label('Progress')
                     ->getStateUsing(fn (Budget $record): string => $record->getProgressPercentage().'%')
                     ->color(fn (Budget $record): string => $record->getStatusColor())
                     ->badge(),
 
-                Tables\Columns\TextColumn::make('remaining')
+                TextColumn::make('remaining')
                     ->label('Remaining')
                     ->getStateUsing(fn (Budget $record): string => $record->getFormattedRemaining())
                     ->color(fn (Budget $record): string => $record->isOverBudget() ? 'danger' : 'success'),
 
-                Tables\Columns\TextColumn::make('period')
+                TextColumn::make('period')
                     ->badge()
                     ->color('info'),
 
-                Tables\Columns\IconColumn::make('is_active')
+                IconColumn::make('is_active')
                     ->boolean()
                     ->label('Active'),
 
-                Tables\Columns\TextColumn::make('start_date')
+                TextColumn::make('start_date')
                     ->date()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                Tables\Filters\SelectFilter::make('period')
+                SelectFilter::make('period')
                     ->options([
                         'weekly' => 'Weekly',
                         'monthly' => 'Monthly',
                         'annual' => 'Annual',
                     ]),
 
-                Tables\Filters\SelectFilter::make('status')
+                SelectFilter::make('status')
                     ->options([
                         'under' => 'Under Budget',
                         'near' => 'Near Limit',
@@ -154,17 +171,17 @@ class BudgetResource extends Resource
                         return $query->whereIn('id', $filteredIds);
                     }),
 
-                Tables\Filters\TernaryFilter::make('is_active')
+                TernaryFilter::make('is_active')
                     ->label('Active'),
             ])
-            ->actions([
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
+            ->recordActions([
+                EditAction::make(),
+                DeleteAction::make(),
             ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                    Tables\Actions\BulkAction::make('toggle_active')
+            ->toolbarActions([
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
+                    BulkAction::make('toggle_active')
                         ->label('Toggle Active')
                         ->icon('heroicon-m-power')
                         ->action(function ($records) {
@@ -188,9 +205,9 @@ class BudgetResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListBudgets::route('/'),
-            'create' => Pages\CreateBudget::route('/create'),
-            'edit' => Pages\EditBudget::route('/{record}/edit'),
+            'index' => ListBudgets::route('/'),
+            'create' => CreateBudget::route('/create'),
+            'edit' => EditBudget::route('/{record}/edit'),
         ];
     }
 

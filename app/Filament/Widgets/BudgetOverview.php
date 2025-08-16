@@ -7,7 +7,7 @@ use Filament\Widgets\Widget;
 
 class BudgetOverview extends Widget
 {
-    protected static string $view = 'filament.widgets.budget-overview';
+    protected string $view = 'filament.widgets.budget-overview';
 
     protected static ?int $sort = 3;
 

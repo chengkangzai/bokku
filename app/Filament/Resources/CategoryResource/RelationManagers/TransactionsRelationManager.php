@@ -2,9 +2,18 @@
 
 namespace App\Filament\Resources\CategoryResource\RelationManagers;
 
+use Filament\Schemas\Schema;
+use Filament\Forms\Components\TextInput;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Columns\IconColumn;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Filters\TernaryFilter;
+use Filament\Tables\Filters\Filter;
+use Filament\Forms\Components\DatePicker;
+use Filament\Actions\ViewAction;
+use Filament\Actions\EditAction;
 use App\Models\Transaction;
 use Filament\Forms;
-use Filament\Forms\Form;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -18,11 +27,11 @@ class TransactionsRelationManager extends RelationManager
 
     protected static ?string $recordTitleAttribute = 'description';
 
-    public function form(Form $form): Form
+    public function form(Schema $schema): Schema
     {
-        return $form
-            ->schema([
-                Forms\Components\TextInput::make('description')
+        return $schema
+            ->components([
+                TextInput::make('description')
                     ->required()
                     ->maxLength(255),
             ]);
@@ -32,12 +41,12 @@ class TransactionsRelationManager extends RelationManager
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('date')
+                TextColumn::make('date')
                     ->date()
                     ->sortable()
                     ->searchable(),
 
-                Tables\Columns\TextColumn::make('type')
+                TextColumn::make('type')
                     ->badge()
                     ->colors([
                         'success' => 'income',
@@ -46,11 +55,11 @@ class TransactionsRelationManager extends RelationManager
                     ])
                     ->visible(fn () => $this->getOwnerRecord()->type === null),
 
-                Tables\Columns\TextColumn::make('description')
+                TextColumn::make('description')
                     ->searchable()
                     ->limit(30),
 
-                Tables\Columns\TextColumn::make('amount')
+                TextColumn::make('amount')
                     ->money('myr')
                     ->sortable()
                     ->color(fn (Transaction $record) => match ($record->type) {
@@ -69,27 +78,27 @@ class TransactionsRelationManager extends RelationManager
                         };
                     }),
 
-                Tables\Columns\TextColumn::make('account.name')
+                TextColumn::make('account.name')
                     ->label('Account')
                     ->sortable()
                     ->searchable(),
 
-                Tables\Columns\IconColumn::make('is_reconciled')
+                IconColumn::make('is_reconciled')
                     ->boolean()
                     ->label('✓'),
 
-                Tables\Columns\TextColumn::make('reference')
+                TextColumn::make('reference')
                     ->searchable()
                     ->placeholder('—')
                     ->toggleable(isToggledHiddenByDefault: true),
 
-                Tables\Columns\TextColumn::make('notes')
+                TextColumn::make('notes')
                     ->limit(20)
                     ->placeholder('—')
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                Tables\Filters\SelectFilter::make('account_id')
+                SelectFilter::make('account_id')
                     ->label('Account')
                     ->relationship(
                         'account',
@@ -97,17 +106,17 @@ class TransactionsRelationManager extends RelationManager
                         fn (Builder $query) => $query->where('user_id', auth()->id())
                     ),
 
-                Tables\Filters\TernaryFilter::make('is_reconciled')
+                TernaryFilter::make('is_reconciled')
                     ->label('Reconciled')
                     ->placeholder('All transactions')
                     ->trueLabel('Reconciled only')
                     ->falseLabel('Unreconciled only'),
 
-                Tables\Filters\Filter::make('date_range')
-                    ->form([
-                        Forms\Components\DatePicker::make('date_from')
+                Filter::make('date_range')
+                    ->schema([
+                        DatePicker::make('date_from')
                             ->label('From'),
-                        Forms\Components\DatePicker::make('date_to')
+                        DatePicker::make('date_to')
                             ->label('To'),
                     ])
                     ->query(function (Builder $query, array $data): Builder {
@@ -125,15 +134,15 @@ class TransactionsRelationManager extends RelationManager
             ->headerActions([
                 // Remove create action as transactions should be created from the main transaction resource
             ])
-            ->actions([
-                Tables\Actions\ViewAction::make()
+            ->recordActions([
+                ViewAction::make()
                     ->url(fn (Transaction $record): string => route('filament.admin.resources.transactions.edit', ['record' => $record])
                     ),
-                Tables\Actions\EditAction::make()
+                EditAction::make()
                     ->url(fn (Transaction $record): string => route('filament.admin.resources.transactions.edit', ['record' => $record])
                     ),
             ])
-            ->bulkActions([
+            ->toolbarActions([
                 // Remove bulk actions for safety
             ])
             ->defaultSort('date', 'desc');
