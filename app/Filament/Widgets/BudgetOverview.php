@@ -3,20 +3,94 @@
 namespace App\Filament\Widgets;
 
 use App\Models\Budget;
-use Filament\Widgets\Widget;
+use Filament\Actions\Action;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Table;
+use Filament\Widgets\TableWidget as BaseWidget;
 
-class BudgetOverview extends Widget
+class BudgetOverview extends BaseWidget
 {
-    protected string $view = 'filament.widgets.budget-overview';
-
     protected static ?int $sort = 3;
 
-    public function getBudgets()
+    protected static ?string $heading = 'Budget Overview';
+
+    protected int|string|array $columnSpan = 'full';
+
+    public function table(Table $table): Table
     {
-        return Budget::where('user_id', auth()->id())
-            ->where('is_active', true)
-            ->with(['category'])
-            ->orderBy('created_at')
-            ->get();
+        return $table
+            ->query(
+                Budget::query()
+                    ->where('user_id', auth()->id())
+                    ->where('is_active', true)
+                    ->with(['category'])
+                    ->orderBy('created_at')
+            )
+            ->columns([
+                TextColumn::make('category.name')
+                    ->label('Category')
+                    ->sortable()
+                    ->searchable(),
+
+                TextColumn::make('period')
+                    ->badge()
+                    ->label('Period')
+                    ->colors([
+                        'secondary' => 'weekly',
+                        'primary' => 'monthly',
+                        'success' => 'annual',
+                    ])
+                    ->formatStateUsing(fn (string $state): string => ucfirst($state)),
+
+                TextColumn::make('amount')
+                    ->label('Budget')
+                    ->formatStateUsing(fn (Budget $record): string => $record->getFormattedBudget())
+                    ->sortable(),
+
+                TextColumn::make('spent')
+                    ->label('Spent')
+                    ->formatStateUsing(fn (Budget $record): string => $record->getFormattedSpent())
+                    ->color(fn (Budget $record): string => $record->getStatusColor()),
+
+                TextColumn::make('progress')
+                    ->label('Progress')
+                    ->formatStateUsing(fn (Budget $record): string => $record->getProgressPercentage().'%')
+                    ->color(fn (Budget $record): string => $record->getStatusColor()),
+
+                TextColumn::make('status')
+                    ->badge()
+                    ->label('Status')
+                    ->getStateUsing(fn (Budget $record): string => match ($record->getStatus()) {
+                        'over' => 'Over Budget',
+                        'near' => 'Near Limit',
+                        'under' => 'On Track',
+                        default => 'Unknown',
+                    })
+                    ->colors([
+                        'danger' => 'Over Budget',
+                        'warning' => 'Near Limit',
+                        'success' => 'On Track',
+                    ]),
+
+                TextColumn::make('remaining')
+                    ->label('Remaining')
+                    ->formatStateUsing(fn (Budget $record): string => $record->getFormattedRemaining())
+                    ->color(fn (Budget $record): string => $record->isOverBudget() ? 'danger' : 'success'),
+            ])
+            ->recordActions([
+                Action::make('view')
+                    ->url(fn (Budget $record): string => route('filament.admin.resources.budgets.edit', $record))
+                    ->icon('heroicon-m-eye'),
+            ])
+            ->emptyStateHeading('No active budgets')
+            ->emptyStateDescription('Get started by creating your first budget')
+            ->emptyStateActions([
+                Action::make('create')
+                    ->label('Create Budget')
+                    ->url(route('filament.admin.resources.budgets.create'))
+                    ->icon('heroicon-m-plus')
+                    ->button(),
+            ])
+            ->paginated(false);
     }
 }
