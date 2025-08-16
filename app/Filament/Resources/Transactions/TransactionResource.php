@@ -26,6 +26,7 @@ use Filament\Forms\Components\SpatieTagsInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Grid;
@@ -269,9 +270,9 @@ class TransactionResource extends Resource
 
                         Section::make('Automation')
                             ->schema([
-                                Placeholder::make('matching_rules')
+                                TextEntry::make('matching_rules')
                                     ->label('Matching Rules')
-                                    ->content(function ($get) {
+                                    ->state(function ($get) {
                                         $description = $get('description');
                                         $amount = $get('amount');
                                         $type = $get('type');
