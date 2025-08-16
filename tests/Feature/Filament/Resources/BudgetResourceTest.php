@@ -1,9 +1,9 @@
 <?php
 
-use App\Filament\Resources\BudgetResource;
-use App\Filament\Resources\BudgetResource\Pages\CreateBudget;
-use App\Filament\Resources\BudgetResource\Pages\EditBudget;
-use App\Filament\Resources\BudgetResource\Pages\ListBudgets;
+use App\Filament\Resources\Budgets\BudgetResource;
+use App\Filament\Resources\Budgets\Pages\CreateBudget;
+use App\Filament\Resources\Budgets\Pages\EditBudget;
+use App\Filament\Resources\Budgets\Pages\ListBudgets;
 use App\Models\Account;
 use App\Models\Budget;
 use App\Models\Category;

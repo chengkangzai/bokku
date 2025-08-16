@@ -1,8 +1,8 @@
 <?php
 
-use App\Filament\Resources\TransactionResource;
-use App\Filament\Resources\TransactionResource\Pages\CreateTransaction;
-use App\Filament\Resources\TransactionResource\Pages\ListTransactions;
+use App\Filament\Resources\Transactions\TransactionResource;
+use App\Filament\Resources\Transactions\Pages\CreateTransaction;
+use App\Filament\Resources\Transactions\Pages\ListTransactions;
 use App\Models\Account;
 use App\Models\Category;
 use App\Models\Transaction;
