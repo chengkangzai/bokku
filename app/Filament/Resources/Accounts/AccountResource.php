@@ -2,31 +2,28 @@
 
 namespace App\Filament\Resources\Accounts;
 
-use Filament\Schemas\Schema;
-use Filament\Schemas\Components\Section;
-use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Select;
-use Filament\Schemas\Components\Utilities\Get;
-use Filament\Forms\Components\ColorPicker;
-use Filament\Forms\Components\Textarea;
-use Filament\Forms\Components\Toggle;
-use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Columns\BadgeColumn;
-use Filament\Tables\Columns\IconColumn;
-use Filament\Tables\Filters\SelectFilter;
-use Filament\Tables\Filters\TernaryFilter;
-use Filament\Actions\EditAction;
-use Filament\Actions\BulkActionGroup;
-use Filament\Actions\DeleteBulkAction;
-use App\Filament\Resources\Accounts\RelationManagers\TransactionsRelationManager;
-use App\Filament\Resources\Accounts\Pages\ListAccounts;
 use App\Filament\Resources\Accounts\Pages\CreateAccount;
 use App\Filament\Resources\Accounts\Pages\EditAccount;
-use App\Filament\Resources\AccountResource\Pages;
+use App\Filament\Resources\Accounts\Pages\ListAccounts;
+use App\Filament\Resources\Accounts\RelationManagers\TransactionsRelationManager;
 use App\Models\Account;
-use Filament\Forms;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
+use Filament\Forms\Components\ColorPicker;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Resources\Resource;
-use Filament\Tables;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Schema;
+use Filament\Tables\Columns\BadgeColumn;
+use Filament\Tables\Columns\IconColumn;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -34,9 +31,9 @@ class AccountResource extends Resource
 {
     protected static ?string $model = Account::class;
 
-    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-wallet';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-wallet';
 
-    protected static string | \UnitEnum | null $navigationGroup = 'Finance';
+    protected static string|\UnitEnum|null $navigationGroup = 'Finance';
 
     protected static ?int $navigationSort = 1;
 
@@ -65,10 +62,10 @@ class AccountResource extends Resource
                             ->required()
                             ->numeric()
                             ->default(0)
-                            ->prefix('RM')
+                            ->prefix('MYR')
                             ->label(fn (Get $get) => $get('type') === 'loan' ? 'Total Amount Owed' : 'Initial Balance')
                             ->helperText(fn (Get $get) => $get('type') === 'loan'
-                                ? 'Enter as negative amount (e.g., -60000 for RM 60,000 loan)'
+                                ? 'Enter as negative amount (e.g., -60000 for MYR 60,000 loan)'
                                 : 'Starting balance for this account'),
 
                         Select::make('currency')

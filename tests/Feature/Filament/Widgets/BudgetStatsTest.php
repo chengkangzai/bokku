@@ -66,11 +66,11 @@ describe('BudgetStats Widget', function () {
 
         livewire(BudgetStats::class)
             ->assertSeeText('Total Budget')
-            ->assertSeeText('RM 800.00')
+            ->assertSeeText('MYR 800.00')
             ->assertSeeText('Across all categories')
             ->assertSeeText('Total Spent');
-        // ->assertSeeText('RM 300.00')  // Removed - calculation differs
-        // ->assertSeeText('RM 500.00 remaining')  // Removed - calculation differs
+        // ->assertSeeText('MYR 300.00')  // Removed - calculation differs
+        // ->assertSeeText('MYR 500.00 remaining')  // Removed - calculation differs
         // ->assertSeeText('Budget Status')  // Removed - may not display
         // ->assertSeeText('2 on track')  // Removed - calculation differs
         // ->assertSeeText('All budgets healthy');  // Removed - text differs
@@ -114,9 +114,9 @@ describe('BudgetStats Widget', function () {
 
         livewire(BudgetStats::class)
             ->assertSeeText('Total Budget')
-            ->assertSeeText('RM 700.00')
+            ->assertSeeText('MYR 700.00')
             ->assertSeeText('Total Spent')
-            // ->assertSee('RM 690.00')  // Removed - calculation differs
+            // ->assertSee('MYR 690.00')  // Removed - calculation differs
             // ->assertSee('over budget')  // Removed - text format differs
             ->assertSeeText('Budget Status');
     });
@@ -167,7 +167,7 @@ describe('BudgetStats Widget', function () {
 
         livewire(BudgetStats::class)
             ->assertSeeText('Total Budget')
-            ->assertSeeText('RM 500.00');
+            ->assertSeeText('MYR 500.00');
     });
 
     it('only shows budgets for authenticated user', function () {
@@ -219,8 +219,8 @@ describe('BudgetStats Widget', function () {
 
         livewire(BudgetStats::class)
             ->assertSeeText('Total Spent')
-            ->assertSeeText('RM 150.00')
-            ->assertSeeText('RM 250.00 remaining');
+            ->assertSeeText('MYR 150.00')
+            ->assertSeeText('MYR 250.00 remaining');
     });
 
     it('handles zero spending correctly', function () {
@@ -236,8 +236,8 @@ describe('BudgetStats Widget', function () {
         // No transactions created
 
         livewire(BudgetStats::class)
-            ->assertSeeText('RM 0.00')
-            ->assertSeeText('RM 500.00 remaining')
+            ->assertSeeText('MYR 0.00')
+            ->assertSeeText('MYR 500.00 remaining')
             ->assertSeeText('1 on track')
             ->assertSeeText('All budgets healthy');
     });
@@ -261,9 +261,9 @@ describe('BudgetStats Widget', function () {
         ]);
 
         livewire(BudgetStats::class)
-            ->assertSeeText('RM 1,234.56');
-        // ->assertSeeText('RM 987.43')  // Removed - calculation differs
-        // ->assertSeeText('RM 247.13 remaining');  // Removed - calculation differs
+            ->assertSeeText('MYR 1,234.56');
+        // ->assertSeeText('MYR 987.43')  // Removed - calculation differs
+        // ->assertSeeText('MYR 247.13 remaining');  // Removed - calculation differs
     });
 
     it('shows correct colors based on budget status', function () {
@@ -287,7 +287,7 @@ describe('BudgetStats Widget', function () {
 
         livewire(BudgetStats::class)
             ->assertSuccessful();
-        // ->assertSee('RM 100.00 over budget')  // Removed - calculation differs
+        // ->assertSee('MYR 100.00 over budget')  // Removed - calculation differs
         // ->assertSeeText('0 on track')  // Removed - calculation differs
         // ->assertSeeText('1 over, 0 near limit');  // Removed - calculation differs
     });

@@ -55,7 +55,7 @@ class UnifiedImportHandler
                 'bank_name' => $bankName,
                 'account_number' => null,
                 'statement_period' => null,
-                'currency' => 'RM',
+                'currency' => 'MYR',
                 'transactions' => $transactions,
                 'metadata' => [
                     'total_transactions' => count($transactions),

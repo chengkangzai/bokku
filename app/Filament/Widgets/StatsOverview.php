@@ -32,22 +32,22 @@ class StatsOverview extends BaseWidget
         $monthlySavings = $monthlyIncome - $monthlyExpenses;
 
         return [
-            Stat::make('Net Worth', 'RM '.number_format($netWorth, 2))
+            Stat::make('Net Worth', 'MYR '.number_format($netWorth, 2))
                 ->description($netWorth >= 0 ? 'Total assets' : 'Total liabilities')
                 ->descriptionIcon($netWorth >= 0 ? 'heroicon-m-arrow-trending-up' : 'heroicon-m-arrow-trending-down')
                 ->color($netWorth >= 0 ? 'success' : 'danger'),
 
-            Stat::make('Monthly Income', 'RM '.number_format($monthlyIncome, 2))
+            Stat::make('Monthly Income', 'MYR '.number_format($monthlyIncome, 2))
                 ->description(now()->format('F Y'))
                 ->descriptionIcon('heroicon-m-arrow-down-tray')
                 ->color('success'),
 
-            Stat::make('Monthly Expenses', 'RM '.number_format($monthlyExpenses, 2))
+            Stat::make('Monthly Expenses', 'MYR '.number_format($monthlyExpenses, 2))
                 ->description(now()->format('F Y'))
                 ->descriptionIcon('heroicon-m-arrow-up-tray')
                 ->color('danger'),
 
-            Stat::make('Monthly Savings', 'RM '.number_format($monthlySavings, 2))
+            Stat::make('Monthly Savings', 'MYR '.number_format($monthlySavings, 2))
                 ->description($monthlySavings >= 0 ? 'Saved this month' : 'Overspent this month')
                 ->descriptionIcon($monthlySavings >= 0 ? 'heroicon-m-check-circle' : 'heroicon-m-exclamation-circle')
                 ->color($monthlySavings >= 0 ? 'primary' : 'warning'),

@@ -131,18 +131,18 @@ class Budget extends Model
 
     public function getFormattedSpent(): string
     {
-        return 'RM '.number_format($this->getSpentAmount(), 2);
+        return 'MYR '.number_format($this->getSpentAmount(), 2);
     }
 
     public function getFormattedBudget(): string
     {
-        return 'RM '.number_format($this->amount, 2);
+        return 'MYR '.number_format($this->amount, 2);
     }
 
     public function getFormattedRemaining(): string
     {
         $remaining = $this->getRemainingAmount();
-        $prefix = $remaining < 0 ? '-RM ' : 'RM ';
+        $prefix = $remaining < 0 ? '-MYR ' : 'MYR ';
 
         return $prefix.number_format(abs($remaining), 2);
     }

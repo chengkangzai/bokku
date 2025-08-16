@@ -106,7 +106,7 @@ class Category extends Model
         if ($totalSpent > $budgetAmount) {
             $overage = $totalSpent - $budgetAmount;
 
-            return '⚠️ This will put you RM '.number_format($overage, 2)." over your {$this->name} budget";
+            return '⚠️ This will put you MYR '.number_format($overage, 2)." over your {$this->name} budget";
         } elseif (($totalSpent / $budgetAmount) >= 0.8) {
             $percentage = round(($totalSpent / $budgetAmount) * 100);
 

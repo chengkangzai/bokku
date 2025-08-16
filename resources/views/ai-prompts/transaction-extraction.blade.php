@@ -5,7 +5,7 @@ Extract transaction data from the provided content and return it in a structured
 
 **Malaysian Banking Context:**
 - Date format: DD/MM/YYYY (e.g., 15/01/2024)
-- Currency: RM (Ringgit Malaysia)
+- Currency: MYR (Malaysian Ringgit)
 - Common banks: Maybank, CIMB Bank, Public Bank, RHB Bank, Hong Leong Bank, AmBank, Bank Islam, OCBC Bank, HSBC, Standard Chartered
 
 **Required JSON Structure:**

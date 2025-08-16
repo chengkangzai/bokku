@@ -2,10 +2,10 @@
 
 namespace App\Console\Commands;
 
-use Exception;
-use Log;
 use App\Models\RecurringTransaction;
+use Exception;
 use Illuminate\Console\Command;
+use Log;
 
 class ProcessRecurringTransactions extends Command
 {
@@ -59,13 +59,13 @@ class ProcessRecurringTransactions extends Command
         foreach ($dueTransactions as $recurring) {
             try {
                 if ($dryRun) {
-                    $this->line("Would process: {$recurring->description} - RM {$recurring->amount}");
+                    $this->line("Would process: {$recurring->description} - MYR {$recurring->amount}");
                     $this->line("  Next date would be: {$recurring->calculateNextDate()->format('Y-m-d')}");
                 } else {
                     $transaction = $recurring->generateTransaction();
 
                     if ($transaction) {
-                        $this->info("✓ Created transaction: {$recurring->description} - RM {$recurring->amount}");
+                        $this->info("✓ Created transaction: {$recurring->description} - MYR {$recurring->amount}");
                         $this->line("  Next occurrence: {$recurring->next_date->format('Y-m-d')}");
                         $processed++;
                     } else {

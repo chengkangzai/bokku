@@ -370,7 +370,7 @@ describe('Category Budget Warnings', function () {
         $warning = $category->getBudgetWarning(250.00);
 
         expect($warning)->toBeString()
-            ->and($warning)->toContain('⚠️ This will put you RM 50.00 over your Groceries budget');
+            ->and($warning)->toContain('⚠️ This will put you MYR 50.00 over your Groceries budget');
     });
 
     it('returns percentage warning when approaching budget limit', function () {

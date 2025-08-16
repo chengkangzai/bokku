@@ -70,7 +70,7 @@ describe('UnifiedImportHandler File Processing', function () {
             ->and($result['bank_name'])->toBe('Maybank')
             ->and($result)->toHaveKey('account_number')
             ->and($result['account_number'])->toBeNull()
-            ->and($result)->toHaveKey('currency', 'RM')
+            ->and($result)->toHaveKey('currency', 'MYR')
             ->and($result)->toHaveKey('transactions')
             ->and($result['transactions'])->toHaveCount(2)
             ->and($result['transactions'][0])->toMatchArray([
@@ -333,7 +333,7 @@ describe('UnifiedImportHandler Error Handling', function () {
         expect($result['transactions'])->toBeEmpty()
             ->and($result['bank_name'])->toBe('Unknown Bank')
             ->and($result['account_number'])->toBeNull()
-            ->and($result['currency'])->toBe('RM');
+            ->and($result['currency'])->toBe('MYR');
     });
 });
 

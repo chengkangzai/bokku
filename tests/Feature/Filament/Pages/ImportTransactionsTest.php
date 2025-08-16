@@ -79,7 +79,7 @@ describe('ImportTransactions Data Processing', function () {
         $mockResponse = [
             'bank_name' => 'Maybank',
             'account_number' => '****1234',
-            'currency' => 'RM',
+            'currency' => 'MYR',
             'transactions' => [
                 [
                     'date' => '2024-01-15',
@@ -124,7 +124,7 @@ describe('ImportTransactions Review Step', function () {
         $extractedData = [
             'bank_name' => 'Maybank',
             'account_number' => '****1234',
-            'currency' => 'RM',
+            'currency' => 'MYR',
             'transactions' => [
                 ['date' => '2024-01-15', 'description' => 'Test', 'amount' => 100, 'type' => 'expense'],
             ],

@@ -6,7 +6,7 @@ Analyze the transaction description and suggest the most appropriate category.
 **Transaction Details:**
 - Description: "{{ $description }}"
 - Type: {{ $type }}
-- Amount: RM {{ number_format($amount, 2) }}
+- Amount: MYR {{ number_format($amount, 2) }}
 
 @if(isset($existingCategories) && !empty($existingCategories))
 **User's Existing Categories:**

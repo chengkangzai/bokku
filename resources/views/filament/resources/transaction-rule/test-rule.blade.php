@@ -12,7 +12,7 @@
                             <p class="font-medium">{{ $transaction->description }}</p>
                             <p class="text-sm text-gray-600">
                                 {{ $transaction->date->format('M j, Y') }} • 
-                                RM {{ number_format($transaction->amount, 2) }} •
+                                MYR {{ number_format($transaction->amount, 2) }} •
                                 {{ $transaction->account->name }}
                                 @if($transaction->category)
                                     • {{ $transaction->category->name }}

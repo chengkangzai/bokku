@@ -2,21 +2,17 @@
 
 namespace App\Filament\Pages;
 
-use Filament\Forms\Components\Repeater;
-use Filament\Schemas\Schema;
-use Filament\Schemas\Components\Wizard;
-use Filament\Schemas\Components\Wizard\Step;
-use Filament\Schemas\Components\Actions;
-use Filament\Actions\Action;
-use Exception;
 use App\Models\Account;
 use App\Models\Category;
 use App\Models\Transaction;
 use App\Services\Import\UnifiedImportHandler;
+use Exception;
+use Filament\Actions\Action;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Placeholder;
+use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -24,6 +20,10 @@ use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+use Filament\Schemas\Components\Actions;
+use Filament\Schemas\Components\Wizard;
+use Filament\Schemas\Components\Wizard\Step;
+use Filament\Schemas\Schema;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\HtmlString;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
@@ -32,7 +32,7 @@ class ImportTransactions extends Page implements HasForms
 {
     use InteractsWithForms;
 
-    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-arrow-down-tray';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-arrow-down-tray';
 
     protected static ?string $navigationLabel = 'Import Transactions';
 
@@ -40,7 +40,7 @@ class ImportTransactions extends Page implements HasForms
 
     protected static ?string $slug = 'import-transactions';
 
-    protected static string | \UnitEnum | null $navigationGroup = 'Finance';
+    protected static string|\UnitEnum|null $navigationGroup = 'Finance';
 
     protected static ?int $navigationSort = 50;
 
@@ -165,7 +165,7 @@ class ImportTransactions extends Page implements HasForms
                                         ->required()
                                         ->numeric()
                                         ->step(0.01)
-                                        ->prefix('RM'),
+                                        ->prefix('MYR'),
                                     Select::make('type')
                                         ->required()
                                         ->options([

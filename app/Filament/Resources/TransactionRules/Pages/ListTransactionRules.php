@@ -2,13 +2,12 @@
 
 namespace App\Filament\Resources\TransactionRules\Pages;
 
-use Filament\Actions\Action;
-use Filament\Forms\Components\Select;
-use Filament\Notifications\Notification;
-use Filament\Actions\CreateAction;
 use App\Filament\Resources\TransactionRules\TransactionRuleResource;
 use App\Models\TransactionRule;
-use Filament\Actions;
+use Filament\Actions\Action;
+use Filament\Actions\CreateAction;
+use Filament\Forms\Components\Select;
+use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ListRecords;
 
 class ListTransactionRules extends ListRecords
@@ -79,7 +78,7 @@ class ListTransactionRules extends ListRecords
                         ],
                         'large_purchases' => [
                             'name' => 'Tag Large Purchases',
-                            'description' => 'Tag transactions over RM 500',
+                            'description' => 'Tag transactions over MYR 500',
                             'conditions' => [
                                 ['field' => 'amount', 'operator' => 'greater_than', 'value' => '500'],
                             ],

@@ -547,13 +547,13 @@ describe('Budget Formatting Methods', function () {
             'date' => now(),
         ]);
 
-        expect($budget->getFormattedSpent())->toBe('RM 123.45');
+        expect($budget->getFormattedSpent())->toBe('MYR 123.45');
     });
 
     it('formats budget amount correctly', function () {
         $budget = Budget::factory()->withAmount(567.89)->create();
 
-        expect($budget->getFormattedBudget())->toBe('RM 567.89');
+        expect($budget->getFormattedBudget())->toBe('MYR 567.89');
     });
 
     it('formats positive remaining amount correctly', function () {
@@ -575,7 +575,7 @@ describe('Budget Formatting Methods', function () {
             'date' => now(),
         ]);
 
-        expect($budget->getFormattedRemaining())->toBe('RM 300.00');
+        expect($budget->getFormattedRemaining())->toBe('MYR 300.00');
     });
 
     it('formats negative remaining amount correctly', function () {
@@ -597,7 +597,7 @@ describe('Budget Formatting Methods', function () {
             'date' => now(),
         ]);
 
-        expect($budget->getFormattedRemaining())->toBe('-RM 150.00'); // Shows actual overage amount
+        expect($budget->getFormattedRemaining())->toBe('-MYR 150.00'); // Shows actual overage amount
     });
 });
 

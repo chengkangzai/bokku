@@ -2,11 +2,10 @@
 
 namespace App\Filament\Widgets;
 
-use Filament\Tables\Columns\TextColumn;
+use App\Models\RecurringTransaction;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
-use App\Models\RecurringTransaction;
-use Filament\Tables;
+use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget as BaseWidget;
 
@@ -46,7 +45,7 @@ class UpcomingRecurringTransactions extends BaseWidget
                     ->weight('semibold'),
 
                 TextColumn::make('amount')
-                    ->formatStateUsing(fn ($state) => 'RM '.number_format($state, 2))
+                    ->formatStateUsing(fn ($state) => 'MYR '.number_format($state, 2))
                     ->color(fn ($record) => match ($record->type) {
                         'income' => 'success',
                         'expense' => 'danger',
