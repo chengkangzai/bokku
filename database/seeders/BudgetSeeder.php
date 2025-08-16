@@ -30,26 +30,8 @@ class BudgetSeeder extends Seeder
             // Food & Dining
             [
                 'user_id' => $user->id,
-                'category_id' => $categories['Groceries']->id,
-                'amount' => 80000, // RM800.00
-                'period' => 'monthly',
-                'start_date' => $currentMonth,
-                'is_active' => true,
-                'auto_rollover' => false,
-            ],
-            [
-                'user_id' => $user->id,
-                'category_id' => $categories['Restaurant']->id,
-                'amount' => 40000, // RM400.00
-                'period' => 'monthly',
-                'start_date' => $currentMonth,
-                'is_active' => true,
-                'auto_rollover' => false,
-            ],
-            [
-                'user_id' => $user->id,
-                'category_id' => $categories['Food Delivery']->id,
-                'amount' => 20000, // RM200.00
+                'category_id' => $categories['Food & Dining']->id ?? null,
+                'amount' => 500, // MYR500.00
                 'period' => 'monthly',
                 'start_date' => $currentMonth,
                 'is_active' => true,
@@ -58,26 +40,8 @@ class BudgetSeeder extends Seeder
             // Transportation
             [
                 'user_id' => $user->id,
-                'category_id' => $categories['Petrol']->id,
-                'amount' => 40000, // RM400.00
-                'period' => 'monthly',
-                'start_date' => $currentMonth,
-                'is_active' => true,
-                'auto_rollover' => false,
-            ],
-            [
-                'user_id' => $user->id,
-                'category_id' => $categories['Parking']->id,
-                'amount' => 10000, // RM100.00
-                'period' => 'monthly',
-                'start_date' => $currentMonth,
-                'is_active' => true,
-                'auto_rollover' => false,
-            ],
-            [
-                'user_id' => $user->id,
-                'category_id' => $categories['Toll']->id,
-                'amount' => 15000, // RM150.00
+                'category_id' => $categories['Transportation']->id ?? null,
+                'amount' => 300, // MYR300.00
                 'period' => 'monthly',
                 'start_date' => $currentMonth,
                 'is_active' => true,
@@ -86,36 +50,8 @@ class BudgetSeeder extends Seeder
             // Shopping
             [
                 'user_id' => $user->id,
-                'category_id' => $categories['Clothes & Fashion']->id,
-                'amount' => 30000, // RM300.00
-                'period' => 'monthly',
-                'start_date' => $currentMonth,
-                'is_active' => true,
-                'auto_rollover' => false,
-            ],
-            [
-                'user_id' => $user->id,
-                'category_id' => $categories['Online Shopping']->id,
-                'amount' => 20000, // RM200.00
-                'period' => 'monthly',
-                'start_date' => $currentMonth,
-                'is_active' => true,
-                'auto_rollover' => false,
-            ],
-            // Personal
-            [
-                'user_id' => $user->id,
-                'category_id' => $categories['Healthcare']->id,
-                'amount' => 30000, // RM300.00
-                'period' => 'monthly',
-                'start_date' => $currentMonth,
-                'is_active' => true,
-                'auto_rollover' => false,
-            ],
-            [
-                'user_id' => $user->id,
-                'category_id' => $categories['Personal Care']->id,
-                'amount' => 10000, // RM100.00
+                'category_id' => $categories['Shopping']->id ?? null,
+                'amount' => 250, // MYR250.00
                 'period' => 'monthly',
                 'start_date' => $currentMonth,
                 'is_active' => true,
@@ -124,42 +60,45 @@ class BudgetSeeder extends Seeder
             // Entertainment
             [
                 'user_id' => $user->id,
-                'category_id' => $categories['Entertainment']->id,
-                'amount' => 25000, // RM250.00
+                'category_id' => $categories['Entertainment']->id ?? null,
+                'amount' => 150, // MYR150.00
                 'period' => 'monthly',
                 'start_date' => $currentMonth,
                 'is_active' => true,
                 'auto_rollover' => false,
             ],
-            // Annual budgets
+            // Bills & Utilities
             [
                 'user_id' => $user->id,
-                'category_id' => $categories['Travel']->id,
-                'amount' => 600000, // RM6,000.00
-                'period' => 'annual',
-                'start_date' => Carbon::now()->startOfYear(),
+                'category_id' => $categories['Bills & Utilities']->id ?? null,
+                'amount' => 250, // MYR250.00
+                'period' => 'monthly',
+                'start_date' => $currentMonth,
                 'is_active' => true,
-                'auto_rollover' => true,
+                'auto_rollover' => false,
             ],
+            // Groceries
             [
                 'user_id' => $user->id,
-                'category_id' => $categories['Insurance']->id,
-                'amount' => 480000, // RM4,800.00
-                'period' => 'annual',
-                'start_date' => Carbon::now()->startOfYear(),
+                'category_id' => $categories['Groceries']->id ?? null,
+                'amount' => 400, // MYR400.00
+                'period' => 'monthly',
+                'start_date' => $currentMonth,
                 'is_active' => true,
                 'auto_rollover' => false,
             ],
         ];
 
         foreach ($budgets as $budget) {
-            Budget::firstOrCreate(
-                [
-                    'user_id' => $budget['user_id'],
-                    'category_id' => $budget['category_id'],
-                ],
-                $budget
-            );
+            if ($budget['category_id']) {
+                Budget::firstOrCreate(
+                    [
+                        'user_id' => $budget['user_id'],
+                        'category_id' => $budget['category_id'],
+                    ],
+                    $budget
+                );
+            }
         }
     }
 }

@@ -24,287 +24,165 @@ class TransactionRuleSeeder extends Seeder
         $categories = Category::where('user_id', $user->id)->get()->keyBy('name');
 
         $rules = [
-            // Salary rule
+            // Auto-categorize Grab transactions
             [
                 'user_id' => $user->id,
-                'name' => 'Monthly Salary',
+                'name' => 'Auto-categorize Grab rides',
                 'priority' => 1,
                 'conditions' => [
                     [
                         'field' => 'description',
                         'operator' => 'contains',
-                        'value' => 'Monthly Salary',
-                    ],
-                    [
-                        'field' => 'amount',
-                        'operator' => '>',
-                        'value' => '8000',
-                    ],
-                ],
-                'actions' => [
-                    [
-                        'type' => 'set_category',
-                        'value' => $categories['Salary']->id,
-                    ],
-                    [
-                        'type' => 'add_tags',
-                        'value' => ['salary', 'monthly'],
-                    ],
-                ],
-                'is_active' => true,
-                'stop_processing' => true,
-            ],
-            // Grab rides
-            [
-                'user_id' => $user->id,
-                'name' => 'Grab Rides',
-                'priority' => 2,
-                'conditions' => [
-                    [
-                        'field' => 'description',
-                        'operator' => 'starts_with',
                         'value' => 'Grab',
                     ],
                 ],
                 'actions' => [
                     [
                         'type' => 'set_category',
-                        'value' => $categories['Grab/E-hailing']->id,
+                        'value' => $categories['Transportation']->id ?? null,
                     ],
                     [
                         'type' => 'add_tags',
-                        'value' => ['transport', 'grab'],
+                        'value' => 'transport,grab',
                     ],
                 ],
+                'apply_to' => 'expense',
                 'is_active' => true,
-                'stop_processing' => false,
             ],
-            // Touch n Go transactions
+
+            // Auto-categorize utility bills
             [
                 'user_id' => $user->id,
-                'name' => 'TnG Toll Payments',
-                'priority' => 3,
+                'name' => 'Auto-categorize utility bills',
+                'priority' => 2,
                 'conditions' => [
                     [
                         'field' => 'description',
-                        'operator' => 'contains',
-                        'value' => 'Toll',
-                    ],
-                    [
-                        'field' => 'account',
-                        'operator' => 'equals',
-                        'value' => 'Touch n Go eWallet',
+                        'operator' => 'contains_any',
+                        'value' => 'TNB,Unifi,Water Bill,Electricity',
                     ],
                 ],
                 'actions' => [
                     [
                         'type' => 'set_category',
-                        'value' => $categories['Toll']->id,
+                        'value' => $categories['Bills & Utilities']->id ?? null,
                     ],
                     [
                         'type' => 'add_tags',
-                        'value' => ['toll', 'tng'],
+                        'value' => 'utilities,monthly',
                     ],
                 ],
+                'apply_to' => 'expense',
                 'is_active' => true,
-                'stop_processing' => true,
             ],
-            // Netflix subscription
+
+            // Tag large purchases
             [
                 'user_id' => $user->id,
-                'name' => 'Netflix Subscription',
+                'name' => 'Tag Large Purchases',
+                'priority' => 3,
+                'conditions' => [
+                    [
+                        'field' => 'amount',
+                        'operator' => 'greater_than',
+                        'value' => '500',
+                    ],
+                ],
+                'actions' => [
+                    [
+                        'type' => 'add_tags',
+                        'value' => 'large-purchase',
+                    ],
+                ],
+                'apply_to' => 'expense',
+                'is_active' => true,
+            ],
+
+            // Auto-categorize salary
+            [
+                'user_id' => $user->id,
+                'name' => 'Auto-categorize salary deposits',
                 'priority' => 4,
                 'conditions' => [
                     [
                         'field' => 'description',
-                        'operator' => 'contains',
-                        'value' => 'Netflix',
+                        'operator' => 'contains_any',
+                        'value' => 'Salary,Monthly Salary,PAYROLL',
+                    ],
+                    [
+                        'field' => 'amount',
+                        'operator' => 'greater_than',
+                        'value' => '5000',
                     ],
                 ],
                 'actions' => [
                     [
                         'type' => 'set_category',
-                        'value' => $categories['Astro/Streaming']->id,
+                        'value' => $categories['Salary']->id ?? null,
                     ],
                     [
                         'type' => 'add_tags',
-                        'value' => ['subscription', 'netflix', 'monthly'],
+                        'value' => 'salary,monthly',
                     ],
                 ],
+                'apply_to' => 'income',
                 'is_active' => true,
-                'stop_processing' => true,
             ],
-            // Utilities - TNB
+
+            // Auto-categorize subscriptions
             [
                 'user_id' => $user->id,
-                'name' => 'TNB Electricity',
+                'name' => 'Auto-categorize subscriptions',
                 'priority' => 5,
                 'conditions' => [
                     [
                         'field' => 'description',
-                        'operator' => 'contains',
-                        'value' => 'TNB',
+                        'operator' => 'contains_any',
+                        'value' => 'Netflix,Spotify,Subscription,YouTube Premium',
                     ],
                 ],
                 'actions' => [
                     [
                         'type' => 'set_category',
-                        'value' => $categories['Electricity (TNB)']->id,
+                        'value' => $categories['Entertainment']->id ?? null,
                     ],
                     [
                         'type' => 'add_tags',
-                        'value' => ['utilities', 'tnb', 'monthly'],
+                        'value' => 'subscription,entertainment',
+                    ],
+                    [
+                        'type' => 'set_recurring',
+                        'value' => true,
                     ],
                 ],
+                'apply_to' => 'expense',
                 'is_active' => true,
-                'stop_processing' => true,
             ],
-            // Petrol
+
+            // Auto-categorize groceries
             [
                 'user_id' => $user->id,
-                'name' => 'Petrol Station',
+                'name' => 'Auto-categorize grocery shopping',
                 'priority' => 6,
                 'conditions' => [
                     [
                         'field' => 'description',
-                        'operator' => 'regex',
-                        'value' => '(Petron|Shell|Petronas|BHP|Caltex)',
+                        'operator' => 'contains_any',
+                        'value' => 'Tesco,AEON,Giant,Lotus,NSK,Village Grocer',
                     ],
                 ],
                 'actions' => [
                     [
                         'type' => 'set_category',
-                        'value' => $categories['Petrol']->id,
+                        'value' => $categories['Groceries']->id ?? null,
                     ],
                     [
                         'type' => 'add_tags',
-                        'value' => ['petrol', 'car'],
+                        'value' => 'groceries,shopping',
                     ],
                 ],
+                'apply_to' => 'expense',
                 'is_active' => true,
-                'stop_processing' => false,
-            ],
-            // Shopee/Lazada
-            [
-                'user_id' => $user->id,
-                'name' => 'Online Shopping',
-                'priority' => 7,
-                'conditions' => [
-                    [
-                        'field' => 'description',
-                        'operator' => 'regex',
-                        'value' => '(Shopee|Lazada|Zalora)',
-                    ],
-                ],
-                'actions' => [
-                    [
-                        'type' => 'set_category',
-                        'value' => $categories['Online Shopping']->id,
-                    ],
-                    [
-                        'type' => 'add_tags',
-                        'value' => ['online-shopping'],
-                    ],
-                ],
-                'is_active' => true,
-                'stop_processing' => false,
-            ],
-            // Coffee shops
-            [
-                'user_id' => $user->id,
-                'name' => 'Coffee Shops',
-                'priority' => 8,
-                'conditions' => [
-                    [
-                        'field' => 'description',
-                        'operator' => 'regex',
-                        'value' => '(Starbucks|Coffee Bean|Costa|ZUS)',
-                    ],
-                ],
-                'actions' => [
-                    [
-                        'type' => 'set_category',
-                        'value' => $categories['Restaurant']->id,
-                    ],
-                    [
-                        'type' => 'add_tags',
-                        'value' => ['coffee'],
-                    ],
-                ],
-                'is_active' => true,
-                'stop_processing' => false,
-            ],
-            // Insurance payments
-            [
-                'user_id' => $user->id,
-                'name' => 'Insurance Premium',
-                'priority' => 9,
-                'conditions' => [
-                    [
-                        'field' => 'description',
-                        'operator' => 'regex',
-                        'value' => '(Great Eastern|Prudential|AIA|Allianz|Insurance)',
-                    ],
-                ],
-                'actions' => [
-                    [
-                        'type' => 'set_category',
-                        'value' => $categories['Insurance']->id,
-                    ],
-                    [
-                        'type' => 'add_tags',
-                        'value' => ['insurance', 'monthly'],
-                    ],
-                ],
-                'is_active' => true,
-                'stop_processing' => true,
-            ],
-            // ATM withdrawals
-            [
-                'user_id' => $user->id,
-                'name' => 'ATM Cash Withdrawal',
-                'priority' => 10,
-                'conditions' => [
-                    [
-                        'field' => 'description',
-                        'operator' => 'contains',
-                        'value' => 'ATM',
-                    ],
-                    [
-                        'field' => 'type',
-                        'operator' => 'equals',
-                        'value' => 'transfer',
-                    ],
-                ],
-                'actions' => [
-                    [
-                        'type' => 'add_tags',
-                        'value' => ['atm', 'cash-withdrawal'],
-                    ],
-                ],
-                'is_active' => true,
-                'stop_processing' => false,
-            ],
-            // Disabled rule example
-            [
-                'user_id' => $user->id,
-                'name' => 'Old Gym Membership (Cancelled)',
-                'priority' => 99,
-                'conditions' => [
-                    [
-                        'field' => 'description',
-                        'operator' => 'contains',
-                        'value' => 'Celebrity Fitness',
-                    ],
-                ],
-                'actions' => [
-                    [
-                        'type' => 'set_category',
-                        'value' => $categories['Gym/Fitness']->id,
-                    ],
-                ],
-                'is_active' => false,
-                'stop_processing' => true,
             ],
         ];
 

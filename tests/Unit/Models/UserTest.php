@@ -59,28 +59,34 @@ describe('User Model', function () {
     it('calculates net worth correctly', function () {
         $user = User::factory()->create();
 
+        // Assets
         Account::factory()->create([
             'user_id' => $user->id,
+            'type' => 'bank',
             'balance' => 1000.50,
         ]);
 
         Account::factory()->create([
             'user_id' => $user->id,
+            'type' => 'cash',
             'balance' => 2500.75,
         ]);
 
+        // Liabilities (stored as positive values)
         Account::factory()->create([
             'user_id' => $user->id,
-            'balance' => -500.25, // Credit card debt
+            'type' => 'credit_card',
+            'balance' => 500.25, // Credit card debt stored as positive
         ]);
 
-        expect($user->net_worth)->toBe(3001);
+        // Net Worth = Assets - Liabilities = (1000.50 + 2500.75) - 500.25 = 3001
+        expect($user->net_worth)->toBe(3001.0);
     });
 
     it('returns zero net worth when no accounts', function () {
         $user = User::factory()->create();
 
-        expect($user->net_worth)->toBe(0);
+        expect($user->net_worth)->toBe(0.0);
     });
 
     it('only includes own accounts in net worth calculation', function () {
@@ -89,16 +95,51 @@ describe('User Model', function () {
 
         Account::factory()->create([
             'user_id' => $user1->id,
+            'type' => 'bank',
             'balance' => 1000.00,
         ]);
 
         Account::factory()->create([
             'user_id' => $user2->id,
+            'type' => 'bank',
             'balance' => 5000.00,
         ]);
 
-        expect($user1->net_worth)->toBe(1000);
-        expect($user2->net_worth)->toBe(5000);
+        expect($user1->net_worth)->toBe(1000.0);
+        expect($user2->net_worth)->toBe(5000.0);
+    });
+
+    it('calculates net worth correctly with multiple liability types', function () {
+        $user = User::factory()->create();
+
+        // Assets
+        Account::factory()->create([
+            'user_id' => $user->id,
+            'type' => 'bank',
+            'balance' => 5000.00,
+        ]);
+
+        Account::factory()->create([
+            'user_id' => $user->id,
+            'type' => 'cash',
+            'balance' => 1000.00,
+        ]);
+
+        // Liabilities (stored as positive values)
+        Account::factory()->create([
+            'user_id' => $user->id,
+            'type' => 'credit_card',
+            'balance' => 1500.00, // Credit card debt
+        ]);
+
+        Account::factory()->create([
+            'user_id' => $user->id,
+            'type' => 'loan',
+            'balance' => 2000.00, // Loan debt
+        ]);
+
+        // Net Worth = Assets - Liabilities = (5000 + 1000) - (1500 + 2000) = 2500
+        expect($user->net_worth)->toBe(2500.0);
     });
 
     it('has required fillable attributes', function () {

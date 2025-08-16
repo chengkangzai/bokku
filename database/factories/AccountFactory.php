@@ -57,7 +57,7 @@ class AccountFactory extends Factory
             'type' => 'credit_card',
             'name' => fake()->company().' Credit Card',
             'initial_balance' => 0,
-            'balance' => fake()->numberBetween(-5000, 0), // -$5000 to $0
+            'balance' => fake()->numberBetween(0, 5000), // $0 to $5000 representing amount owed
         ]);
     }
 
@@ -66,8 +66,8 @@ class AccountFactory extends Factory
         return $this->state(fn (array $attributes) => [
             'type' => 'loan',
             'name' => fake()->randomElement(['Home', 'Car', 'Personal']).' Loan',
-            'initial_balance' => fake()->numberBetween(-50000, -1000), // -$50,000 to -$1,000
-            'balance' => fake()->numberBetween(-50000, -1000), // -$50,000 to -$1,000
+            'initial_balance' => fake()->numberBetween(1000, 50000), // $1,000 to $50,000 representing amount owed
+            'balance' => fake()->numberBetween(1000, 50000), // $1,000 to $50,000 representing amount owed
         ]);
     }
 

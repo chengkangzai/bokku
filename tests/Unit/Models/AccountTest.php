@@ -170,9 +170,9 @@ describe('Account Model', function () {
         expect($cash->type)->toBe('cash');
         expect($cash->account_number)->toBeNull();
         expect($creditCard->type)->toBe('credit_card');
-        expect($creditCard->balance)->toBeLessThanOrEqual(0);
+        expect($creditCard->balance)->toBeGreaterThanOrEqual(0); // Now positive representing amount owed
         expect($loan->type)->toBe('loan');
-        expect($loan->balance)->toBeLessThan(0);
+        expect($loan->balance)->toBeGreaterThan(0); // Now positive representing amount owed
     });
 
     it('has correct fillable attributes', function () {

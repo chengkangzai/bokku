@@ -46,11 +46,13 @@ describe('StatsOverview Widget Rendering', function () {
         // Create test accounts and transactions
         Account::factory()->create([
             'user_id' => $this->user->id,
+            'type' => 'bank',
             'balance' => 1000.00,
         ]);
 
         Account::factory()->create([
             'user_id' => $this->user->id,
+            'type' => 'cash',
             'balance' => 500.00,
         ]);
 
@@ -118,14 +120,18 @@ describe('StatsOverview Data Scoping', function () {
 
 describe('StatsOverview Monthly Calculations', function () {
     it('calculates net worth correctly', function () {
+        // Assets
         Account::factory()->create([
             'user_id' => $this->user->id,
+            'type' => 'bank',
             'balance' => 1500.00,
         ]);
 
+        // Liabilities (stored as positive values)
         Account::factory()->create([
             'user_id' => $this->user->id,
-            'balance' => -500.00, // Credit card debt
+            'type' => 'credit_card',
+            'balance' => 500.00, // Credit card debt stored as positive
         ]);
 
         livewire(StatsOverview::class)

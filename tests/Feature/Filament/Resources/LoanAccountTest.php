@@ -14,12 +14,12 @@ beforeEach(function () {
 });
 
 describe('Loan Account Resource', function () {
-    it('can create a loan account with negative balance', function () {
+    it('can create a loan account with positive balance representing amount owed', function () {
         livewire(CreateAccount::class)
             ->fillForm([
                 'name' => 'Car Loan - Honda City',
                 'type' => 'loan',
-                'initial_balance' => -60000,
+                'initial_balance' => 60000,
                 'currency' => 'MYR',
                 'notes' => 'Monthly payment: RM 1,200, Due on 15th',
                 'is_active' => true,
@@ -30,7 +30,7 @@ describe('Loan Account Resource', function () {
         $this->assertDatabaseHas(Account::class, [
             'name' => 'Car Loan - Honda City',
             'type' => 'loan',
-            'initial_balance' => -6000000, // DB stores cents
+            'initial_balance' => 6000000, // DB stores cents
             'user_id' => $this->user->id,
         ]);
     });
@@ -39,7 +39,7 @@ describe('Loan Account Resource', function () {
         $loan = Account::factory()->loan()->create([
             'user_id' => $this->user->id,
             'name' => 'Home Loan',
-            'balance' => -250000,
+            'balance' => 250000,
             'currency' => 'MYR',
         ]);
 
@@ -51,7 +51,7 @@ describe('Loan Account Resource', function () {
     it('shows loan-specific helper text in form', function () {
         livewire(CreateAccount::class)
             ->fillForm(['type' => 'loan'])
-            ->assertSee('Enter as negative amount')
+            ->assertSee('Enter as positive amount')
             ->assertSee('Total Amount Owed');
     });
 
@@ -64,13 +64,13 @@ describe('Loan Account Resource', function () {
     it('can update loan account balance through transactions', function () {
         $loan = Account::factory()->loan()->create([
             'user_id' => $this->user->id,
-            'initial_balance' => -10000,
-            'balance' => -10000,
+            'initial_balance' => 10000,
+            'balance' => 10000,
             'currency' => 'MYR',
         ]);
 
-        // Simulate updating balance after payment
-        $loan->balance = -8800;
+        // Simulate updating balance after payment (reducing amount owed)
+        $loan->balance = 8800;
         $loan->save();
 
         livewire(EditAccount::class, ['record' => $loan->getRouteKey()])
@@ -79,7 +79,7 @@ describe('Loan Account Resource', function () {
                 'type' => 'loan',
             ]);
 
-        expect((float) $loan->refresh()->balance)->toBe(-8800.0);
+        expect((float) $loan->refresh()->balance)->toBe(8800.0);
         expect($loan->formatted_balance)->toBe('MYR 8,800.00');
     });
 
