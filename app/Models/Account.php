@@ -92,22 +92,26 @@ class Account extends Model
     protected function formattedBalance(): Attribute
     {
         return Attribute::make(
-            get: fn () => $this->type === 'loan'
-                ? $this->currency.' '.number_format(abs($this->balance), 2)
-                : $this->currency.' '.number_format($this->balance, 2)
-        );
-    }
-
-    protected function balanceLabel(): Attribute
-    {
-        return Attribute::make(
-            get: fn () => $this->type === 'loan' ? 'Outstanding' : 'Balance'
+            get: fn () => $this->currency.' '.number_format($this->balance, 2)
         );
     }
 
     public function isLoan(): bool
     {
         return $this->type === 'loan';
+    }
+
+    public function isLiability(): bool
+    {
+        return in_array($this->type, ['loan', 'credit_card']);
+    }
+
+
+    protected function balanceLabel(): Attribute
+    {
+        return Attribute::make(
+            get: fn () => $this->isLiability() ? 'Outstanding' : 'Balance'
+        );
     }
 
     public function hasSufficientBalance(float $amount): bool

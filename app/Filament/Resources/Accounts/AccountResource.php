@@ -63,10 +63,16 @@ class AccountResource extends Resource
                             ->numeric()
                             ->default(0)
                             ->prefix('MYR')
-                            ->label(fn (Get $get) => $get('type') === 'loan' ? 'Total Amount Owed' : 'Initial Balance')
-                            ->helperText(fn (Get $get) => $get('type') === 'loan'
-                                ? 'Enter as negative amount (e.g., -60000 for MYR 60,000 loan)'
-                                : 'Starting balance for this account'),
+                            ->label(fn (Get $get) => match ($get('type')) {
+                                'loan' => 'Total Amount Owed',
+                                'credit_card' => 'Outstanding Balance',
+                                default => 'Initial Balance'
+                            })
+                            ->helperText(fn (Get $get) => match ($get('type')) {
+                                'loan' => 'Enter as positive amount (e.g., 60000 for MYR 60,000 loan)',
+                                'credit_card' => 'Enter as positive amount (e.g., 5000 for MYR 5,000 outstanding balance)',
+                                default => 'Starting balance for this account'
+                            }),
 
                         Select::make('currency')
                             ->required()
@@ -128,7 +134,7 @@ class AccountResource extends Resource
                     ->money(fn (Account $record) => strtolower($record->currency))
                     ->sortable()
                     ->formatStateUsing(fn (Account $record) => $record->formatted_balance)
-                    ->color(fn (Account $record) => $record->type === 'loan' ? 'danger' : ($record->balance >= 0 ? 'success' : 'danger')),
+                    ->color(fn (Account $record) => $record->isLiability() ? 'danger' : ($record->balance >= 0 ? 'success' : 'danger')),
 
                 TextColumn::make('currency')
                     ->badge()

@@ -84,7 +84,20 @@ class User extends Authenticatable implements FilamentUser
     protected function netWorth(): Attribute
     {
         return Attribute::make(
-            get: fn () => $this->accounts()->sum('balance') / 100
+            get: function () {
+                // Updated net worth calculation: Assets - Liabilities
+                // Note: balance is already in proper format due to MoneyCast, but sum() uses raw values
+                $assets = $this->accounts()
+                    ->whereNotIn('type', ['loan', 'credit_card'])
+                    ->sum('balance') / 100;
+                
+                $liabilities = $this->accounts()
+                    ->whereIn('type', ['loan', 'credit_card'])
+                    ->sum('balance') / 100;
+                
+                // Return assets minus liabilities (liabilities are positive, so we subtract them)
+                return (float) ($assets - $liabilities);
+            }
         );
     }
 }
