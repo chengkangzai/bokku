@@ -46,14 +46,14 @@ class BudgetOverview extends BaseWidget
                     ->formatStateUsing(fn (Budget $record): string => $record->getFormattedBudget())
                     ->sortable(),
 
-                TextColumn::make('spent')
+                TextColumn::make('getFormattedSpent')
                     ->label('Spent')
-                    ->formatStateUsing(fn (Budget $record): string => $record->getFormattedSpent())
+                    ->getStateUsing(fn (Budget $record): string => $record->getFormattedSpent())
                     ->color(fn (Budget $record): string => $record->getStatusColor()),
 
                 TextColumn::make('progress')
                     ->label('Progress')
-                    ->formatStateUsing(fn (Budget $record): string => $record->getProgressPercentage().'%')
+                    ->getStateUsing(fn (Budget $record): string => $record->getProgressPercentage().'%')
                     ->color(fn (Budget $record): string => $record->getStatusColor()),
 
                 TextColumn::make('status')
@@ -73,7 +73,7 @@ class BudgetOverview extends BaseWidget
 
                 TextColumn::make('remaining')
                     ->label('Remaining')
-                    ->formatStateUsing(fn (Budget $record): string => $record->getFormattedRemaining())
+                    ->getStateUsing(fn (Budget $record): string => $record->getFormattedRemaining())
                     ->color(fn (Budget $record): string => $record->isOverBudget() ? 'danger' : 'success'),
             ])
             ->recordActions([
