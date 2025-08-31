@@ -1,4 +1,4 @@
-!a---
+---
 name: code-simplifier
 description: | 
         Use this agent when you have functional code that needs refactoring to improve readability, reduce complexity, or eliminate redundancy. 
