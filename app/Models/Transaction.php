@@ -15,7 +15,7 @@ use Spatie\Tags\HasTags;
 
 class Transaction extends Model implements HasMedia
 {
-    use HasFactory, InteractsWithMedia, HasTags, HasUserScopedTags;
+    use HasFactory, HasTags, HasUserScopedTags, InteractsWithMedia;
 
     protected $fillable = [
         'user_id',

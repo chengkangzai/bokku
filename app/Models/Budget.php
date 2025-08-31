@@ -156,5 +156,4 @@ class Budget extends Model
     {
         return $this->getProgressPercentage() >= 80 && ! $this->isOverBudget();
     }
-
 }

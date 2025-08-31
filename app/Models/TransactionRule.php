@@ -180,7 +180,7 @@ class TransactionRule extends Model
         $tag = $action['tag'] ?? '';
         if ($tag) {
             // Use user-scoped tag type
-            $transaction->attachTag($tag, 'user_' . $transaction->user_id);
+            $transaction->attachTag($tag, 'user_'.$transaction->user_id);
         }
     }
 

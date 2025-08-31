@@ -307,7 +307,7 @@ describe('Transaction Model', function () {
 
         expect($transaction->tags)->toHaveCount(2);
         expect($transaction->tags->pluck('name')->toArray())->toContain('monthly', 'salary');
-        expect($transaction->tags->pluck('type')->unique()->first())->toBe('user_' . $user->id);
+        expect($transaction->tags->pluck('type')->unique()->first())->toBe('user_'.$user->id);
     });
 
     it('can detach user-scoped tags', function () {
@@ -362,16 +362,16 @@ describe('Transaction Model', function () {
 
         expect($userTags)->toHaveCount(2);
         expect($userTags->pluck('name')->toArray())->toContain('monthly', 'salary');
-        expect($userTags->pluck('type')->unique()->first())->toBe('user_' . $user->id);
+        expect($userTags->pluck('type')->unique()->first())->toBe('user_'.$user->id);
     });
 
     it('isolates tags between different users', function () {
         $user1 = User::factory()->create();
         $user2 = User::factory()->create();
-        
+
         $account1 = Account::factory()->create(['user_id' => $user1->id]);
         $account2 = Account::factory()->create(['user_id' => $user2->id]);
-        
+
         $transaction1 = Transaction::factory()->create([
             'user_id' => $user1->id,
             'account_id' => $account1->id,
@@ -385,13 +385,13 @@ describe('Transaction Model', function () {
         $transaction2->attachUserTag(['monthly', 'expense']);
 
         // User 1's tags
-        expect($transaction1->tags->pluck('type')->unique()->first())->toBe('user_' . $user1->id);
+        expect($transaction1->tags->pluck('type')->unique()->first())->toBe('user_'.$user1->id);
         expect($transaction1->tags->pluck('name')->toArray())->toContain('monthly', 'salary');
-        
+
         // User 2's tags
-        expect($transaction2->tags->pluck('type')->unique()->first())->toBe('user_' . $user2->id);
+        expect($transaction2->tags->pluck('type')->unique()->first())->toBe('user_'.$user2->id);
         expect($transaction2->tags->pluck('name')->toArray())->toContain('monthly', 'expense');
-        
+
         // Tags are isolated
         expect($transaction1->tags->pluck('name')->toArray())->not->toContain('expense');
         expect($transaction2->tags->pluck('name')->toArray())->not->toContain('salary');
@@ -400,7 +400,7 @@ describe('Transaction Model', function () {
     it('can query transactions with any user tags', function () {
         $user = User::factory()->create();
         $account = Account::factory()->create(['user_id' => $user->id]);
-        
+
         $transaction1 = Transaction::factory()->create([
             'user_id' => $user->id,
             'account_id' => $account->id,
@@ -429,7 +429,7 @@ describe('Transaction Model', function () {
     it('can query transactions with all user tags', function () {
         $user = User::factory()->create();
         $account = Account::factory()->create(['user_id' => $user->id]);
-        
+
         $transaction1 = Transaction::factory()->create([
             'user_id' => $user->id,
             'account_id' => $account->id,
@@ -453,13 +453,13 @@ describe('Transaction Model', function () {
     it('can get available user tags', function () {
         $user1 = User::factory()->create();
         $user2 = User::factory()->create();
-        
+
         $account1 = Account::factory()->create(['user_id' => $user1->id]);
         $transaction1 = Transaction::factory()->create([
             'user_id' => $user1->id,
             'account_id' => $account1->id,
         ]);
-        
+
         $account2 = Account::factory()->create(['user_id' => $user2->id]);
         $transaction2 = Transaction::factory()->create([
             'user_id' => $user2->id,
@@ -474,20 +474,20 @@ describe('Transaction Model', function () {
 
         expect($user1Tags->pluck('name')->toArray())->toContain('monthly', 'salary');
         expect($user1Tags->pluck('name')->toArray())->not->toContain('weekly', 'expense');
-        
+
         expect($user2Tags->pluck('name')->toArray())->toContain('weekly', 'expense');
         expect($user2Tags->pluck('name')->toArray())->not->toContain('monthly', 'salary');
     });
 
     it('can find or create user tags', function () {
         $user = User::factory()->create();
-        
+
         $tag1 = Transaction::findOrCreateUserTag('monthly', $user->id);
         expect($tag1)->toBeInstanceOf(Tag::class);
         expect($tag1->name)->toBe('monthly');
-        expect($tag1->type)->toBe('user_' . $user->id);
+        expect($tag1->type)->toBe('user_'.$user->id);
         expect($tag1->exists)->toBeTrue();
-        
+
         $tag2 = Transaction::findOrCreateUserTag('monthly', $user->id);
         expect($tag2->id)->toBe($tag1->id); // Should return existing tag
     });

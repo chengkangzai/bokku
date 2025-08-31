@@ -2,9 +2,8 @@
 
 namespace App\Filament\Resources\Accounts\Pages;
 
-use Filament\Actions\DeleteAction;
 use App\Filament\Resources\Accounts\AccountResource;
-use Filament\Actions;
+use Filament\Actions\DeleteAction;
 use Filament\Resources\Pages\EditRecord;
 
 class EditAccount extends EditRecord

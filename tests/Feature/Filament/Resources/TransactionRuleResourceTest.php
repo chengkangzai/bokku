@@ -1,9 +1,9 @@
 <?php
 
-use App\Filament\Resources\TransactionRules\TransactionRuleResource;
 use App\Filament\Resources\TransactionRules\Pages\CreateTransactionRule;
 use App\Filament\Resources\TransactionRules\Pages\EditTransactionRule;
 use App\Filament\Resources\TransactionRules\Pages\ListTransactionRules;
+use App\Filament\Resources\TransactionRules\TransactionRuleResource;
 use App\Models\Account;
 use App\Models\Category;
 use App\Models\Transaction;

@@ -106,7 +106,6 @@ class Account extends Model
         return in_array($this->type, ['loan', 'credit_card']);
     }
 
-
     protected function balanceLabel(): Attribute
     {
         return Attribute::make(

@@ -1,9 +1,9 @@
 <?php
 
-use App\Filament\Resources\RecurringTransactions\RecurringTransactionResource;
 use App\Filament\Resources\RecurringTransactions\Pages\CreateRecurringTransaction;
 use App\Filament\Resources\RecurringTransactions\Pages\EditRecurringTransaction;
 use App\Filament\Resources\RecurringTransactions\Pages\ListRecurringTransactions;
+use App\Filament\Resources\RecurringTransactions\RecurringTransactionResource;
 use App\Models\Account;
 use App\Models\Category;
 use App\Models\RecurringTransaction;

@@ -2,8 +2,8 @@
 
 namespace App\Traits;
 
-use Illuminate\Support\Collection;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Collection;
 use Spatie\Tags\Tag;
 
 trait HasUserScopedTags
@@ -13,7 +13,7 @@ trait HasUserScopedTags
      */
     public function getUserTagType(): string
     {
-        return 'user_' . $this->user_id;
+        return 'user_'.$this->user_id;
     }
 
     /**
@@ -53,7 +53,7 @@ trait HasUserScopedTags
      */
     public function scopeWithAnyUserTags(Builder $query, array $tags, int $userId): Builder
     {
-        return $query->withAnyTagsOfType($tags, 'user_' . $userId);
+        return $query->withAnyTagsOfType($tags, 'user_'.$userId);
     }
 
     /**
@@ -61,12 +61,13 @@ trait HasUserScopedTags
      */
     public function scopeWithAllUserTags(Builder $query, array $tags, int $userId): Builder
     {
-        $tagType = 'user_' . $userId;
+        $tagType = 'user_'.$userId;
         foreach ($tags as $tag) {
-            $query->whereHas('tags', function($q) use ($tag, $tagType) {
+            $query->whereHas('tags', function ($q) use ($tag, $tagType) {
                 $q->where('name', $tag)->where('type', $tagType);
             });
         }
+
         return $query;
     }
 
@@ -75,7 +76,7 @@ trait HasUserScopedTags
      */
     public static function getAvailableUserTags(int $userId): Collection
     {
-        return Tag::getWithType('user_' . $userId);
+        return Tag::getWithType('user_'.$userId);
     }
 
     /**
@@ -83,6 +84,6 @@ trait HasUserScopedTags
      */
     public static function findOrCreateUserTag(string $name, int $userId): Tag
     {
-        return Tag::findOrCreate($name, 'user_' . $userId);
+        return Tag::findOrCreate($name, 'user_'.$userId);
     }
 }

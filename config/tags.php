@@ -16,7 +16,7 @@ return [
      * The name of the table to create.
      */
     'table_name' => 'tags',
-    
+
     /*
      * Disable translations to use simple string tags
      */

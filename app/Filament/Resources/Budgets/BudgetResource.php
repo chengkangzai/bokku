@@ -2,29 +2,26 @@
 
 namespace App\Filament\Resources\Budgets;
 
-use Filament\Schemas\Schema;
-use Filament\Schemas\Components\Section;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\Toggle;
-use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Columns\IconColumn;
-use Filament\Tables\Filters\SelectFilter;
-use Filament\Tables\Filters\TernaryFilter;
-use Filament\Actions\EditAction;
-use Filament\Actions\DeleteAction;
-use Filament\Actions\BulkActionGroup;
-use Filament\Actions\DeleteBulkAction;
-use Filament\Actions\BulkAction;
-use App\Filament\Resources\Budgets\Pages\ListBudgets;
 use App\Filament\Resources\Budgets\Pages\CreateBudget;
 use App\Filament\Resources\Budgets\Pages\EditBudget;
-use App\Filament\Resources\BudgetResource\Pages;
+use App\Filament\Resources\Budgets\Pages\ListBudgets;
 use App\Models\Budget;
-use Filament\Forms;
+use Filament\Actions\BulkAction;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Resources\Resource;
-use Filament\Tables;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
+use Filament\Tables\Columns\IconColumn;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -32,9 +29,9 @@ class BudgetResource extends Resource
 {
     protected static ?string $model = Budget::class;
 
-    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-banknotes';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-banknotes';
 
-    protected static string | \UnitEnum | null $navigationGroup = 'Finance';
+    protected static string|\UnitEnum|null $navigationGroup = 'Finance';
 
     protected static ?int $navigationSort = 3;
 

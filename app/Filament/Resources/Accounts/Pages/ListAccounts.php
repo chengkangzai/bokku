@@ -2,9 +2,8 @@
 
 namespace App\Filament\Resources\Accounts\Pages;
 
-use Filament\Actions\CreateAction;
 use App\Filament\Resources\Accounts\AccountResource;
-use Filament\Actions;
+use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ListRecords;
 
 class ListAccounts extends ListRecords

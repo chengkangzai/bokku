@@ -2,38 +2,35 @@
 
 namespace App\Filament\Resources\Categories;
 
-use Filament\Schemas\Schema;
-use Filament\Schemas\Components\Section;
-use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\ColorPicker;
-use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Columns\BadgeColumn;
-use Filament\Tables\Columns\ColorColumn;
-use Filament\Tables\Filters\SelectFilter;
-use Filament\Actions\EditAction;
-use Filament\Actions\DeleteAction;
-use Filament\Actions\BulkActionGroup;
-use Filament\Actions\DeleteBulkAction;
-use Illuminate\Database\Eloquent\Builder;
-use App\Filament\Resources\Categories\RelationManagers\TransactionsRelationManager;
-use App\Filament\Resources\Categories\Pages\ListCategories;
 use App\Filament\Resources\Categories\Pages\CreateCategory;
 use App\Filament\Resources\Categories\Pages\EditCategory;
-use App\Filament\Resources\CategoryResource\Pages;
+use App\Filament\Resources\Categories\Pages\ListCategories;
+use App\Filament\Resources\Categories\RelationManagers\TransactionsRelationManager;
 use App\Models\Category;
-use Filament\Forms;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
+use Filament\Forms\Components\ColorPicker;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
-use Filament\Tables;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
+use Filament\Tables\Columns\BadgeColumn;
+use Filament\Tables\Columns\ColorColumn;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class CategoryResource extends Resource
 {
     protected static ?string $model = Category::class;
 
-    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-tag';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-tag';
 
-    protected static string | \UnitEnum | null $navigationGroup = 'Finance';
+    protected static string|\UnitEnum|null $navigationGroup = 'Finance';
 
     protected static ?int $navigationSort = 3;
 

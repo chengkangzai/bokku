@@ -2,34 +2,31 @@
 
 namespace App\Filament\Resources\RecurringTransactions;
 
-use Filament\Schemas\Schema;
-use Filament\Schemas\Components\Section;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\DateTimePicker;
-use Filament\Forms\Components\Toggle;
-use Filament\Forms\Components\Textarea;
-use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Columns\IconColumn;
-use Filament\Tables\Filters\SelectFilter;
-use Filament\Tables\Filters\TernaryFilter;
-use Filament\Tables\Filters\Filter;
-use Filament\Actions\Action;
-use Filament\Notifications\Notification;
-use Filament\Actions\EditAction;
-use Filament\Actions\DeleteAction;
-use Filament\Actions\BulkAction;
-use Filament\Actions\BulkActionGroup;
-use Filament\Actions\DeleteBulkAction;
-use App\Filament\Resources\RecurringTransactions\Pages\ListRecurringTransactions;
 use App\Filament\Resources\RecurringTransactions\Pages\CreateRecurringTransaction;
 use App\Filament\Resources\RecurringTransactions\Pages\EditRecurringTransaction;
-use App\Filament\Resources\RecurringTransactionResource\Pages;
+use App\Filament\Resources\RecurringTransactions\Pages\ListRecurringTransactions;
 use App\Models\RecurringTransaction;
-use Filament\Forms;
+use Filament\Actions\Action;
+use Filament\Actions\BulkAction;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\DateTimePicker;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
-use Filament\Tables;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
+use Filament\Tables\Columns\IconColumn;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\Filter;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -37,9 +34,9 @@ class RecurringTransactionResource extends Resource
 {
     protected static ?string $model = RecurringTransaction::class;
 
-    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-arrow-path';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-arrow-path';
 
-    protected static string | \UnitEnum | null $navigationGroup = 'Finance';
+    protected static string|\UnitEnum|null $navigationGroup = 'Finance';
 
     protected static ?int $navigationSort = 4;
 

@@ -256,7 +256,7 @@ describe('TransactionRule Actions', function () {
 
         expect($transaction->tags)->toHaveCount(1);
         expect($transaction->tags->first()->name)->toBe('coffee-shop');
-        expect($transaction->tags->first()->type)->toBe('user_' . $this->user->id);
+        expect($transaction->tags->first()->type)->toBe('user_'.$this->user->id);
     });
 
     it('applies multiple actions to matching transaction', function () {

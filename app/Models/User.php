@@ -90,11 +90,11 @@ class User extends Authenticatable implements FilamentUser
                 $assets = $this->accounts()
                     ->whereNotIn('type', ['loan', 'credit_card'])
                     ->sum('balance') / 100;
-                
+
                 $liabilities = $this->accounts()
                     ->whereIn('type', ['loan', 'credit_card'])
                     ->sum('balance') / 100;
-                
+
                 // Return assets minus liabilities (liabilities are positive, so we subtract them)
                 return (float) ($assets - $liabilities);
             }

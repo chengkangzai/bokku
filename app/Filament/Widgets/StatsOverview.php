@@ -18,11 +18,11 @@ class StatsOverview extends BaseWidget
         $assets = Account::where('user_id', $userId)
             ->whereNotIn('type', ['loan', 'credit_card'])
             ->sum('balance') / 100;
-        
+
         $liabilities = Account::where('user_id', $userId)
             ->whereIn('type', ['loan', 'credit_card'])
             ->sum('balance') / 100;
-        
+
         $netWorth = $assets - $liabilities;
 
         $monthlyIncome = Transaction::where('user_id', $userId)
