@@ -14,7 +14,7 @@ class BudgetOverview extends BaseWidget
 
     protected static ?string $heading = 'Budget Overview';
 
-    protected int|string|array $columnSpan = 'full';
+    protected int|string|array $columnSpan = '1';
 
     public function table(Table $table): Table
     {
@@ -29,8 +29,7 @@ class BudgetOverview extends BaseWidget
             ->columns([
                 TextColumn::make('category.name')
                     ->label('Category')
-                    ->sortable()
-                    ->searchable(),
+                    ->sortable(),
 
                 TextColumn::make('period')
                     ->badge()
