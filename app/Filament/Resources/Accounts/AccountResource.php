@@ -90,8 +90,7 @@ class AccountResource extends Resource
                 Section::make('Additional Details')
                     ->schema([
                         TextInput::make('account_number')
-                            ->maxLength(255)
-                            ->placeholder('Last 4 digits for reference'),
+                            ->maxLength(255),
 
                         ColorPicker::make('color')
                             ->required()
