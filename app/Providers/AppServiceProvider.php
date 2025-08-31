@@ -3,6 +3,8 @@
 namespace App\Providers;
 
 use Filament\Schemas\Components\Section;
+use Filament\Support\Enums\FontFamily;
+use Filament\Tables\Columns\TextColumn;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -22,6 +24,12 @@ class AppServiceProvider extends ServiceProvider
     {
         Section::configureUsing(function (Section $section) {
             $section->compact();
+        });
+
+        TextColumn::configureUsing(function (TextColumn $column) {
+            if ($column->isBadge()) {
+                $column->fontFamily(FontFamily::Sans);
+            }
         });
     }
 }
