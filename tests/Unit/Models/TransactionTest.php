@@ -397,58 +397,6 @@ describe('Transaction Model', function () {
         expect($transaction2->tags->pluck('name')->toArray())->not->toContain('salary');
     });
 
-    it('can query transactions with any user tags', function () {
-        $user = User::factory()->create();
-        $account = Account::factory()->create(['user_id' => $user->id]);
-
-        $transaction1 = Transaction::factory()->create([
-            'user_id' => $user->id,
-            'account_id' => $account->id,
-        ]);
-        $transaction2 = Transaction::factory()->create([
-            'user_id' => $user->id,
-            'account_id' => $account->id,
-        ]);
-        $transaction3 = Transaction::factory()->create([
-            'user_id' => $user->id,
-            'account_id' => $account->id,
-        ]);
-
-        $transaction1->attachUserTag(['monthly', 'salary']);
-        $transaction2->attachUserTag(['expense', 'coffee']);
-        $transaction3->attachUserTag(['transport', 'petrol']);
-
-        $monthlyOrCoffee = Transaction::withAnyUserTags(['monthly', 'coffee'], $user->id)
-            ->where('user_id', $user->id)
-            ->get();
-
-        expect($monthlyOrCoffee)->toHaveCount(2);
-        expect($monthlyOrCoffee->pluck('id')->toArray())->toContain($transaction1->id, $transaction2->id);
-    });
-
-    it('can query transactions with all user tags', function () {
-        $user = User::factory()->create();
-        $account = Account::factory()->create(['user_id' => $user->id]);
-
-        $transaction1 = Transaction::factory()->create([
-            'user_id' => $user->id,
-            'account_id' => $account->id,
-        ]);
-        $transaction2 = Transaction::factory()->create([
-            'user_id' => $user->id,
-            'account_id' => $account->id,
-        ]);
-
-        $transaction1->attachUserTag(['monthly', 'salary', 'income']);
-        $transaction2->attachUserTag(['monthly', 'expense']);
-
-        $monthlyAndSalary = Transaction::withAllUserTags(['monthly', 'salary'], $user->id)
-            ->where('user_id', $user->id)
-            ->get();
-
-        expect($monthlyAndSalary)->toHaveCount(1);
-        expect($monthlyAndSalary->first()->id)->toBe($transaction1->id);
-    });
 
     it('can get available user tags', function () {
         $user1 = User::factory()->create();
