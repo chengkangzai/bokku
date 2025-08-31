@@ -1,0 +1,23 @@
+name: Check & fix styling
+
+on: [ push ]
+
+jobs:
+  fix-styling:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.head_ref }}
+
+      - name: laravel-pint
+        uses: aglipanci/laravel-pint-action@2.6
+        with:
+          preset: laravel
+
+      - name: Commit changes
+        uses: stefanzweifel/git-auto-commit-action@v6
+        with:
+          commit_message: Fix styling
