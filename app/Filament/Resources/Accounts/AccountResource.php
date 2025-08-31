@@ -127,7 +127,7 @@ class AccountResource extends Resource
                         'warning' => 'credit_card',
                         'danger' => 'loan',
                     ])
-                    ->formatStateUsing(fn (string $state): string => ucwords(str_replace('_', ' ', $state))),
+                    ->formatStateUsing(fn (string $state): string => str_replace('_', ' ', $state)),
 
                 TextColumn::make('balance')
                     ->label('Balance/Outstanding')

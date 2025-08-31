@@ -38,8 +38,7 @@ class BudgetOverview extends BaseWidget
                         'secondary' => 'weekly',
                         'primary' => 'monthly',
                         'success' => 'annual',
-                    ])
-                    ->formatStateUsing(fn (string $state): string => ucfirst($state)),
+                    ]),
 
                 TextColumn::make('amount')
                     ->label('Budget')
