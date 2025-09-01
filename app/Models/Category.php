@@ -45,10 +45,12 @@ class Category extends Model
         $month = $month ?? now()->month;
         $year = $year ?? now()->year;
 
-        return $this->transactions()
+        $sumInCents = $this->transactions()
             ->whereYear('date', $year)
             ->whereMonth('date', $month)
-            ->sum('amount') / 100;
+            ->sum('amount');
+
+        return round($sumInCents / 100, 2);
     }
 
     protected function defaultIcon(): Attribute

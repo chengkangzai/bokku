@@ -146,7 +146,7 @@ describe('UnifiedImportHandler File Processing', function () {
 
         Log::shouldReceive('error')
             ->once()
-            ->with('Unified import handler failed', \Mockery::any());
+            ->with('Import processing failed', \Mockery::any());
 
         expect(fn () => $this->handler->processFile('content', 'pdf'))
             ->toThrow(Exception::class, 'Failed to process file');

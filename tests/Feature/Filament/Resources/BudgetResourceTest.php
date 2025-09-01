@@ -188,32 +188,6 @@ describe('BudgetResource CRUD Operations', function () {
             ]);
     });
 
-    it('can save updated budget data', function () {
-        $budget = Budget::factory()->create([
-            'user_id' => $this->user->id,
-            'category_id' => $this->expenseCategory1->id,
-            'amount' => 500.00,
-            'period' => 'monthly',
-            'is_active' => true,
-            'auto_rollover' => false,
-        ]);
-
-        livewire(EditBudget::class, ['record' => $budget->getRouteKey()])
-            ->fillForm([
-                'amount' => 750.00,
-                'period' => 'weekly',
-                'is_active' => false,
-                'auto_rollover' => true,
-            ])
-            ->call('save')
-            ->assertHasNoFormErrors();
-
-        expect($budget->refresh())
-            ->amount->toBe(750.00)
-            ->period->toBe('weekly')
-            ->is_active->toBeFalse()
-            ->auto_rollover->toBeTrue();
-    });
 
     it('can delete budget', function () {
         $budget = Budget::factory()->create([

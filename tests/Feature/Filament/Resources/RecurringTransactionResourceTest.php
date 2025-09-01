@@ -148,13 +148,22 @@ describe('RecurringTransactionResource CRUD Operations', function () {
     it('can update recurring transaction', function () {
         $recurring = RecurringTransaction::factory()->monthly()->create([
             'user_id' => $this->user->id,
+            'account_id' => $this->account->id,
+            'category_id' => $this->expenseCategory->id,
             'amount' => 100.00,
             'is_active' => true,
         ]);
 
         livewire(EditRecurringTransaction::class, ['record' => $recurring->getRouteKey()])
             ->fillForm([
+                'type' => 'expense',
                 'amount' => 150.00,
+                'description' => $recurring->description,
+                'account_id' => $recurring->account_id,
+                'category_id' => $recurring->category_id,
+                'frequency' => $recurring->frequency,
+                'interval' => $recurring->interval,
+                'day_of_month' => $recurring->day_of_month,
                 'is_active' => false,
             ])
             ->call('save')
@@ -311,7 +320,7 @@ describe('RecurringTransaction Model Functionality', function () {
         $nextDate = $recurring->calculateNextDate();
 
         expect($nextDate->day)->toBe(15);
-        expect($nextDate->month)->toBe(now()->addMonth()->month);
+        expect($nextDate->month)->toBe(now()->addMonthNoOverflow()->month);
     });
 
     it('handles end of month correctly', function () {

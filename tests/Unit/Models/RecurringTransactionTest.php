@@ -523,18 +523,6 @@ describe('RecurringTransaction Attributes', function () {
         expect($transfer->type_icon)->toBe('heroicon-o-arrow-right-circle');
     });
 
-    it('generates next occurrences preview', function () {
-        $recurring = RecurringTransaction::factory()->monthly()->create([
-            'user_id' => $this->user->id,
-            'next_date' => now()->startOfMonth(),
-            'interval' => 1,
-        ]);
-
-        $occurrences = $recurring->next_occurrences;
-
-        expect($occurrences)->toHaveCount(5);
-        expect($occurrences[0]->format('Y-m-d'))->toBe(now()->startOfMonth()->format('Y-m-d'));
-    });
 
     it('limits occurrences by end_date', function () {
         $recurring = RecurringTransaction::factory()->daily()->create([

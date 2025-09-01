@@ -35,7 +35,7 @@ class AccountBalances extends BaseWidget
                         'warning' => 'credit_card',
                         'danger' => 'loan',
                     ])
-                    ->formatStateUsing(fn (string $state): string => str_replace('_', ' ', $state)),
+                    ->formatStateUsing(fn (string $state): string => str($state)->replace('_', ' ')->title()),
 
                 TextColumn::make('balance')
                     ->label('Balance/Outstanding')
