@@ -6,6 +6,11 @@
     <title>{{ config('app.name', 'Bokku') }} - Personal Finance Management Made Simple</title>
     <meta name="description" content="Bokku is a self-hosted personal finance manager built with Laravel and Filament, inspired by Firefly III. Track your finances with Malaysian banking support.">
     
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('logo.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('logo.png') }}">
+    <link rel="apple-touch-icon" href="{{ asset('logo.png') }}">
+    
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700" rel="stylesheet" />
