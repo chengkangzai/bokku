@@ -20,9 +20,10 @@
             <div class="flex justify-between items-center py-6 md:justify-start md:space-x-10">
                 <!-- Logo -->
                 <div class="flex justify-start lg:w-0 lg:flex-1">
-                    <span class="text-2xl font-bold text-gray-900 dark:text-white flex items-center">
-                        📚💰 Bokku
-                    </span>
+                    <a href="/" class="flex items-center">
+                        <img src="{{ asset('logo.png') }}" alt="Bokku" class="h-8 w-auto mr-2">
+                        <span class="text-2xl font-bold text-gray-900 dark:text-white">Bokku</span>
+                    </a>
                 </div>
 
                 <!-- Navigation -->
@@ -199,7 +200,9 @@
                     
                     <div class="mt-8 lg:mt-0">
                         <div class="text-center">
-                            <div class="text-8xl mb-4">📚💰</div>
+                            <div class="mb-4 flex justify-center">
+                                <img src="{{ asset('logo.png') }}" alt="Bokku Logo" class="h-32 w-auto">
+                            </div>
                             <h3 class="text-xl font-medium text-gray-900 dark:text-white">Your Personal Finance Manager</h3>
                             <p class="mt-2 text-gray-500 dark:text-gray-300">Simple. Secure. Self-hosted.</p>
                         </div>
