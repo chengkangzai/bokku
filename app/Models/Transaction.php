@@ -161,8 +161,7 @@ class Transaction extends Model implements HasMedia
                 'image/gif',
                 'image/webp',
                 'application/pdf',
-            ])
-            ->useDisk('public');
+            ]);
     }
 
     public function registerMediaConversions(?Media $media = null): void
