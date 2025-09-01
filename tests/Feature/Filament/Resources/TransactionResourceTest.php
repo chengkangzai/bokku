@@ -74,7 +74,6 @@ describe('TransactionResource CRUD Operations', function () {
         ]);
     });
 
-
     it('can validate required fields on create', function () {
         livewire(CreateTransaction::class)
             ->fillForm([
@@ -362,8 +361,6 @@ describe('TransactionResource Media Attachments', function () {
         expect($transaction->getFirstMedia('receipts')->name)->toBe('receipt');
     });
 
-
-
     it('respects maximum file count limit', function () {
         $files = [
             UploadedFile::fake()->image('receipt1.jpg'),
@@ -469,7 +466,6 @@ describe('TransactionResource Budget Warning Integration', function () {
         ]);
     });
 
-
     it('does not show warning for categories without budgets', function () {
         $noBudgetCategory = Category::factory()->expense()->create(['user_id' => $this->user->id]);
 
@@ -521,8 +517,7 @@ describe('TransactionResource Budget Warning Integration', function () {
 
         // Verify form state and no warning initially
         $component->assertDontSee('⚠️')
-            ->assertFormSet(['amount' => 100.00])
-;
+            ->assertFormSet(['amount' => 100.00]);
 
         // Update amount to trigger warning using reactive field update
         $component->set('data.amount', 600.00)
@@ -581,8 +576,7 @@ describe('TransactionResource Budget Warning Integration', function () {
             ->assertFormSet([
                 'amount' => 600.00,
                 'category_id' => $this->budgetCategory->id,
-            ])
-;
+            ]);
     });
 
     it('handles zero amount gracefully in reactive form', function () {
@@ -612,8 +606,7 @@ describe('TransactionResource Budget Warning Integration', function () {
             ])
             ->assertDontSee('⚠️')
             ->assertDontSee('💡')
-            ->assertFormSet(['amount' => ''])
-;
+            ->assertFormSet(['amount' => '']);
     });
 
     it('shows correct warning for weekly budget period with form validation', function () {
@@ -650,8 +643,7 @@ describe('TransactionResource Budget Warning Integration', function () {
             ->assertFormSet([
                 'amount' => 80.00,
                 'category_id' => $weeklyCategory->id,
-            ])
-;
+            ]);
     });
 
     it('shows correct warning for annual budget period with form validation', function () {
@@ -688,8 +680,7 @@ describe('TransactionResource Budget Warning Integration', function () {
             ->assertFormSet([
                 'amount' => 600.00,
                 'category_id' => $annualCategory->id,
-            ])
-;
+            ]);
     });
 
     it('only shows warnings for current users budgets with multi-tenant isolation', function () {
@@ -721,7 +712,6 @@ describe('TransactionResource Budget Warning Integration', function () {
             ->assertFormSet([
                 'category_id' => $this->budgetCategory->id,
                 'amount' => 600.00,
-            ])
-;
+            ]);
     });
 });

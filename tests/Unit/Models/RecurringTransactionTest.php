@@ -523,7 +523,6 @@ describe('RecurringTransaction Attributes', function () {
         expect($transfer->type_icon)->toBe('heroicon-o-arrow-right-circle');
     });
 
-
     it('limits occurrences by end_date', function () {
         $recurring = RecurringTransaction::factory()->daily()->create([
             'user_id' => $this->user->id,

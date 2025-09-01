@@ -139,7 +139,6 @@ describe('StatsOverview Monthly Calculations', function () {
             ->assertSee('1,000.00'); // Net worth: 1500 - 500 = 1000
     });
 
-
     it('calculates monthly savings correctly', function () {
         // Current month income
         Transaction::factory()->create([

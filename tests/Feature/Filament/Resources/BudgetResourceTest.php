@@ -188,7 +188,6 @@ describe('BudgetResource CRUD Operations', function () {
             ]);
     });
 
-
     it('can delete budget', function () {
         $budget = Budget::factory()->create([
             'user_id' => $this->user->id,

@@ -397,7 +397,6 @@ describe('Transaction Model', function () {
         expect($transaction2->tags->pluck('name')->toArray())->not->toContain('salary');
     });
 
-
     it('can get available user tags', function () {
         $user1 = User::factory()->create();
         $user2 = User::factory()->create();
