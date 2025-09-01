@@ -241,7 +241,8 @@ class TransactionResource extends Resource
                                     ->label('Upload Receipts')
                                     ->helperText('Upload receipts, invoices, or related documents (max 5 files, 5MB each)')
                                     ->columnSpanFull()
-                                    ->conversion('thumb'),
+                                    ->conversion('thumb')
+                                    ->conversionsDisk('s3'),
                             ]),
 
                         Section::make('Additional Information')
