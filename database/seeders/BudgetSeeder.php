@@ -12,14 +12,14 @@ class BudgetSeeder extends Seeder
 {
     public function run(): void
     {
-        $ahmad = User::where('email', 'ahmad@example.com')->first();
+        $admin = User::where('email', 'admin@admin.com')->first();
 
-        if ($ahmad) {
-            $this->createBudgetsForAhmad($ahmad);
+        if ($admin) {
+            $this->createBudgetsForUser($admin);
         }
     }
 
-    private function createBudgetsForAhmad(User $user): void
+    private function createBudgetsForUser(User $user): void
     {
         // Get categories
         $categories = Category::where('user_id', $user->id)->get()->keyBy('name');

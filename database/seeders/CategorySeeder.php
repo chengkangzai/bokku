@@ -10,10 +10,10 @@ class CategorySeeder extends Seeder
 {
     public function run(): void
     {
-        $users = User::all();
+        $admin = User::where('email', 'admin@admin.com')->first();
 
-        foreach ($users as $user) {
-            $this->createCategoriesForUser($user);
+        if ($admin) {
+            $this->createCategoriesForUser($admin);
         }
     }
 

@@ -11,14 +11,14 @@ class TransactionRuleSeeder extends Seeder
 {
     public function run(): void
     {
-        $ahmad = User::where('email', 'ahmad@example.com')->first();
+        $admin = User::where('email', 'admin@admin.com')->first();
 
-        if ($ahmad) {
-            $this->createRulesForAhmad($ahmad);
+        if ($admin) {
+            $this->createRulesForUser($admin);
         }
     }
 
-    private function createRulesForAhmad(User $user): void
+    private function createRulesForUser(User $user): void
     {
         // Get categories for this user
         $categories = Category::where('user_id', $user->id)->get()->keyBy('name');

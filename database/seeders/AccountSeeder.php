@@ -10,15 +10,10 @@ class AccountSeeder extends Seeder
 {
     public function run(): void
     {
-        $ahmad = User::where('email', 'ahmad@example.com')->first();
-        $sarah = User::where('email', 'sarah@example.com')->first();
+        $admin = User::where('email', 'admin@admin.com')->first();
 
-        if ($ahmad) {
-            $this->createAccountsForUser($ahmad);
-        }
-
-        if ($sarah) {
-            $this->createMinimalAccountsForUser($sarah);
+        if ($admin) {
+            $this->createAccountsForUser($admin);
         }
     }
 
@@ -72,46 +67,6 @@ class AccountSeeder extends Seeder
                 'color' => '#8B0000',
                 'is_active' => true,
                 'notes' => 'Hong Leong car loan, 7 years @ 2.95%',
-            ],
-        ];
-
-        foreach ($accounts as $account) {
-            Account::firstOrCreate(
-                [
-                    'user_id' => $account['user_id'],
-                    'name' => $account['name'],
-                ],
-                $account
-            );
-        }
-    }
-
-    private function createMinimalAccountsForUser(User $user): void
-    {
-        $accounts = [
-            [
-                'user_id' => $user->id,
-                'name' => 'RHB Savings',
-                'type' => 'bank',
-                'initial_balance' => 8000, // MYR8,000.00
-                'balance' => 6543.20, // MYR6,543.20
-                'currency' => 'MYR',
-                'account_number' => '212345678901',
-                'color' => '#00008B',
-                'is_active' => true,
-                'notes' => 'Main account',
-            ],
-            [
-                'user_id' => $user->id,
-                'name' => 'Cash',
-                'type' => 'cash',
-                'initial_balance' => 300, // MYR300.00
-                'balance' => 150.50, // MYR150.50
-                'currency' => 'MYR',
-                'account_number' => null,
-                'color' => '#228B22',
-                'is_active' => true,
-                'notes' => null,
             ],
         ];
 

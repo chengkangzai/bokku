@@ -13,14 +13,14 @@ class TransactionSeeder extends Seeder
 {
     public function run(): void
     {
-        $ahmad = User::where('email', 'ahmad@example.com')->first();
+        $admin = User::where('email', 'admin@admin.com')->first();
 
-        if ($ahmad) {
-            $this->createTransactionsForAhmad($ahmad);
+        if ($admin) {
+            $this->createTransactionsForUser($admin);
         }
     }
 
-    private function createTransactionsForAhmad(User $user): void
+    private function createTransactionsForUser(User $user): void
     {
         // Get accounts
         $maybank = Account::where('user_id', $user->id)->where('name', 'Maybank Savings')->first();

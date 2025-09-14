@@ -13,14 +13,14 @@ class RecurringTransactionSeeder extends Seeder
 {
     public function run(): void
     {
-        $ahmad = User::where('email', 'ahmad@example.com')->first();
+        $admin = User::where('email', 'admin@admin.com')->first();
 
-        if ($ahmad) {
-            $this->createRecurringTransactionsForAhmad($ahmad);
+        if ($admin) {
+            $this->createRecurringTransactionsForUser($admin);
         }
     }
 
-    private function createRecurringTransactionsForAhmad(User $user): void
+    private function createRecurringTransactionsForUser(User $user): void
     {
         // Get accounts
         $maybank = Account::where('user_id', $user->id)->where('name', 'Maybank Savings')->first();
