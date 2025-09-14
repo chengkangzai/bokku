@@ -230,6 +230,9 @@ class TransactionResource extends Resource
                                     ->multiple()
                                     ->reorderable()
                                     ->maxFiles(5)
+                                    ->afterStateUpdated(function (){
+
+                                    })
                                     ->acceptedFileTypes([
                                         'image/jpeg',
                                         'image/png',
