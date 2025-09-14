@@ -12,7 +12,7 @@ class UserSeeder extends Seeder
     {
         // Main test user
         User::firstOrCreate(
-            ['email' => 'ahmad@example.com'],
+            ['email' => 'admin@admin.com'],
             [
                 'name' => 'Ahmad Rahman',
                 'password' => Hash::make('password'),
