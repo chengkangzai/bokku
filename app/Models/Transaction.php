@@ -171,5 +171,16 @@ class Transaction extends Model implements HasMedia
             ->height(150)
             ->sharpen(10)
             ->nonQueued();
+
+        // Only create ai-optimized conversion for images
+        if ($media === null || str_starts_with($media->mime_type ?? '', 'image/')) {
+            $this->addMediaConversion('ai-optimized')
+                ->width(1024)
+                ->height(1024)
+                ->quality(85)
+                ->sharpen(5)
+                ->nonQueued()
+                ->performOnCollections('receipts');
+        }
     }
 }

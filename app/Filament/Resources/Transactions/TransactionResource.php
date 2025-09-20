@@ -9,6 +9,7 @@ use App\Models\Account;
 use App\Models\Category;
 use App\Models\Transaction;
 use App\Models\TransactionRule;
+use App\Services\ReceiptExtractorService;
 use Filament\Actions\Action;
 use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
@@ -31,6 +32,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\SpatieMediaLibraryImageColumn;
@@ -230,8 +232,143 @@ class TransactionResource extends Resource
                                     ->multiple()
                                     ->reorderable()
                                     ->maxFiles(5)
-                                    ->afterStateUpdated(function (){
+                                    ->hintActions([
+                                        Action::make('Auto Fill')
+                                            ->icon('heroicon-o-pencil-square')
+                                            ->visible(fn (?Transaction $record, string $context) => $context == 'edit' && $record->getFirstMedia('receipts') !== null)
+                                            ->action(function (Transaction $record, Set $set, Get $get) {
+                                                try {
+                                                    $media = $record->getFirstMedia('receipts');
+                                                    $mimeType = $media->mime_type;
 
+                                                    if (str_starts_with($mimeType, 'image/')) {
+                                                        // For images: use streams directly
+                                                        $stream = $media->hasGeneratedConversion('ai-optimized')
+                                                            ? $media->stream('ai-optimized')
+                                                            : $media->stream();
+                                                        $content = stream_get_contents($stream);
+                                                        fclose($stream);
+
+                                                        $extractedInfo = self::extractAndAutoFill($content, $mimeType, $set, $get);
+                                                    } elseif ($mimeType === 'application/pdf') {
+                                                        // For PDFs: must use temp files
+                                                        $tempPath = storage_path('app/temp_'.uniqid().'.pdf');
+                                                        try {
+                                                            $stream = $media->stream();
+                                                            file_put_contents($tempPath, stream_get_contents($stream));
+                                                            fclose($stream);
+
+                                                            $extractedInfo = self::extractAndAutoFill($tempPath, $mimeType, $set, $get);
+                                                        } finally {
+                                                            if (file_exists($tempPath)) {
+                                                                unlink($tempPath);
+                                                            }
+                                                        }
+                                                    } else {
+                                                        throw new \Exception('Unsupported file type: '.$mimeType);
+                                                    }
+
+                                                    if (! empty($extractedInfo)) {
+                                                        Notification::make()
+                                                            ->title('Information Extracted')
+                                                            ->body('Successfully extracted '.implode(', ', $extractedInfo).'.')
+                                                            ->success()
+                                                            ->send();
+                                                    }
+                                                } catch (\Spatie\PdfToText\Exceptions\CouldNotExtractText $e) {
+                                                    \Log::warning('PDF text extraction failed', [
+                                                        'transaction_id' => $record->id,
+                                                        'error' => $e->getMessage(),
+                                                    ]);
+                                                    Notification::make()
+                                                        ->title('PDF Extraction Failed')
+                                                        ->body('Could not extract text from the PDF file. Please check if the PDF is valid.')
+                                                        ->danger()
+                                                        ->send();
+                                                } catch (\Spatie\PdfToText\Exceptions\PdfNotFound $e) {
+                                                    \Log::error('PDF file not found during extraction', [
+                                                        'transaction_id' => $record->id,
+                                                        'error' => $e->getMessage(),
+                                                    ]);
+                                                    Notification::make()
+                                                        ->title('File Not Found')
+                                                        ->body('The PDF file could not be found. Please try uploading again.')
+                                                        ->danger()
+                                                        ->send();
+                                                } catch (\Exception $e) {
+                                                    \Log::error('Receipt extraction failed', [
+                                                        'transaction_id' => $record->id,
+                                                        'error' => $e->getMessage(),
+                                                        'trace' => $e->getTraceAsString(),
+                                                    ]);
+                                                    Notification::make()
+                                                        ->title('Extraction Failed')
+                                                        ->body('Failed to extract receipt information. Please fill in the details manually.')
+                                                        ->danger()
+                                                        ->send();
+                                                }
+                                            }),
+                                    ])
+                                    ->afterStateUpdated(function (array $state, Set $set, Get $get, string $context) {
+                                        if ($context !== 'create') {
+                                            return;
+                                        }
+
+                                        try {
+                                            $uploadedFile = $state[0];
+                                            $mimeType = $uploadedFile->getMimeType();
+
+                                            if (str_starts_with($mimeType, 'image/')) {
+                                                // For images: read content directly
+                                                $content = file_get_contents($uploadedFile->path());
+                                                $extractedInfo = self::extractAndAutoFill($content, $mimeType, $set, $get);
+                                            } elseif ($mimeType === 'application/pdf') {
+                                                // For PDFs: use file path
+                                                $extractedInfo = self::extractAndAutoFill($uploadedFile->path(), $mimeType, $set, $get);
+                                            } else {
+                                                throw new \Exception('Unsupported file type: '.$mimeType);
+                                            }
+
+                                            if (! empty($extractedInfo)) {
+                                                Notification::make()
+                                                    ->title('Receipt Information Extracted')
+                                                    ->body('Successfully extracted '.implode(' and ', $extractedInfo).'.')
+                                                    ->success()
+                                                    ->send();
+                                            }
+                                        } catch (\Spatie\PdfToText\Exceptions\CouldNotExtractText $e) {
+                                            \Log::warning('PDF text extraction failed during upload', [
+                                                'file_name' => $uploadedFile->getClientOriginalName(),
+                                                'error' => $e->getMessage(),
+                                            ]);
+                                            Notification::make()
+                                                ->title('PDF Extraction Failed')
+                                                ->body('Could not extract text from the PDF. You can fill in the details manually.')
+                                                ->warning()
+                                                ->send();
+                                        } catch (\Spatie\PdfToText\Exceptions\PdfNotFound $e) {
+                                            \Log::error('PDF file not found during upload extraction', [
+                                                'file_name' => $uploadedFile->getClientOriginalName(),
+                                                'error' => $e->getMessage(),
+                                            ]);
+                                            Notification::make()
+                                                ->title('File Processing Error')
+                                                ->body('Could not process the PDF file. Please try uploading again.')
+                                                ->danger()
+                                                ->send();
+                                        } catch (\Exception $e) {
+                                            \Log::error('Receipt extraction failed during upload', [
+                                                'file_name' => $uploadedFile->getClientOriginalName(),
+                                                'mime_type' => $uploadedFile->getMimeType(),
+                                                'error' => $e->getMessage(),
+                                                'trace' => $e->getTraceAsString(),
+                                            ]);
+                                            Notification::make()
+                                                ->title('Auto-extraction Unavailable')
+                                                ->body('Could not automatically extract receipt information. Please fill in the details manually.')
+                                                ->warning()
+                                                ->send();
+                                        }
                                     })
                                     ->acceptedFileTypes([
                                         'image/jpeg',
@@ -524,5 +661,70 @@ class TransactionResource extends Resource
             ->count();
 
         return $count > 0 ? $count : null;
+    }
+
+    private static function extractAndAutoFill(string $input, string $mimeType, Set $set, Get $get): array
+    {
+        $extractor = (new ReceiptExtractorService)->extractInformation($input, $mimeType);
+        $extractedInfo = [];
+
+        if (! $extractor) {
+            return $extractedInfo;
+        }
+
+        // Extract transaction type
+        if (! empty($extractor['type']) && empty($get('type'))) {
+            $type = $extractor['type'];
+            if (in_array($type, ['income', 'expense', 'transfer'])) {
+                $set('type', $type);
+                $extractedInfo[] = 'type';
+            }
+        }
+
+        // Extract amount
+        if (! empty($extractor['amount']) && empty($get('amount'))) {
+            $amount = (float) $extractor['amount'];
+            if ($amount > 0) {
+                $set('amount', $amount);
+                $extractedInfo[] = 'amount';
+            }
+        }
+
+        // Extract date
+        if (! empty($extractor['date']) && $extractor['date'] !== 'N/A' && empty($get('date'))) {
+            $date = $extractor['date'];
+            // Validate date format and ensure it's not in the future
+            if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
+                $dateObj = \DateTime::createFromFormat('Y-m-d', $date);
+                if ($dateObj && $dateObj->format('Y-m-d') === $date && $dateObj <= new \DateTime) {
+                    $set('date', $date);
+                    $extractedInfo[] = 'date';
+                }
+            }
+        }
+
+        // Extract description
+        if (! empty($extractor['description']) && empty($get('description'))) {
+            $description = trim($extractor['description']);
+            if (strlen($description) > 0 && strlen($description) <= 255) {
+                $set('description', $description);
+                $extractedInfo[] = 'description';
+            }
+        }
+
+        // Extract category
+        if (! empty($extractor['category_id']) && empty($get('category_id'))) {
+            $categoryId = $extractor['category_id'];
+            // Verify category exists and belongs to the user
+            $category = Category::where('id', $categoryId)
+                ->where('user_id', auth()->id())
+                ->first();
+            if ($category) {
+                $set('category_id', $categoryId);
+                $extractedInfo[] = 'category';
+            }
+        }
+
+        return $extractedInfo;
     }
 }

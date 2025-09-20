@@ -10,6 +10,10 @@ use App\Models\Transaction;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Prism\Prism\Prism;
+use Prism\Prism\Testing\StructuredResponseFake;
+use Prism\Prism\ValueObjects\Usage;
+use Spatie\PdfToText\Pdf;
 
 use function Pest\Livewire\livewire;
 
@@ -713,5 +717,254 @@ describe('TransactionResource Budget Warning Integration', function () {
                 'category_id' => $this->budgetCategory->id,
                 'amount' => 600.00,
             ]);
+    });
+});
+
+describe('TransactionResource Receipt Extraction', function () {
+    beforeEach(function () {
+        $this->user = User::factory()->create();
+        $this->actingAs($this->user);
+
+        $this->account = Account::factory()->create(['user_id' => $this->user->id]);
+        $this->expenseCategory = Category::factory()->expense()->create(['user_id' => $this->user->id]);
+        $this->incomeCategory = Category::factory()->income()->create(['user_id' => $this->user->id]);
+    });
+
+    it('can trigger auto extraction on image upload during creation', function () {
+        // Mock Prism response
+        $fake = Prism::fake([
+            StructuredResponseFake::make()
+                ->withStructured([
+                    'type' => 'expense',
+                    'amount' => '25.50',
+                    'date' => '2025-01-15',
+                    'description' => 'Coffee shop',
+                    'category_id' => $this->expenseCategory->id,
+                ])
+                ->withUsage(new Usage(100, 50)),
+        ]);
+
+        $file = UploadedFile::fake()->image('receipt.jpg');
+
+        livewire(CreateTransaction::class)
+            ->fillForm([
+                'date' => '', // Clear default date to allow extraction
+                'receipts' => [$file],
+            ])
+            ->assertFormSet([
+                'type' => 'expense',
+                'amount' => 25.50,
+                'date' => '2025-01-15',
+                'description' => 'Coffee shop',
+                'category_id' => $this->expenseCategory->id,
+            ])
+            ->assertNotified('Receipt Information Extracted');
+
+        $fake->assertCallCount(1);
+    });
+
+    it('can trigger manual extraction from edit page', function () {
+        // Create transaction with minimal required fields
+        $transaction = Transaction::factory()->create([
+            'user_id' => $this->user->id,
+            'account_id' => $this->account->id,
+            'category_id' => $this->expenseCategory->id,
+            'type' => 'expense',
+            'amount' => 10.00,
+            'description' => 'Initial description',
+        ]);
+
+        // Add media to transaction
+        $testImageContent = base64_decode('/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQH/2wBDAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQH/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwA/');
+        $tempPath = storage_path('app/test-receipt.jpg');
+        file_put_contents($tempPath, $testImageContent);
+        $transaction->addMedia($tempPath)->toMediaCollection('receipts');
+
+        // Mock Prism response
+        $fake = Prism::fake([
+            StructuredResponseFake::make()
+                ->withStructured([
+                    'type' => 'income',
+                    'amount' => '45.75',
+                    'date' => '2025-01-16',
+                    'description' => 'Restaurant bill',
+                    'category_id' => $this->incomeCategory->id,
+                ])
+                ->withUsage(new Usage(120, 80)),
+        ]);
+
+        livewire(EditTransaction::class, ['record' => $transaction->id])
+            ->fillForm([
+                'amount' => '', // Clear amount to allow extraction
+                'description' => '', // Clear description to allow extraction
+                'category_id' => null, // Clear category to allow extraction
+            ])
+            ->callFormComponentAction('receipts', 'Auto Fill')
+            ->assertFormSet([
+                'type' => 'expense', // Should NOT change (was pre-filled)
+                'amount' => 45.75,   // Should change (was cleared)
+                'date' => $transaction->date->format('Y-m-d'), // Should NOT change (has value)
+                'description' => 'Restaurant bill', // Should change (was cleared)
+                'category_id' => $this->incomeCategory->id, // Should change (was cleared)
+            ])
+            ->assertNotified('Information Extracted');
+
+        $fake->assertCallCount(1);
+    });
+
+    it('uses ai-optimized conversion when available for images', function () {
+        // Create transaction with media
+        $transaction = Transaction::factory()->create([
+            'user_id' => $this->user->id,
+            'account_id' => $this->account->id,
+            'category_id' => $this->expenseCategory->id,
+        ]);
+
+        // Add image media (will generate ai-optimized conversion)
+        $testImageContent = base64_decode('/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQH/2wBDAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQH/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwA/');
+        $tempPath = storage_path('app/test-receipt.jpg');
+        file_put_contents($tempPath, $testImageContent);
+        $media = $transaction->addMedia($tempPath)->toMediaCollection('receipts');
+
+        // Verify ai-optimized conversion exists
+        expect($media->hasGeneratedConversion('ai-optimized'))->toBeTrue();
+
+        // Mock Prism response
+        $fake = Prism::fake([
+            StructuredResponseFake::make()
+                ->withStructured([
+                    'type' => 'expense',
+                    'amount' => '15.00',
+                    'date' => '2025-01-15',
+                    'description' => 'Extracted from optimized image',
+                    'category_id' => $this->expenseCategory->id,
+                ])
+                ->withUsage(new Usage(90, 60)),
+        ]);
+
+        livewire(EditTransaction::class, ['record' => $transaction->id])
+            ->callFormComponentAction('receipts', 'Auto Fill')
+            ->assertNotified('Information Extracted');
+
+        $fake->assertCallCount(1);
+    });
+
+    it('falls back to original for pdfs', function () {
+        // Create transaction with PDF media
+        $transaction = Transaction::factory()->create([
+            'user_id' => $this->user->id,
+            'account_id' => $this->account->id,
+            'category_id' => $this->expenseCategory->id,
+        ]);
+
+        // Add PDF media (will not generate ai-optimized conversion)
+        $tempPath = storage_path('app/test-receipt.pdf');
+        file_put_contents($tempPath, '%PDF-1.4 test content');
+        $media = $transaction->addMedia($tempPath)->toMediaCollection('receipts');
+
+        // Verify ai-optimized conversion does not exist
+        expect($media->hasGeneratedConversion('ai-optimized'))->toBeFalse();
+
+        // Mock Prism and Pdf
+        $fake = Prism::fake([
+            StructuredResponseFake::make()
+                ->withStructured([
+                    'type' => 'expense',
+                    'amount' => '35.25',
+                    'date' => '2025-01-15',
+                    'description' => 'Extracted from PDF',
+                    'category_id' => $this->expenseCategory->id,
+                ])
+                ->withUsage(new Usage(150, 100)),
+        ]);
+
+        $this->mock(Pdf::class, function ($mock) {
+            $mock->shouldReceive('setPdf')
+                ->andReturnSelf();
+            $mock->shouldReceive('text')
+                ->andReturn('Sample PDF content for testing');
+        });
+
+        livewire(EditTransaction::class, ['record' => $transaction->id])
+            ->callFormComponentAction('receipts', 'Auto Fill')
+            ->assertNotified('Information Extracted');
+
+        $fake->assertCallCount(1);
+    });
+
+    it('handles extraction errors gracefully', function () {
+        // Create transaction with media
+        $transaction = Transaction::factory()->create([
+            'user_id' => $this->user->id,
+            'account_id' => $this->account->id,
+            'category_id' => $this->expenseCategory->id,
+        ]);
+
+        // Add media
+        $testImageContent = base64_decode('/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQH/2wBDAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQH/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwA/');
+        $tempPath = storage_path('app/test-receipt.jpg');
+        file_put_contents($tempPath, $testImageContent);
+        $transaction->addMedia($tempPath)->toMediaCollection('receipts');
+
+        // This test will cause Prism to throw an exception due to missing fake response
+        // When there's no fake response configured, it throws an exception
+
+        livewire(EditTransaction::class, ['record' => $transaction->id])
+            ->callFormComponentAction('receipts', 'Auto Fill')
+            ->assertNotified('Error Occurred');
+    });
+
+    it('does not extract if no receipt media exists', function () {
+        // Create transaction without media
+        $transaction = Transaction::factory()->create([
+            'user_id' => $this->user->id,
+            'account_id' => $this->account->id,
+            'category_id' => $this->expenseCategory->id,
+        ]);
+
+        // The Auto Fill action should not be visible when there's no media
+        // We can test this by verifying the action throws an exception when called
+        livewire(EditTransaction::class, ['record' => $transaction->id])
+            ->assertOk();
+
+        // Since there's no media, the hint action won't be rendered
+        // We can't test hidden state directly, so this test just verifies
+        // the page loads correctly without media
+        expect($transaction->getFirstMedia('receipts'))->toBeNull();
+    });
+
+    it('only fills empty fields during extraction', function () {
+        // Mock Prism response
+        $fake = Prism::fake([
+            StructuredResponseFake::make()
+                ->withStructured([
+                    'type' => 'income',
+                    'amount' => '100.00',
+                    'date' => '2025-01-20',
+                    'description' => 'Extracted description',
+                    'category_id' => $this->incomeCategory->id,
+                ])
+                ->withUsage(new Usage(110, 70)),
+        ]);
+
+        $file = UploadedFile::fake()->image('receipt.jpg');
+
+        livewire(CreateTransaction::class)
+            ->fillForm([
+                'type' => 'expense', // Pre-filled
+                'amount' => 50.00,   // Pre-filled
+                'date' => '',       // Clear default date to allow extraction
+                'receipts' => [$file],
+            ])
+            ->assertFormSet([
+                'type' => 'expense',              // Should NOT change (was pre-filled)
+                'amount' => 50.00,               // Should NOT change (was pre-filled)
+                'date' => '2025-01-20',         // Should change (was empty)
+                'description' => 'Extracted description', // Should change (was empty)
+                'category_id' => $this->incomeCategory->id, // Should change (was empty)
+            ])
+            ->assertNotified('Receipt Information Extracted');
+
+        $fake->assertCallCount(1);
     });
 });
