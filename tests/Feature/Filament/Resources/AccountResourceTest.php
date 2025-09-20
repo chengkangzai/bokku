@@ -272,3 +272,160 @@ describe('AccountResource User Data Scoping', function () {
             ->assertSuccessful(); // The page loads but with filtered data
     });
 });
+
+describe('AccountResource Balance Adjustment', function () {
+    it('has disabled initial_balance field on edit page', function () {
+        $account = Account::factory()->create(['user_id' => $this->user->id]);
+
+        livewire(EditAccount::class, ['record' => $account->getRouteKey()])
+            ->assertFormFieldIsDisabled('initial_balance');
+    });
+
+    it('can adjust account balance with positive adjustment', function () {
+        $account = Account::factory()->create([
+            'user_id' => $this->user->id,
+            'initial_balance' => 1000.00,
+            'balance' => 1000.00,
+        ]);
+
+        $newBalance = 1500.00;
+        $adjustmentNote = 'Bank reconciliation adjustment';
+
+        livewire(EditAccount::class, ['record' => $account->getRouteKey()])
+            ->callAction(
+                \Filament\Actions\Testing\TestAction::make('adjustBalance')->schemaComponent('initial_balance'),
+                data: [
+                    'new_balance' => $newBalance,
+                    'adjustment_note' => $adjustmentNote,
+                ]
+            )
+            ->assertHasNoActionErrors()
+            ->assertNotified();
+
+        // Check that adjustment transaction was created
+        $this->assertDatabaseHas('transactions', [
+            'user_id' => $this->user->id,
+            'account_id' => $account->id,
+            'type' => 'income',
+            'amount' => 50000, // 500.00 * 100 (stored in cents)
+            'description' => "Balance Adjustment: {$adjustmentNote}",
+        ]);
+
+        // Check that account balance was updated
+        expect($account->refresh()->balance)->toBe(1500.00);
+    });
+
+    it('can adjust account balance with negative adjustment', function () {
+        $account = Account::factory()->create([
+            'user_id' => $this->user->id,
+            'initial_balance' => 1000.00,
+            'balance' => 1000.00,
+        ]);
+
+        $newBalance = 750.00;
+        $adjustmentNote = 'Correction for duplicate transaction';
+
+        livewire(EditAccount::class, ['record' => $account->getRouteKey()])
+            ->callAction(
+                \Filament\Actions\Testing\TestAction::make('adjustBalance')->schemaComponent('initial_balance'),
+                data: [
+                    'new_balance' => $newBalance,
+                    'adjustment_note' => $adjustmentNote,
+                ]
+            )
+            ->assertHasNoActionErrors()
+            ->assertNotified();
+
+        // Check that adjustment transaction was created
+        $this->assertDatabaseHas('transactions', [
+            'user_id' => $this->user->id,
+            'account_id' => $account->id,
+            'type' => 'expense',
+            'amount' => 25000, // 250.00 * 100 (stored in cents)
+            'description' => "Balance Adjustment: {$adjustmentNote}",
+        ]);
+
+        // Check that account balance was updated
+        expect($account->refresh()->balance)->toBe(750.00);
+    });
+
+    it('shows warning when adjustment amount is zero', function () {
+        $account = Account::factory()->create([
+            'user_id' => $this->user->id,
+            'initial_balance' => 1000.00,
+            'balance' => 1000.00,
+        ]);
+
+        livewire(EditAccount::class, ['record' => $account->getRouteKey()])
+            ->callAction(
+                \Filament\Actions\Testing\TestAction::make('adjustBalance')->schemaComponent('initial_balance'),
+                data: [
+                    'new_balance' => 1000.00, // Same as current balance
+                    'adjustment_note' => 'No change needed',
+                ]
+            )
+            ->assertHasNoActionErrors()
+            ->assertNotified(); // Should show warning notification
+
+        // Check that no transaction was created
+        $this->assertDatabaseMissing('transactions', [
+            'account_id' => $account->id,
+            'description' => 'Balance Adjustment: No change needed',
+        ]);
+
+        // Balance should remain unchanged
+        expect($account->refresh()->balance)->toBe(1000.00);
+    });
+
+    it('can adjust balance without a note', function () {
+        $account = Account::factory()->create([
+            'user_id' => $this->user->id,
+            'initial_balance' => 1000.00,
+            'balance' => 1000.00,
+        ]);
+
+        livewire(EditAccount::class, ['record' => $account->getRouteKey()])
+            ->callAction(
+                \Filament\Actions\Testing\TestAction::make('adjustBalance')->schemaComponent('initial_balance'),
+                data: [
+                    'new_balance' => 1200.00,
+                    'adjustment_note' => '', // Empty note
+                ]
+            )
+            ->assertHasNoActionErrors()
+            ->assertNotified();
+
+        // Check that adjustment transaction was created with default message
+        $this->assertDatabaseHas('transactions', [
+            'user_id' => $this->user->id,
+            'account_id' => $account->id,
+            'type' => 'income',
+            'amount' => 20000, // 200.00 * 100 (stored in cents)
+            'description' => 'Balance Adjustment: Manual balance adjustment',
+        ]);
+
+        expect($account->refresh()->balance)->toBe(1200.00);
+    });
+
+    it('preserves initial_balance when adjusting balance', function () {
+        $account = Account::factory()->create([
+            'user_id' => $this->user->id,
+            'initial_balance' => 1000.00,
+            'balance' => 1000.00,
+        ]);
+
+        $originalInitialBalance = $account->initial_balance;
+
+        livewire(EditAccount::class, ['record' => $account->getRouteKey()])
+            ->callAction(
+                \Filament\Actions\Testing\TestAction::make('adjustBalance')->schemaComponent('initial_balance'),
+                data: [
+                    'new_balance' => 1300.00,
+                    'adjustment_note' => 'Test adjustment',
+                ]
+            );
+
+        // Initial balance should remain unchanged
+        expect($account->refresh()->initial_balance)->toBe($originalInitialBalance);
+    });
+});

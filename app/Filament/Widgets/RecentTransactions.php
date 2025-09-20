@@ -2,7 +2,6 @@
 
 namespace App\Filament\Widgets;
 
-use App\Enums\TransactionType;
 use App\Models\Transaction;
 use Filament\Actions\Action;
 use Filament\Tables\Columns\BadgeColumn;

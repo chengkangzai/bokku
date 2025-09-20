@@ -3,11 +3,14 @@
 namespace App\Filament\Resources\Accounts;
 
 use App\Enums\AccountType;
+use App\Enums\TransactionType;
 use App\Filament\Resources\Accounts\Pages\CreateAccount;
 use App\Filament\Resources\Accounts\Pages\EditAccount;
 use App\Filament\Resources\Accounts\Pages\ListAccounts;
 use App\Filament\Resources\Accounts\RelationManagers\TransactionsRelationManager;
 use App\Models\Account;
+use App\Models\Transaction;
+use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -16,16 +19,19 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
+use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Livewire\Component;
 
 class AccountResource extends Resource
 {
@@ -63,11 +69,82 @@ class AccountResource extends Resource
                                 AccountType::CreditCard => 'Outstanding Balance',
                                 default => 'Initial Balance'
                             })
-                            ->helperText(fn (Get $get) => match ($get('type')) {
-                                AccountType::Loan => 'Enter as positive amount (e.g., 60000 for MYR 60,000 loan)',
-                                AccountType::CreditCard => 'Enter as positive amount (e.g., 5000 for MYR 5,000 outstanding balance)',
-                                default => 'Starting balance for this account'
-                            }),
+                            ->helperText(fn (Get $get, Component $livewire) => $livewire instanceof EditAccount
+                                    ? 'Initial balance cannot be changed after account creation. Use the "Adjust Balance" button to make adjustments.'
+                                    : match ($get('type')) {
+                                        AccountType::Loan => 'Enter as positive amount (e.g., 60000 for MYR 60,000 loan)',
+                                        AccountType::CreditCard => 'Enter as positive amount (e.g., 5000 for MYR 5,000 outstanding balance)',
+                                        default => 'Starting balance for this account'
+                                    }
+                            )
+                            ->disabled(fn (Component $livewire) => $livewire instanceof EditAccount)
+                            ->afterContent(
+                                Action::make('adjustBalance')
+                                    ->label('Adjust Balance')
+                                    ->icon(Heroicon::Calculator)
+                                    ->color('primary')
+                                    ->size('sm')
+                                    ->visible(fn (Component $livewire) => $livewire instanceof EditAccount)
+                                    ->schema([
+                                        TextInput::make('current_balance')
+                                            ->label('Current Balance')
+                                            ->prefix('MYR')
+                                            ->disabled()
+                                            ->default(fn (Component $livewire) => number_format($livewire->record->balance, 2)),
+
+                                        TextInput::make('new_balance')
+                                            ->label('New Balance')
+                                            ->prefix('MYR')
+                                            ->numeric()
+                                            ->required()
+                                            ->default(fn (Component $livewire) => $livewire->record->balance),
+
+                                        Textarea::make('adjustment_note')
+                                            ->label('Reason for Adjustment')
+                                            ->placeholder('e.g., Bank reconciliation, correction, initial import adjustment')
+                                            ->maxLength(500),
+                                    ])
+                                    ->modalHeading('Adjust Account Balance')
+                                    ->modalDescription('This will create a balance adjustment transaction to change your account balance.')
+                                    ->action(function (array $data, Component $livewire): void {
+                                        $currentBalance = $livewire->record->balance;
+                                        $newBalance = (float) $data['new_balance'];
+                                        $adjustmentAmount = $newBalance - $currentBalance;
+
+                                        if ($adjustmentAmount == 0) {
+                                            Notification::make()
+                                                ->title('No adjustment needed')
+                                                ->body('The new balance is the same as the current balance.')
+                                                ->warning()
+                                                ->send();
+
+                                            return;
+                                        }
+
+                                        // Create adjustment transaction
+                                        Transaction::create([
+                                            'user_id' => auth()->id(),
+                                            'account_id' => $livewire->record->id,
+                                            'type' => $adjustmentAmount > 0 ? TransactionType::Income : TransactionType::Expense,
+                                            'amount' => abs($adjustmentAmount),
+                                            'description' => 'Balance Adjustment: '.($data['adjustment_note'] ?? 'Manual balance adjustment'),
+                                            'date' => now(),
+                                            'category_id' => null, // No category for adjustments
+                                        ]);
+
+                                        // Update the account balance
+                                        $livewire->record->updateBalance();
+
+                                        Notification::make()
+                                            ->title('Balance adjusted successfully')
+                                            ->body('Account balance changed from MYR '.number_format($currentBalance, 2).' to MYR '.number_format($newBalance, 2))
+                                            ->success()
+                                            ->send();
+
+                                        // Refresh the form to show updated values
+                                        $livewire->refreshFormData(['initial_balance']);
+                                    })
+                            ),
 
                         Select::make('currency')
                             ->required()

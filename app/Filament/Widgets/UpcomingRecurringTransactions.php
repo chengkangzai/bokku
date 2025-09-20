@@ -2,7 +2,6 @@
 
 namespace App\Filament\Widgets;
 
-use App\Enums\TransactionType;
 use App\Models\RecurringTransaction;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
