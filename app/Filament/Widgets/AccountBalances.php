@@ -28,14 +28,7 @@ class AccountBalances extends BaseWidget
                 TextColumn::make('name'),
 
                 TextColumn::make('type')
-                    ->badge()
-                    ->colors([
-                        'primary' => 'bank',
-                        'success' => 'cash',
-                        'warning' => 'credit_card',
-                        'danger' => 'loan',
-                    ])
-                    ->formatStateUsing(fn (string $state): string => str($state)->replace('_', ' ')->title()),
+                    ->badge(),
 
                 TextColumn::make('balance')
                     ->label('Balance/Outstanding')

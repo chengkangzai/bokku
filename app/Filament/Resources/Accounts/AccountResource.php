@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Accounts;
 
+use App\Enums\AccountType;
 use App\Filament\Resources\Accounts\Pages\CreateAccount;
 use App\Filament\Resources\Accounts\Pages\EditAccount;
 use App\Filament\Resources\Accounts\Pages\ListAccounts;
@@ -50,12 +51,7 @@ class AccountResource extends Resource
 
                         Select::make('type')
                             ->required()
-                            ->options([
-                                'bank' => 'Bank Account',
-                                'cash' => 'Cash',
-                                'credit_card' => 'Credit Card',
-                                'loan' => 'Loan',
-                            ])
+                            ->options(AccountType::class)
                             ->native(false),
 
                         TextInput::make('initial_balance')
@@ -64,13 +60,13 @@ class AccountResource extends Resource
                             ->default(0)
                             ->prefix('MYR')
                             ->label(fn (Get $get) => match ($get('type')) {
-                                'loan' => 'Total Amount Owed',
-                                'credit_card' => 'Outstanding Balance',
+                                AccountType::Loan => 'Total Amount Owed',
+                                AccountType::CreditCard => 'Outstanding Balance',
                                 default => 'Initial Balance'
                             })
                             ->helperText(fn (Get $get) => match ($get('type')) {
-                                'loan' => 'Enter as positive amount (e.g., 60000 for MYR 60,000 loan)',
-                                'credit_card' => 'Enter as positive amount (e.g., 5000 for MYR 5,000 outstanding balance)',
+                                AccountType::Loan => 'Enter as positive amount (e.g., 60000 for MYR 60,000 loan)',
+                                AccountType::CreditCard => 'Enter as positive amount (e.g., 5000 for MYR 5,000 outstanding balance)',
                                 default => 'Starting balance for this account'
                             }),
 
@@ -99,7 +95,7 @@ class AccountResource extends Resource
                         Textarea::make('notes')
                             ->maxLength(65535)
                             ->columnSpanFull()
-                            ->placeholder(fn (Get $get) => $get('type') === 'loan'
+                            ->placeholder(fn (Get $get) => $get('type') === AccountType::Loan
                                 ? 'e.g., Monthly payment: RM 1,200, Due on 15th of each month, Loan ref: HP123456'
                                 : 'Additional notes about this account'),
 
@@ -119,14 +115,7 @@ class AccountResource extends Resource
                     ->searchable()
                     ->sortable(),
 
-                BadgeColumn::make('type')
-                    ->colors([
-                        'primary' => 'bank',
-                        'success' => 'cash',
-                        'warning' => 'credit_card',
-                        'danger' => 'loan',
-                    ])
-                    ->formatStateUsing(fn (string $state): string => str_replace('_', ' ', $state)),
+                BadgeColumn::make('type'),
 
                 TextColumn::make('balance')
                     ->label('Balance/Outstanding')
@@ -155,12 +144,7 @@ class AccountResource extends Resource
             ])
             ->filters([
                 SelectFilter::make('type')
-                    ->options([
-                        'bank' => 'Bank Account',
-                        'cash' => 'Cash',
-                        'credit_card' => 'Credit Card',
-                        'loan' => 'Loan',
-                    ]),
+                    ->options(AccountType::class),
 
                 TernaryFilter::make('is_active')
                     ->label('Active')

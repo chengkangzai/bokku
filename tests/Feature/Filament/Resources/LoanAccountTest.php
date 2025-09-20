@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\AccountType;
 use App\Filament\Resources\Accounts\Pages\CreateAccount;
 use App\Filament\Resources\Accounts\Pages\EditAccount;
 use App\Filament\Resources\Accounts\Pages\ListAccounts;
@@ -18,7 +19,7 @@ describe('Loan Account Resource', function () {
         livewire(CreateAccount::class)
             ->fillForm([
                 'name' => 'Car Loan - Honda City',
-                'type' => 'loan',
+                'type' => AccountType::Loan,
                 'initial_balance' => 60000,
                 'currency' => 'MYR',
                 'notes' => 'Monthly payment: RM 1,200, Due on 15th',
@@ -50,14 +51,14 @@ describe('Loan Account Resource', function () {
 
     it('shows loan-specific helper text in form', function () {
         livewire(CreateAccount::class)
-            ->fillForm(['type' => 'loan'])
+            ->fillForm(['type' => AccountType::Loan->value])
             ->assertSee('Enter as positive amount')
             ->assertSee('Total Amount Owed');
     });
 
     it('shows correct placeholder for loan notes', function () {
         livewire(CreateAccount::class)
-            ->fillForm(['type' => 'loan'])
+            ->fillForm(['type' => AccountType::Loan->value])
             ->assertSee('Monthly payment: RM');
     });
 
@@ -76,7 +77,7 @@ describe('Loan Account Resource', function () {
         livewire(EditAccount::class, ['record' => $loan->getRouteKey()])
             ->assertFormSet([
                 'name' => $loan->name,
-                'type' => 'loan',
+                'type' => AccountType::Loan,
             ]);
 
         expect((float) $loan->refresh()->balance)->toBe(8800.0);

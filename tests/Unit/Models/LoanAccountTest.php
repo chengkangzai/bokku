@@ -54,10 +54,10 @@ describe('Loan Account Model', function () {
         expect($loan->formatted_balance)->toBe($loan->currency.' 58,800.00');
     });
 
-    it('shows correct icon for loan accounts', function () {
+    it('shows correct icon for loan accounts from enum', function () {
         $loan = Account::factory()->loan()->create();
 
-        expect($loan->type_icon)->toBe('heroicon-o-document-text');
+        expect($loan->type->getIcon())->toBe('heroicon-o-document-text');
     });
 
     it('correctly formats credit card balance as positive outstanding amount', function () {

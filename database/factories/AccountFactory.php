@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\AccountType;
 use App\Models\Account;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -15,14 +16,13 @@ class AccountFactory extends Factory
 
     public function definition(): array
     {
-        $types = ['bank', 'cash', 'credit_card', 'loan'];
         $currencies = ['MYR', 'USD', 'EUR', 'GBP', 'JPY'];
         $initialBalance = fake()->numberBetween(0, 10000); // $0 to $10,000
 
         return [
             'user_id' => User::factory(),
             'name' => fake()->company().' '.fake()->randomElement(['Checking', 'Savings', 'Account']),
-            'type' => fake()->randomElement($types),
+            'type' => fake()->randomElement(AccountType::cases()),
             'icon' => null,
             'color' => fake()->hexColor(),
             'balance' => $initialBalance,
@@ -37,7 +37,7 @@ class AccountFactory extends Factory
     public function bank(): static
     {
         return $this->state(fn (array $attributes) => [
-            'type' => 'bank',
+            'type' => AccountType::Bank,
             'name' => fake()->company().' Bank Account',
         ]);
     }
@@ -45,7 +45,7 @@ class AccountFactory extends Factory
     public function cash(): static
     {
         return $this->state(fn (array $attributes) => [
-            'type' => 'cash',
+            'type' => AccountType::Cash,
             'name' => 'Cash Wallet',
             'account_number' => null,
         ]);
@@ -54,7 +54,7 @@ class AccountFactory extends Factory
     public function creditCard(): static
     {
         return $this->state(fn (array $attributes) => [
-            'type' => 'credit_card',
+            'type' => AccountType::CreditCard,
             'name' => fake()->company().' Credit Card',
             'initial_balance' => 0,
             'balance' => fake()->numberBetween(0, 5000), // $0 to $5000 representing amount owed
@@ -64,7 +64,7 @@ class AccountFactory extends Factory
     public function loan(): static
     {
         return $this->state(fn (array $attributes) => [
-            'type' => 'loan',
+            'type' => AccountType::Loan,
             'name' => fake()->randomElement(['Home', 'Car', 'Personal']).' Loan',
             'initial_balance' => fake()->numberBetween(1000, 50000), // $1,000 to $50,000 representing amount owed
             'balance' => fake()->numberBetween(1000, 50000), // $1,000 to $50,000 representing amount owed

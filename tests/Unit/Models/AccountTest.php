@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\AccountType;
 use App\Models\Account;
 use App\Models\Transaction;
 use App\Models\User;
@@ -11,7 +12,7 @@ describe('Account Model', function () {
         expect($account)
             ->toBeInstanceOf(Account::class)
             ->and($account->name)->toBeString()
-            ->and($account->type)->toBeIn(['bank', 'cash', 'credit_card', 'loan'])
+            ->and($account->type)->toBeInstanceOf(AccountType::class)
             ->and($account->currency)->toBeString()
             ->and($account->is_active)->toBeBool();
     });
@@ -133,22 +134,16 @@ describe('Account Model', function () {
         expect((float) $toAccount->balance)->toBe(700.0);   // 500 + 200 (transfer in)
     });
 
-    it('returns correct type icon', function () {
+    it('returns correct type icon from enum', function () {
         $bankAccount = Account::factory()->bank()->create();
         $cashAccount = Account::factory()->cash()->create();
         $creditCard = Account::factory()->creditCard()->create();
         $loan = Account::factory()->loan()->create();
 
-        expect($bankAccount->type_icon)->toBe('heroicon-o-building-library');
-        expect($cashAccount->type_icon)->toBe('heroicon-o-banknotes');
-        expect($creditCard->type_icon)->toBe('heroicon-o-credit-card');
-        expect($loan->type_icon)->toBe('heroicon-o-document-text');
-    });
-
-    it('returns default icon for unknown type', function () {
-        $account = Account::factory()->make(['type' => 'unknown']);
-
-        expect($account->type_icon)->toBe('heroicon-o-wallet');
+        expect($bankAccount->type->getIcon())->toBe('heroicon-o-building-library');
+        expect($cashAccount->type->getIcon())->toBe('heroicon-o-banknotes');
+        expect($creditCard->type->getIcon())->toBe('heroicon-o-credit-card');
+        expect($loan->type->getIcon())->toBe('heroicon-o-document-text');
     });
 
     it('formats balance correctly', function () {
@@ -166,12 +161,12 @@ describe('Account Model', function () {
         $creditCard = Account::factory()->creditCard()->create();
         $loan = Account::factory()->loan()->create();
 
-        expect($bank->type)->toBe('bank');
-        expect($cash->type)->toBe('cash');
+        expect($bank->type)->toBe(AccountType::Bank);
+        expect($cash->type)->toBe(AccountType::Cash);
         expect($cash->account_number)->toBeNull();
-        expect($creditCard->type)->toBe('credit_card');
+        expect($creditCard->type)->toBe(AccountType::CreditCard);
         expect($creditCard->balance)->toBeGreaterThanOrEqual(0); // Now positive representing amount owed
-        expect($loan->type)->toBe('loan');
+        expect($loan->type)->toBe(AccountType::Loan);
         expect($loan->balance)->toBeGreaterThan(0); // Now positive representing amount owed
     });
 

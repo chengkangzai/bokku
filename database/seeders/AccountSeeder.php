@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Enums\AccountType;
 use App\Models\Account;
 use App\Models\User;
 use Illuminate\Database\Seeder;
@@ -23,7 +24,7 @@ class AccountSeeder extends Seeder
             [
                 'user_id' => $user->id,
                 'name' => 'Maybank Savings',
-                'type' => 'bank',
+                'type' => AccountType::Bank,
                 'initial_balance' => 15000, // MYR15,000.00
                 'balance' => 12345.67, // MYR12,345.67
                 'currency' => 'MYR',
@@ -35,7 +36,7 @@ class AccountSeeder extends Seeder
             [
                 'user_id' => $user->id,
                 'name' => 'Touch n Go eWallet',
-                'type' => 'cash',
+                'type' => AccountType::Cash,
                 'initial_balance' => 200, // MYR200.00
                 'balance' => 85.30, // MYR85.30
                 'currency' => 'MYR',
@@ -47,7 +48,7 @@ class AccountSeeder extends Seeder
             [
                 'user_id' => $user->id,
                 'name' => 'Maybank Visa',
-                'type' => 'credit_card',
+                'type' => AccountType::CreditCard,
                 'initial_balance' => 2500, // MYR2,500.00
                 'balance' => 3489.20, // MYR3,489.20
                 'currency' => 'MYR',
@@ -59,7 +60,7 @@ class AccountSeeder extends Seeder
             [
                 'user_id' => $user->id,
                 'name' => 'Car Loan - Honda City',
-                'type' => 'loan',
+                'type' => AccountType::Loan,
                 'initial_balance' => 65000, // MYR65,000.00
                 'balance' => 52340, // MYR52,340.00
                 'currency' => 'MYR',

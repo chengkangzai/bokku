@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Casts\MoneyCast;
+use App\Enums\AccountType;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -28,6 +29,7 @@ class Account extends Model
     ];
 
     protected $casts = [
+        'type' => AccountType::class,
         'balance' => MoneyCast::class,
         'initial_balance' => MoneyCast::class,
         'is_active' => 'boolean',
@@ -76,19 +78,6 @@ class Account extends Model
         $this->save();
     }
 
-    protected function typeIcon(): Attribute
-    {
-        return Attribute::make(
-            get: fn () => match ($this->type) {
-                'bank' => 'heroicon-o-building-library',
-                'cash' => 'heroicon-o-banknotes',
-                'credit_card' => 'heroicon-o-credit-card',
-                'loan' => 'heroicon-o-document-text',
-                default => 'heroicon-o-wallet',
-            }
-        );
-    }
-
     protected function formattedBalance(): Attribute
     {
         return Attribute::make(
@@ -98,12 +87,12 @@ class Account extends Model
 
     public function isLoan(): bool
     {
-        return $this->type === 'loan';
+        return $this->type === AccountType::Loan;
     }
 
     public function isLiability(): bool
     {
-        return in_array($this->type, ['loan', 'credit_card']);
+        return $this->type?->isLiability() ?? false;
     }
 
     protected function balanceLabel(): Attribute
@@ -117,7 +106,7 @@ class Account extends Model
     {
         // For loan accounts, spending increases the outstanding amount (more negative)
         // For regular accounts, check if balance is sufficient
-        if ($this->type === 'loan') {
+        if ($this->type === AccountType::Loan) {
             // Loans can always go more negative (no credit limit check for now)
             return true;
         }
@@ -134,7 +123,7 @@ class Account extends Model
         $currentBalance = $this->balance;
         $afterBalance = $currentBalance - $amount;
 
-        if ($this->type === 'loan') {
+        if ($this->type === AccountType::Loan) {
             $currentOutstanding = abs($currentBalance);
             $newOutstanding = abs($afterBalance);
 
