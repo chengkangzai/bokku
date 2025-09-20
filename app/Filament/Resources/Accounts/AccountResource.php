@@ -20,7 +20,6 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
-use Filament\Tables\Columns\BadgeColumn;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
@@ -115,7 +114,8 @@ class AccountResource extends Resource
                     ->searchable()
                     ->sortable(),
 
-                BadgeColumn::make('type'),
+                TextColumn::make('type')
+                    ->badge(),
 
                 TextColumn::make('balance')
                     ->label('Balance/Outstanding')
