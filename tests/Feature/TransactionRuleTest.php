@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\TransactionType;
 use App\Models\Account;
 use App\Models\Category;
 use App\Models\Transaction;
@@ -82,14 +83,14 @@ describe('TransactionRule Matching', function () {
         $expense = Transaction::factory()->create([
             'user_id' => $this->user->id,
             'account_id' => $this->account->id,
-            'type' => 'expense',
+            'type' => TransactionType::Expense,
             'description' => 'Payment for Services',
         ]);
 
         $income = Transaction::factory()->create([
             'user_id' => $this->user->id,
             'account_id' => $this->account->id,
-            'type' => 'income',
+            'type' => TransactionType::Income,
             'description' => 'Payment Received',
         ]);
 
@@ -352,7 +353,7 @@ describe('Automatic Rule Application', function () {
         $transaction = Transaction::create([
             'user_id' => $this->user->id,
             'account_id' => $this->account->id,
-            'type' => 'expense',
+            'type' => TransactionType::Expense,
             'amount' => 25,
             'description' => 'Grab Ride to Airport',
             'date' => now(),
@@ -403,7 +404,7 @@ describe('Automatic Rule Application', function () {
         $transaction = Transaction::create([
             'user_id' => $this->user->id,
             'account_id' => $this->account->id,
-            'type' => 'expense',
+            'type' => TransactionType::Expense,
             'amount' => 25,
             'description' => 'Grab Ride',
             'date' => now(),
@@ -441,7 +442,7 @@ describe('Automatic Rule Application', function () {
         $transaction = Transaction::create([
             'user_id' => $this->user->id,
             'account_id' => $this->account->id,
-            'type' => 'expense',
+            'type' => TransactionType::Expense,
             'amount' => 2000,
             'description' => 'Monthly Rent',
             'date' => now(),
@@ -743,7 +744,7 @@ describe('Rule Priority and Stop Processing', function () {
         $transaction = Transaction::create([
             'user_id' => $this->user->id,
             'account_id' => $this->account->id,
-            'type' => 'expense',
+            'type' => TransactionType::Expense,
             'amount' => 75, // Matches both rules
             'description' => 'Test Purchase',
             'date' => now(),
@@ -797,7 +798,7 @@ describe('Rule Priority and Stop Processing', function () {
         $transaction = Transaction::create([
             'user_id' => $this->user->id,
             'account_id' => $this->account->id,
-            'type' => 'expense',
+            'type' => TransactionType::Expense,
             'amount' => 5,
             'description' => 'Coffee Shop',
             'date' => now(),

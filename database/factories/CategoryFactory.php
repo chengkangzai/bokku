@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\TransactionType;
 use App\Models\Category;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -15,7 +16,7 @@ class CategoryFactory extends Factory
 
     public function definition(): array
     {
-        $types = ['income', 'expense'];
+        $types = [TransactionType::Income->value, TransactionType::Expense->value];
         $type = fake()->randomElement($types);
 
         $incomeCategories = [
@@ -29,7 +30,7 @@ class CategoryFactory extends Factory
             'Groceries', 'Rent', 'Internet', 'Phone', 'Fuel', 'Clothing',
         ];
 
-        $categoryName = $type === 'income'
+        $categoryName = $type === TransactionType::Income->value
             ? fake()->randomElement($incomeCategories)
             : fake()->randomElement($expenseCategories);
 
@@ -55,7 +56,7 @@ class CategoryFactory extends Factory
         ];
 
         return $this->state(fn (array $attributes) => [
-            'type' => 'income',
+            'type' => TransactionType::Income->value,
             'name' => fake()->randomElement($incomeCategories).'_'.fake()->unique()->numberBetween(1000, 99999),
         ]);
     }
@@ -69,7 +70,7 @@ class CategoryFactory extends Factory
         ];
 
         return $this->state(fn (array $attributes) => [
-            'type' => 'expense',
+            'type' => TransactionType::Expense->value,
             'name' => fake()->randomElement($expenseCategories).'_'.fake()->unique()->numberBetween(1000, 99999),
         ]);
     }

@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Enums\TransactionType;
 use App\Models\Account;
 use App\Models\Category;
 use App\Models\Transaction;
@@ -38,7 +39,7 @@ class TransactionSeeder extends Seeder
             // Current Month - Income
             [
                 'user_id' => $user->id,
-                'type' => 'income',
+                'type' => TransactionType::Income,
                 'amount' => 4500, // MYR4,500.00
                 'description' => 'Monthly Salary',
                 'date' => $currentMonth->copy(),
@@ -50,7 +51,7 @@ class TransactionSeeder extends Seeder
             ],
             [
                 'user_id' => $user->id,
-                'type' => 'income',
+                'type' => TransactionType::Income,
                 'amount' => 800, // MYR800.00
                 'description' => 'Freelance Web Design Project',
                 'date' => $currentMonth->copy()->addDays(5),
@@ -64,7 +65,7 @@ class TransactionSeeder extends Seeder
             // Current Month - Expenses
             [
                 'user_id' => $user->id,
-                'type' => 'expense',
+                'type' => TransactionType::Expense,
                 'amount' => 1200, // MYR1,200.00
                 'description' => 'Monthly Rent',
                 'date' => $currentMonth->copy()->addDay(),
@@ -76,7 +77,7 @@ class TransactionSeeder extends Seeder
             ],
             [
                 'user_id' => $user->id,
-                'type' => 'expense',
+                'type' => TransactionType::Expense,
                 'amount' => 65, // MYR65.00
                 'description' => 'Tesco Groceries',
                 'date' => $currentMonth->copy()->addDays(3),
@@ -88,7 +89,7 @@ class TransactionSeeder extends Seeder
             ],
             [
                 'user_id' => $user->id,
-                'type' => 'expense',
+                'type' => TransactionType::Expense,
                 'amount' => 18.50, // MYR18.50
                 'description' => 'Grab to KLCC',
                 'date' => $currentMonth->copy()->addDays(4),
@@ -100,7 +101,7 @@ class TransactionSeeder extends Seeder
             ],
             [
                 'user_id' => $user->id,
-                'type' => 'expense',
+                'type' => TransactionType::Expense,
                 'amount' => 45, // MYR45.00
                 'description' => 'Netflix Subscription',
                 'date' => $currentMonth->copy()->addDays(7),
@@ -114,7 +115,7 @@ class TransactionSeeder extends Seeder
             // Last Month - Examples
             [
                 'user_id' => $user->id,
-                'type' => 'income',
+                'type' => TransactionType::Income,
                 'amount' => 4500, // MYR4,500.00
                 'description' => 'Monthly Salary',
                 'date' => $lastMonth->copy(),
@@ -126,7 +127,7 @@ class TransactionSeeder extends Seeder
             ],
             [
                 'user_id' => $user->id,
-                'type' => 'expense',
+                'type' => TransactionType::Expense,
                 'amount' => 1200, // MYR1,200.00
                 'description' => 'Monthly Rent',
                 'date' => $lastMonth->copy()->addDay(),
@@ -138,7 +139,7 @@ class TransactionSeeder extends Seeder
             ],
             [
                 'user_id' => $user->id,
-                'type' => 'expense',
+                'type' => TransactionType::Expense,
                 'amount' => 165, // MYR165.00
                 'description' => 'TNB Electricity Bill',
                 'date' => $lastMonth->copy()->addDays(5),
@@ -150,7 +151,7 @@ class TransactionSeeder extends Seeder
             ],
             [
                 'user_id' => $user->id,
-                'type' => 'expense',
+                'type' => TransactionType::Expense,
                 'amount' => 45, // MYR45.00
                 'description' => 'Dinner at The Olive',
                 'date' => $lastMonth->copy()->addDays(15),
@@ -162,7 +163,7 @@ class TransactionSeeder extends Seeder
             ],
             [
                 'user_id' => $user->id,
-                'type' => 'expense',
+                'type' => TransactionType::Expense,
                 'amount' => 60, // MYR60.00
                 'description' => 'Petrol at Petronas',
                 'date' => $lastMonth->copy()->addDays(20),
@@ -174,7 +175,7 @@ class TransactionSeeder extends Seeder
             ],
             [
                 'user_id' => $user->id,
-                'type' => 'expense',
+                'type' => TransactionType::Expense,
                 'amount' => 150, // MYR150.00
                 'description' => 'Shopee Online Shopping',
                 'date' => $lastMonth->copy()->addDays(25),

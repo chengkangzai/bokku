@@ -2,6 +2,7 @@
 
 namespace App\Filament\Widgets;
 
+use App\Enums\TransactionType;
 use App\Models\Transaction;
 use Filament\Actions\Action;
 use Filament\Tables\Columns\BadgeColumn;
@@ -32,23 +33,14 @@ class RecentTransactions extends BaseWidget
                     ->date()
                     ->sortable(),
 
-                BadgeColumn::make('type')
-                    ->colors([
-                        'success' => 'income',
-                        'danger' => 'expense',
-                        'primary' => 'transfer',
-                    ]),
+                BadgeColumn::make('type'),
 
                 TextColumn::make('description')
                     ->limit(30),
 
                 TextColumn::make('amount')
                     ->money('myr')
-                    ->color(fn (Transaction $record) => match ($record->type) {
-                        'income' => 'success',
-                        'expense' => 'danger',
-                        'transfer' => 'primary',
-                    }),
+                    ->color(fn (Transaction $record) => $record->type->getColor()),
 
                 TextColumn::make('account.name')
                     ->label('Account'),

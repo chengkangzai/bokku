@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\TransactionType;
 use App\Models\Account;
 use App\Models\Category;
 use App\Models\Transaction;
@@ -17,15 +18,15 @@ class TransactionFactory extends Factory
 
     public function definition(): array
     {
-        $types = ['income', 'expense'];
+        $types = [TransactionType::Income, TransactionType::Expense];
         $type = fake()->randomElement($types);
 
         $descriptions = [
-            'income' => [
+            TransactionType::Income->value => [
                 'Salary Payment', 'Freelance Project', 'Investment Return',
                 'Business Revenue', 'Bonus Payment', 'Commission', 'Interest Earned',
             ],
-            'expense' => [
+            TransactionType::Expense->value => [
                 'Grocery Shopping', 'Restaurant Bill', 'Gas Station', 'Online Purchase',
                 'Utility Payment', 'Medical Expenses', 'Insurance Premium', 'Rent Payment',
             ],
@@ -35,10 +36,10 @@ class TransactionFactory extends Factory
             'user_id' => User::factory(),
             'type' => $type,
             'amount' => fake()->numberBetween(10, 1000), // $10 to $1000
-            'description' => fake()->randomElement($descriptions[$type]),
+            'description' => fake()->randomElement($descriptions[$type->value]),
             'date' => fake()->dateTimeBetween('-1 year', 'now'),
             'account_id' => Account::factory(),
-            'category_id' => Category::factory()->state(['type' => $type]),
+            'category_id' => Category::factory()->state(['type' => $type->value]),
             'from_account_id' => null,
             'to_account_id' => null,
             'reference' => fake()->optional(0.3)->regexify('[A-Z]{3}[0-9]{6}'),
@@ -55,7 +56,7 @@ class TransactionFactory extends Factory
         ];
 
         return $this->state(fn (array $attributes) => [
-            'type' => 'income',
+            'type' => TransactionType::Income,
             'description' => fake()->randomElement($descriptions),
             'amount' => fake()->numberBetween(100, 5000), // $100 to $5000
             'category_id' => Category::factory()->income(),
@@ -70,7 +71,7 @@ class TransactionFactory extends Factory
         ];
 
         return $this->state(fn (array $attributes) => [
-            'type' => 'expense',
+            'type' => TransactionType::Expense,
             'description' => fake()->randomElement($descriptions),
             'amount' => fake()->numberBetween(5, 500), // $5 to $500
             'category_id' => Category::factory()->expense(),
@@ -80,7 +81,7 @@ class TransactionFactory extends Factory
     public function transfer(): static
     {
         return $this->state(fn (array $attributes) => [
-            'type' => 'transfer',
+            'type' => TransactionType::Transfer,
             'description' => 'Transfer between accounts',
             'amount' => fake()->numberBetween(50, 2000), // $50 to $2000
         ]);

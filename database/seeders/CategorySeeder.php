@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Enums\TransactionType;
 use App\Models\Category;
 use App\Models\User;
 use Illuminate\Database\Seeder;
@@ -49,12 +50,12 @@ class CategorySeeder extends Seeder
                 [
                     'user_id' => $user->id,
                     'name' => $category['name'],
-                    'type' => 'income',
+                    'type' => TransactionType::Income->value,
                 ],
                 [
                     'user_id' => $user->id,
                     'name' => $category['name'],
-                    'type' => 'income',
+                    'type' => TransactionType::Income->value,
                     'color' => $category['color'],
                     'icon' => $category['icon'],
                     'sort_order' => 0,
@@ -68,12 +69,12 @@ class CategorySeeder extends Seeder
                 [
                     'user_id' => $user->id,
                     'name' => $category['name'],
-                    'type' => 'expense',
+                    'type' => TransactionType::Expense->value,
                 ],
                 [
                     'user_id' => $user->id,
                     'name' => $category['name'],
-                    'type' => 'expense',
+                    'type' => TransactionType::Expense->value,
                     'color' => $category['color'],
                     'icon' => $category['icon'],
                     'sort_order' => 0,

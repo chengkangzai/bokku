@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\TransactionType;
 use App\Models\Account;
 use App\Models\Category;
 use App\Models\Transaction;
@@ -12,7 +13,7 @@ describe('Transaction Model', function () {
 
         expect($transaction)
             ->toBeInstanceOf(Transaction::class)
-            ->and($transaction->type)->toBeIn(['income', 'expense'])
+            ->and($transaction->type)->toBeIn([TransactionType::Income, TransactionType::Expense])
             ->and($transaction->amount)->toBeNumeric()
             ->and($transaction->description)->toBeString();
     });
@@ -110,13 +111,17 @@ describe('Transaction Model', function () {
 
         expect($income->type_color)->toBe('success');
         expect($expense->type_color)->toBe('danger');
-        expect($transfer->type_color)->toBe('info');
+        expect($transfer->type_color)->toBe('primary');
     });
 
-    it('returns default color for unknown type', function () {
-        $transaction = new Transaction(['type' => 'unknown']);
+    it('returns correct color for all enum types', function () {
+        $income = Transaction::factory()->income()->make();
+        $expense = Transaction::factory()->expense()->make();
+        $transfer = Transaction::factory()->transfer()->make();
 
-        expect($transaction->type_color)->toBe('gray');
+        expect($income->type_color)->toBe('success');
+        expect($expense->type_color)->toBe('danger');
+        expect($transfer->type_color)->toBe('primary');
     });
 
     it('returns correct type icon attribute', function () {
@@ -129,10 +134,14 @@ describe('Transaction Model', function () {
         expect($transfer->type_icon)->toBe('heroicon-o-arrow-right-circle');
     });
 
-    it('returns default icon for unknown type', function () {
-        $transaction = new Transaction(['type' => 'unknown']);
+    it('returns correct icon for all enum types', function () {
+        $income = Transaction::factory()->income()->make();
+        $expense = Transaction::factory()->expense()->make();
+        $transfer = Transaction::factory()->transfer()->make();
 
-        expect($transaction->type_icon)->toBe('heroicon-o-circle-stack');
+        expect($income->type_icon)->toBe('heroicon-o-arrow-down-circle');
+        expect($expense->type_icon)->toBe('heroicon-o-arrow-up-circle');
+        expect($transfer->type_icon)->toBe('heroicon-o-arrow-right-circle');
     });
 
     it('formats amount correctly for income', function () {
@@ -202,9 +211,9 @@ describe('Transaction Model', function () {
         $expense = Transaction::factory()->expense()->make();
         $transfer = Transaction::factory()->transfer()->make();
 
-        expect($income->type)->toBe('income');
-        expect($expense->type)->toBe('expense');
-        expect($transfer->type)->toBe('transfer');
+        expect($income->type)->toBe(TransactionType::Income);
+        expect($expense->type)->toBe(TransactionType::Expense);
+        expect($transfer->type)->toBe(TransactionType::Transfer);
     });
 
     it('can be created with specific attributes', function () {

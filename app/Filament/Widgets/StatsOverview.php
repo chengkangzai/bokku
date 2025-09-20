@@ -2,6 +2,7 @@
 
 namespace App\Filament\Widgets;
 
+use App\Enums\TransactionType;
 use App\Models\Account;
 use App\Models\Transaction;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
@@ -26,13 +27,13 @@ class StatsOverview extends BaseWidget
         $netWorth = $assets - $liabilities;
 
         $monthlyIncome = Transaction::where('user_id', $userId)
-            ->where('type', 'income')
+            ->where('type', TransactionType::Income)
             ->whereMonth('date', now()->month)
             ->whereYear('date', now()->year)
             ->sum('amount') / 100;
 
         $monthlyExpenses = Transaction::where('user_id', $userId)
-            ->where('type', 'expense')
+            ->where('type', TransactionType::Expense)
             ->whereMonth('date', now()->month)
             ->whereYear('date', now()->year)
             ->sum('amount') / 100;

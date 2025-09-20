@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Casts\MoneyCast;
 use App\Enums\AccountType;
+use App\Enums\TransactionType;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -58,19 +59,19 @@ class Account extends Model
     public function updateBalance(): void
     {
         $income = $this->transactions()
-            ->where('type', 'income')
+            ->where('type', TransactionType::Income)
             ->sum('amount');
 
         $expenses = $this->transactions()
-            ->where('type', 'expense')
+            ->where('type', TransactionType::Expense)
             ->sum('amount');
 
         $transfersOut = $this->transfersFrom()
-            ->where('type', 'transfer')
+            ->where('type', TransactionType::Transfer)
             ->sum('amount');
 
         $transfersIn = $this->transfersTo()
-            ->where('type', 'transfer')
+            ->where('type', TransactionType::Transfer)
             ->sum('amount');
 
         // The cast will handle conversion to/from cents
@@ -114,9 +115,9 @@ class Account extends Model
         return $this->balance >= $amount;
     }
 
-    public function getBalanceWarningMessage(float $amount, string $transactionType): ?string
+    public function getBalanceWarningMessage(float $amount, TransactionType $transactionType): ?string
     {
-        if ($transactionType === 'income') {
+        if ($transactionType === TransactionType::Income) {
             return null; // No warning needed for income
         }
 

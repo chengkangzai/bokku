@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Casts\MoneyCast;
+use App\Enums\TransactionType;
 use App\Traits\HasUserScopedTags;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -38,6 +39,7 @@ class Transaction extends Model implements HasMedia
         'amount' => MoneyCast::class,
         'date' => 'date',
         'is_reconciled' => 'boolean',
+        'type' => TransactionType::class,
     ];
 
     protected static function booted(): void
@@ -97,7 +99,7 @@ class Transaction extends Model implements HasMedia
 
     public function updateAccountBalances(): void
     {
-        if ($this->type === 'transfer') {
+        if ($this->type === TransactionType::Transfer) {
             if ($this->fromAccount) {
                 $this->fromAccount->updateBalance();
             }
@@ -114,24 +116,14 @@ class Transaction extends Model implements HasMedia
     protected function typeColor(): Attribute
     {
         return Attribute::make(
-            get: fn () => match ($this->type) {
-                'income' => 'success',
-                'expense' => 'danger',
-                'transfer' => 'info',
-                default => 'gray',
-            }
+            get: fn () => $this->type->getColor()
         );
     }
 
     protected function typeIcon(): Attribute
     {
         return Attribute::make(
-            get: fn () => match ($this->type) {
-                'income' => 'heroicon-o-arrow-down-circle',
-                'expense' => 'heroicon-o-arrow-up-circle',
-                'transfer' => 'heroicon-o-arrow-right-circle',
-                default => 'heroicon-o-circle-stack',
-            }
+            get: fn () => $this->type->getIcon()
         );
     }
 
@@ -139,11 +131,7 @@ class Transaction extends Model implements HasMedia
     {
         return Attribute::make(
             get: function () {
-                $prefix = match ($this->type) {
-                    'income' => '+',
-                    'expense' => '-',
-                    default => '',
-                };
+                $prefix = $this->type->getAmountPrefix();
 
                 $currency = $this->account?->currency ?? 'USD';
 

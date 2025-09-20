@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\RecurringTransactions;
 
+use App\Enums\TransactionType;
 use App\Filament\Resources\RecurringTransactions\Pages\CreateRecurringTransaction;
 use App\Filament\Resources\RecurringTransactions\Pages\EditRecurringTransaction;
 use App\Filament\Resources\RecurringTransactions\Pages\ListRecurringTransactions;
@@ -50,11 +51,7 @@ class RecurringTransactionResource extends Resource
                     ->schema([
                         Select::make('type')
                             ->required()
-                            ->options([
-                                'income' => 'Income',
-                                'expense' => 'Expense',
-                                'transfer' => 'Transfer',
-                            ])
+                            ->options(TransactionType::class)
                             ->reactive()
                             ->afterStateUpdated(fn (callable $set) => $set('category_id', null))
                             ->native(false),
@@ -70,7 +67,7 @@ class RecurringTransactionResource extends Resource
                             ->maxLength(255),
 
                         Select::make('account_id')
-                            ->label(fn (callable $get) => $get('type') === 'transfer' ? 'From Account' : 'Account')
+                            ->label(fn (callable $get) => $get('type') === TransactionType::Transfer ? 'From Account' : 'Account')
                             ->relationship(
                                 'account',
                                 'name',
@@ -88,8 +85,8 @@ class RecurringTransactionResource extends Resource
                                 'name',
                                 fn (Builder $query) => $query->where('user_id', auth()->id())
                             )
-                            ->required(fn (callable $get) => $get('type') === 'transfer')
-                            ->visible(fn (callable $get) => $get('type') === 'transfer')
+                            ->required(fn (callable $get) => $get('type') === TransactionType::Transfer)
+                            ->visible(fn (callable $get) => $get('type') === TransactionType::Transfer)
                             ->native(false)
                             ->searchable()
                             ->preload(),
@@ -103,11 +100,11 @@ class RecurringTransactionResource extends Resource
                                     ->where('user_id', auth()->id())
                                     ->when(
                                         $get('type'),
-                                        fn ($q, $type) => $q->where('type', $type === 'transfer' ? 'expense' : $type)
+                                        fn ($q, $type) => $q->where('type', $type === TransactionType::Transfer ? TransactionType::Expense->value : $type->value)
                                     )
                             )
-                            ->required(fn (callable $get) => in_array($get('type'), ['income', 'expense']))
-                            ->visible(fn (callable $get) => $get('type') !== 'transfer')
+                            ->required(fn (callable $get) => in_array($get('type'), [TransactionType::Income, TransactionType::Expense]))
+                            ->visible(fn (callable $get) => $get('type') !== TransactionType::Transfer)
                             ->native(false)
                             ->searchable()
                             ->preload(),
@@ -238,17 +235,7 @@ class RecurringTransactionResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('type')
-                    ->badge()
-                    ->color(fn (string $state): string => match ($state) {
-                        'income' => 'success',
-                        'expense' => 'danger',
-                        'transfer' => 'info',
-                    })
-                    ->icon(fn (string $state): string => match ($state) {
-                        'income' => 'heroicon-o-arrow-down-circle',
-                        'expense' => 'heroicon-o-arrow-up-circle',
-                        'transfer' => 'heroicon-o-arrow-right-circle',
-                    }),
+                    ->badge(),
 
                 TextColumn::make('description')
                     ->searchable()
@@ -290,11 +277,7 @@ class RecurringTransactionResource extends Resource
             ])
             ->filters([
                 SelectFilter::make('type')
-                    ->options([
-                        'income' => 'Income',
-                        'expense' => 'Expense',
-                        'transfer' => 'Transfer',
-                    ]),
+                    ->options(TransactionType::class),
 
                 SelectFilter::make('frequency')
                     ->options([

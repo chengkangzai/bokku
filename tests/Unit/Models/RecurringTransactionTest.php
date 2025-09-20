@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\TransactionType;
 use App\Models\Account;
 use App\Models\Category;
 use App\Models\RecurringTransaction;
@@ -283,7 +284,7 @@ describe('RecurringTransaction Transaction Generation', function () {
         expect($transaction->amount)->toBe(150.00);
         expect($transaction->description)->toBe('Test Expense');
         expect($transaction->recurring_transaction_id)->toBe($recurring->id);
-        expect($transaction->type)->toBe('expense');
+        expect($transaction->type)->toBe(TransactionType::Expense);
     });
 
     it('does not generate transaction when not due', function () {
@@ -331,7 +332,7 @@ describe('RecurringTransaction Transaction Generation', function () {
 
         $transaction = $recurring->generateTransaction();
 
-        expect($transaction->type)->toBe('transfer');
+        expect($transaction->type)->toBe(TransactionType::Transfer);
         expect($transaction->from_account_id)->toBe($this->account->id);
         expect($transaction->to_account_id)->toBe($toAccount->id);
         expect($transaction->account_id)->toBe($this->account->id);
@@ -510,7 +511,7 @@ describe('RecurringTransaction Attributes', function () {
 
         expect($income->type_color)->toBe('success');
         expect($expense->type_color)->toBe('danger');
-        expect($transfer->type_color)->toBe('info');
+        expect($transfer->type_color)->toBe('primary');
     });
 
     it('returns correct type icon', function () {

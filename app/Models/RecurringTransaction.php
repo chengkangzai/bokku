@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Casts\MoneyCast;
+use App\Enums\TransactionType;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -48,6 +49,7 @@ class RecurringTransaction extends Model
         'day_of_week' => 'integer',
         'day_of_month' => 'integer',
         'month_of_year' => 'integer',
+        'type' => TransactionType::class,
     ];
 
     public function user(): BelongsTo
@@ -107,7 +109,7 @@ class RecurringTransaction extends Model
             'is_reconciled' => false,
         ];
 
-        if ($this->type === 'transfer') {
+        if ($this->type === TransactionType::Transfer) {
             $transactionData['from_account_id'] = $this->account_id;
             $transactionData['to_account_id'] = $this->to_account_id;
         }
@@ -267,24 +269,14 @@ class RecurringTransaction extends Model
     protected function typeColor(): Attribute
     {
         return Attribute::make(
-            get: fn () => match ($this->type) {
-                'income' => 'success',
-                'expense' => 'danger',
-                'transfer' => 'info',
-                default => 'gray',
-            }
+            get: fn () => $this->type->getColor()
         );
     }
 
     protected function typeIcon(): Attribute
     {
         return Attribute::make(
-            get: fn () => match ($this->type) {
-                'income' => 'heroicon-o-arrow-down-circle',
-                'expense' => 'heroicon-o-arrow-up-circle',
-                'transfer' => 'heroicon-o-arrow-right-circle',
-                default => 'heroicon-o-circle-stack',
-            }
+            get: fn () => $this->type->getIcon()
         );
     }
 

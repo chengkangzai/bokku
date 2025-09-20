@@ -56,7 +56,7 @@ class TransactionRule extends Model
         }
 
         // Check if rule applies to this transaction type
-        if ($this->apply_to !== 'all' && $this->apply_to !== $transaction->type) {
+        if ($this->apply_to !== 'all' && $this->apply_to !== $transaction->type->value) {
             return false;
         }
 

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Transactions;
 
+use App\Enums\TransactionType;
 use App\Filament\Resources\Transactions\Pages\CreateTransaction;
 use App\Filament\Resources\Transactions\Pages\EditTransaction;
 use App\Filament\Resources\Transactions\Pages\ListTransactions;
@@ -70,19 +71,10 @@ class TransactionResource extends Resource
                             ->schema([
                                 Radio::make('type')
                                     ->required()
-                                    ->options([
-                                        'income' => '💰 Income',
-                                        'expense' => '💸 Expense',
-                                        'transfer' => '🔄 Transfer',
-                                    ])
+                                    ->options(TransactionType::class)
                                     ->inline()
-                                    ->default('expense')
+                                    ->default(TransactionType::Expense)
                                     ->inlineLabel(false)
-                                    ->descriptions([
-                                        'income' => 'Money coming in',
-                                        'expense' => 'Money going out',
-                                        'transfer' => 'Move between accounts',
-                                    ])
                                     ->reactive()
                                     ->afterStateUpdated(fn (callable $set) => $set('category_id', null))
                                     ->columnSpanFull(),
@@ -129,8 +121,8 @@ class TransactionResource extends Resource
                             ->schema([
                                 Select::make('account_id')
                                     ->label(fn (Get $get) => match ($get('type')) {
-                                        'income' => 'To Account',
-                                        'expense', 'transfer' => 'From Account',
+                                        TransactionType::Income => 'To Account',
+                                        TransactionType::Expense, TransactionType::Transfer => 'From Account',
                                         default => 'Account'
                                     })
                                     ->relationship(
@@ -141,7 +133,7 @@ class TransactionResource extends Resource
                                     ->required()
                                     ->native(false)
                                     ->reactive()
-                                    ->visible(fn (Get $get) => ! empty($get('type')) && in_array($get('type'), ['income', 'expense', 'transfer']))
+                                    ->visible(fn (Get $get) => ! empty($get('type')) && in_array($get('type'), [TransactionType::Income, TransactionType::Expense, TransactionType::Transfer]))
                                     ->helperText(fn (Get $get) => empty($get('type')) ? 'Please select a transaction type first' : null
                                     ),
 
@@ -154,7 +146,7 @@ class TransactionResource extends Resource
                                     )
                                     ->required()
                                     ->native(false)
-                                    ->visible(fn (Get $get) => $get('type') === 'transfer'),
+                                    ->visible(fn (Get $get) => $get('type') === TransactionType::Transfer),
 
                                 Select::make('category_id')
                                     ->relationship(
@@ -173,7 +165,7 @@ class TransactionResource extends Resource
                                         $amount = (float) $get('amount');
                                         $type = $get('type');
 
-                                        if (! $categoryId || ! $amount || $type !== 'expense') {
+                                        if (! $categoryId || ! $amount || $type !== TransactionType::Expense) {
                                             return null;
                                         }
 
@@ -193,8 +185,8 @@ class TransactionResource extends Resource
                                         Select::make('type')
                                             ->required()
                                             ->options([
-                                                'income' => 'Income',
-                                                'expense' => 'Expense',
+                                                TransactionType::Income->value => 'Income',
+                                                TransactionType::Expense->value => 'Expense',
                                             ])
                                             ->default($get('type'))
                                             ->disabled()
@@ -214,7 +206,7 @@ class TransactionResource extends Resource
                                         return Category::create($data)->getKey();
                                     })
                                     ->createOptionModalHeading('Create New Category')
-                                    ->visible(fn (Get $get) => ! empty($get('type')) && in_array($get('type'), ['income', 'expense'])),
+                                    ->visible(fn (Get $get) => ! empty($get('type')) && in_array($get('type'), [TransactionType::Income, TransactionType::Expense])),
                             ])
                             ->columns(2)
                             ->description(fn (Get $get) => empty($get('type')) ? 'Select a transaction type to see available options' : null),
@@ -429,7 +421,7 @@ class TransactionResource extends Resource
                                             ->where('is_active', true)
                                             ->where(function ($query) use ($type) {
                                                 $query->where('apply_to', 'all')
-                                                    ->orWhere('apply_to', $type);
+                                                    ->orWhere('apply_to', $type->value);
                                             })
                                             ->orderBy('priority', 'desc')
                                             ->get();
@@ -440,7 +432,7 @@ class TransactionResource extends Resource
                                             $tempTransaction = new Transaction([
                                                 'description' => $description ?? '',
                                                 'amount' => $amount ?? 0,
-                                                'type' => $type ?? 'expense',
+                                                'type' => $type ?? TransactionType::Expense,
                                                 'category_id' => $get('category_id'),
                                                 'user_id' => auth()->id(),
                                             ]);
@@ -478,12 +470,7 @@ class TransactionResource extends Resource
                     ->searchable(),
 
                 TextColumn::make('type')
-                    ->badge()
-                    ->colors([
-                        'success' => 'income',
-                        'danger' => 'expense',
-                        'primary' => 'transfer',
-                    ]),
+                    ->badge(),
 
                 TextColumn::make('description')
                     ->searchable()
@@ -492,11 +479,7 @@ class TransactionResource extends Resource
                 TextColumn::make('amount')
                     ->money('myr')
                     ->sortable()
-                    ->color(fn (Transaction $record) => match ($record->type) {
-                        'income' => 'success',
-                        'expense' => 'danger',
-                        'transfer' => 'primary',
-                    }),
+                    ->color(fn (Transaction $record) => $record->type->getColor()),
 
                 TextColumn::make('account.name')
                     ->label('Account')
@@ -541,11 +524,7 @@ class TransactionResource extends Resource
             ])
             ->filters([
                 SelectFilter::make('type')
-                    ->options([
-                        'income' => 'Income',
-                        'expense' => 'Expense',
-                        'transfer' => 'Transfer',
-                    ]),
+                    ->options(TransactionType::class),
 
                 SelectFilter::make('account_id')
                     ->label('Account')
@@ -678,7 +657,7 @@ class TransactionResource extends Resource
         // Extract transaction type
         if (! empty($extractor['type']) && empty($get('type'))) {
             $type = $extractor['type'];
-            if (in_array($type, ['income', 'expense', 'transfer'])) {
+            if (in_array($type, [TransactionType::Income->value, TransactionType::Expense->value, TransactionType::Transfer->value])) {
                 $set('type', $type);
                 $extractedInfo[] = 'type';
             }

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Categories\RelationManagers;
 
+use App\Enums\TransactionType;
 use App\Models\Transaction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
@@ -46,11 +47,6 @@ class TransactionsRelationManager extends RelationManager
 
                 TextColumn::make('type')
                     ->badge()
-                    ->colors([
-                        'success' => 'income',
-                        'danger' => 'expense',
-                        'primary' => 'transfer',
-                    ])
                     ->visible(fn () => $this->getOwnerRecord()->type === null),
 
                 TextColumn::make('description')
@@ -60,18 +56,14 @@ class TransactionsRelationManager extends RelationManager
                 TextColumn::make('amount')
                     ->money('myr')
                     ->sortable()
-                    ->color(fn (Transaction $record) => match ($record->type) {
-                        'income' => 'success',
-                        'expense' => 'danger',
-                        'transfer' => 'primary',
-                    })
+                    ->color(fn (Transaction $record) => $record->type->getColor())
                     ->formatStateUsing(function (Transaction $record) {
                         $amount = number_format($record->amount, 2);
 
                         return match ($record->type) {
-                            'income' => '+RM '.$amount,
-                            'expense' => '-RM '.$amount,
-                            'transfer' => 'RM '.$amount,
+                            TransactionType::Income => '+RM '.$amount,
+                            TransactionType::Expense => '-RM '.$amount,
+                            TransactionType::Transfer => 'RM '.$amount,
                             default => 'RM '.$amount,
                         };
                     }),

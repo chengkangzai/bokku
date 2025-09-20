@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Casts\MoneyCast;
+use App\Enums\TransactionType;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -71,7 +72,7 @@ class Budget extends Model
         // Sum returns the raw database value in cents
         $spentInCents = $this->category->transactions()
             ->where('user_id', $this->user_id)
-            ->where('type', 'expense')
+            ->where('type', TransactionType::Expense)
             ->whereBetween('date', [
                 $this->getCurrentPeriodStart(),
                 $this->getCurrentPeriodEnd(),

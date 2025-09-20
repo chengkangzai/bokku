@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\TransactionType;
 use App\Models\Account;
 use App\Models\Category;
 use App\Models\User;
@@ -19,7 +20,7 @@ class RecurringTransactionFactory extends Factory
      */
     public function definition(): array
     {
-        $type = $this->faker->randomElement(['income', 'expense', 'transfer']);
+        $type = $this->faker->randomElement([TransactionType::Income, TransactionType::Expense, TransactionType::Transfer]);
         $frequency = $this->faker->randomElement(['daily', 'weekly', 'monthly', 'annual']);
 
         $data = [
@@ -39,8 +40,8 @@ class RecurringTransactionFactory extends Factory
                 'Spotify Subscription',
             ]),
             'account_id' => Account::factory(),
-            'category_id' => $type !== 'transfer' ? Category::factory() : null,
-            'to_account_id' => $type === 'transfer' ? Account::factory() : null,
+            'category_id' => $type !== TransactionType::Transfer ? Category::factory() : null,
+            'to_account_id' => $type === TransactionType::Transfer ? Account::factory() : null,
             'frequency' => $frequency,
             'interval' => $this->faker->randomElement([1, 1, 1, 2]), // Mostly 1, sometimes 2
             'day_of_week' => null,
@@ -71,7 +72,7 @@ class RecurringTransactionFactory extends Factory
     public function income(): static
     {
         return $this->state(fn (array $attributes) => [
-            'type' => 'income',
+            'type' => TransactionType::Income,
             'category_id' => Category::factory()->income(),
             'to_account_id' => null,
         ]);
@@ -80,7 +81,7 @@ class RecurringTransactionFactory extends Factory
     public function expense(): static
     {
         return $this->state(fn (array $attributes) => [
-            'type' => 'expense',
+            'type' => TransactionType::Expense,
             'category_id' => Category::factory()->expense(),
             'to_account_id' => null,
         ]);
@@ -89,7 +90,7 @@ class RecurringTransactionFactory extends Factory
     public function transfer(): static
     {
         return $this->state(fn (array $attributes) => [
-            'type' => 'transfer',
+            'type' => TransactionType::Transfer,
             'category_id' => null,
             'to_account_id' => Account::factory(),
         ]);

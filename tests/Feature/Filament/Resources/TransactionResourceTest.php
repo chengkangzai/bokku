@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\TransactionType;
 use App\Filament\Resources\Transactions\Pages\CreateTransaction;
 use App\Filament\Resources\Transactions\Pages\EditTransaction;
 use App\Filament\Resources\Transactions\Pages\ListTransactions;
@@ -24,8 +25,8 @@ beforeEach(function () {
     // Create test accounts and categories for the user
     $this->account = Account::factory()->create(['user_id' => $this->user->id]);
     $this->toAccount = Account::factory()->create(['user_id' => $this->user->id]);
-    $this->incomeCategory = Category::factory()->create(['user_id' => $this->user->id, 'type' => 'income']);
-    $this->expenseCategory = Category::factory()->create(['user_id' => $this->user->id, 'type' => 'expense']);
+    $this->incomeCategory = Category::factory()->create(['user_id' => $this->user->id, 'type' => TransactionType::Income->value]);
+    $this->expenseCategory = Category::factory()->create(['user_id' => $this->user->id, 'type' => TransactionType::Expense->value]);
 });
 
 describe('TransactionResource Page Rendering', function () {
@@ -55,7 +56,7 @@ describe('TransactionResource CRUD Operations', function () {
 
         livewire(CreateTransaction::class)
             ->fillForm([
-                'type' => 'expense',
+                'type' => TransactionType::Expense,
                 'amount' => $transactionData->amount,
                 'date' => $transactionData->date->format('Y-m-d'),
                 'description' => $transactionData->description,
@@ -69,7 +70,7 @@ describe('TransactionResource CRUD Operations', function () {
             ->assertHasNoFormErrors();
 
         $this->assertDatabaseHas(Transaction::class, [
-            'type' => 'expense',
+            'type' => TransactionType::Expense->value,
             'amount' => round($transactionData->amount * 100), // DB stores cents
             'description' => $transactionData->description,
             'user_id' => $this->user->id,
@@ -98,7 +99,7 @@ describe('TransactionResource CRUD Operations', function () {
     it('can validate minimum amount', function () {
         livewire(CreateTransaction::class)
             ->fillForm([
-                'type' => 'income',
+                'type' => TransactionType::Income,
                 'amount' => 0,
                 'description' => 'Test transaction',
                 'date' => now()->format('Y-m-d'),
@@ -166,11 +167,11 @@ describe('TransactionResource Table Functionality', function () {
     it('can filter transactions by type', function () {
         $incomeTransactions = Transaction::factory()->count(2)->create([
             'user_id' => $this->user->id,
-            'type' => 'income',
+            'type' => TransactionType::Income->value,
         ]);
         Transaction::factory()->count(2)->create([
             'user_id' => $this->user->id,
-            'type' => 'expense',
+            'type' => TransactionType::Expense->value,
         ]);
 
         livewire(ListTransactions::class)
@@ -287,7 +288,7 @@ describe('TransactionResource User Data Scoping', function () {
 
         // Test that the form renders successfully with user data scoping
         livewire(CreateTransaction::class)
-            ->fillForm(['type' => 'income'])
+            ->fillForm(['type' => TransactionType::Income])
             ->assertSuccessful();
 
         // The form should only show accounts belonging to the authenticated user
@@ -301,7 +302,7 @@ describe('TransactionResource User Data Scoping', function () {
 
         // Test that the form renders successfully with user data scoping
         livewire(CreateTransaction::class)
-            ->fillForm(['type' => 'income'])
+            ->fillForm(['type' => TransactionType::Income])
             ->assertSuccessful();
 
         // The form should only show categories belonging to the authenticated user
@@ -347,7 +348,7 @@ describe('TransactionResource Media Attachments', function () {
 
         livewire(CreateTransaction::class)
             ->fillForm([
-                'type' => 'expense',
+                'type' => TransactionType::Expense,
                 'amount' => 50.00,
                 'date' => today()->format('Y-m-d'),
                 'description' => 'Test purchase with receipt',
@@ -377,7 +378,7 @@ describe('TransactionResource Media Attachments', function () {
 
         livewire(CreateTransaction::class)
             ->fillForm([
-                'type' => 'income',
+                'type' => TransactionType::Income,
                 'amount' => 100.00,
                 'date' => today()->format('Y-m-d'),
                 'description' => 'Test with too many files',
@@ -394,7 +395,7 @@ describe('TransactionResource Media Attachments', function () {
 
         livewire(CreateTransaction::class)
             ->fillForm([
-                'type' => 'income',
+                'type' => TransactionType::Income,
                 'amount' => 100.00,
                 'date' => today()->format('Y-m-d'),
                 'description' => 'Test with invalid file type',
@@ -411,7 +412,7 @@ describe('TransactionResource Media Attachments', function () {
 
         livewire(CreateTransaction::class)
             ->fillForm([
-                'type' => 'expense',
+                'type' => TransactionType::Expense,
                 'amount' => 100.00,
                 'date' => today()->format('Y-m-d'),
                 'description' => 'Test with large file',
@@ -475,7 +476,7 @@ describe('TransactionResource Budget Warning Integration', function () {
 
         livewire(CreateTransaction::class)
             ->fillForm([
-                'type' => 'expense',
+                'type' => TransactionType::Expense,
                 'amount' => 1000.00,
                 'date' => now()->format('Y-m-d'),
                 'description' => 'Transaction for category without budget',
@@ -495,7 +496,7 @@ describe('TransactionResource Budget Warning Integration', function () {
         // Small transaction well within budget
         livewire(CreateTransaction::class)
             ->fillForm([
-                'type' => 'expense',
+                'type' => TransactionType::Expense,
                 'amount' => 100.00,
                 'date' => now()->format('Y-m-d'),
                 'description' => 'Small transaction',
@@ -511,7 +512,7 @@ describe('TransactionResource Budget Warning Integration', function () {
         // Initial form with safe amount
         $component = livewire(CreateTransaction::class)
             ->fillForm([
-                'type' => 'expense',
+                'type' => TransactionType::Expense,
                 'amount' => 100.00,
                 'date' => now()->format('Y-m-d'),
                 'description' => 'Initial safe amount',
@@ -552,7 +553,7 @@ describe('TransactionResource Budget Warning Integration', function () {
         // But should only consider current month spending (200 + 400 = 600 > 500)
         livewire(CreateTransaction::class)
             ->fillForm([
-                'type' => 'expense',
+                'type' => TransactionType::Expense,
                 'amount' => 400.00,
                 'date' => now()->format('Y-m-d'),
                 'description' => 'Transaction considering period',
@@ -570,7 +571,7 @@ describe('TransactionResource Budget Warning Integration', function () {
         // Should not show warning for inactive budgets
         livewire(CreateTransaction::class)
             ->fillForm([
-                'type' => 'expense',
+                'type' => TransactionType::Expense,
                 'amount' => 600.00,
                 'date' => now()->format('Y-m-d'),
                 'description' => 'Transaction with inactive budget',
@@ -586,7 +587,7 @@ describe('TransactionResource Budget Warning Integration', function () {
     it('handles zero amount gracefully in reactive form', function () {
         livewire(CreateTransaction::class)
             ->fillForm([
-                'type' => 'expense',
+                'type' => TransactionType::Expense,
                 'amount' => 0,
                 'date' => now()->format('Y-m-d'),
                 'description' => 'Zero amount transaction',
@@ -601,7 +602,7 @@ describe('TransactionResource Budget Warning Integration', function () {
     it('handles empty amount field gracefully in reactive form', function () {
         livewire(CreateTransaction::class)
             ->fillForm([
-                'type' => 'expense',
+                'type' => TransactionType::Expense,
                 'amount' => '',
                 'date' => now()->format('Y-m-d'),
                 'description' => 'Empty amount transaction',
@@ -636,7 +637,7 @@ describe('TransactionResource Budget Warning Integration', function () {
         // Transaction that will exceed weekly budget (100 + 80 = 180 > 150)
         livewire(CreateTransaction::class)
             ->fillForm([
-                'type' => 'expense',
+                'type' => TransactionType::Expense,
                 'amount' => 80.00,
                 'date' => now()->format('Y-m-d'),
                 'description' => 'Weekly budget test',
@@ -673,7 +674,7 @@ describe('TransactionResource Budget Warning Integration', function () {
         // Transaction that will exceed annual budget (5500 + 600 = 6100 > 6000)
         livewire(CreateTransaction::class)
             ->fillForm([
-                'type' => 'expense',
+                'type' => TransactionType::Expense,
                 'amount' => 600.00,
                 'date' => now()->format('Y-m-d'),
                 'description' => 'Annual budget test',
@@ -705,7 +706,7 @@ describe('TransactionResource Budget Warning Integration', function () {
         // Current user's transaction should not trigger other user's budget
         livewire(CreateTransaction::class)
             ->fillForm([
-                'type' => 'expense',
+                'type' => TransactionType::Expense,
                 'amount' => 600.00, // Would exceed other user's budget
                 'date' => now()->format('Y-m-d'),
                 'description' => 'Multi-tenant test',
@@ -740,7 +741,7 @@ describe('TransactionResource Receipt Extraction', function () {
         $fake = Prism::fake([
             StructuredResponseFake::make()
                 ->withStructured([
-                    'type' => 'expense',
+                    'type' => TransactionType::Expense,
                     'amount' => '25.50',
                     'date' => '2025-01-15',
                     'description' => 'Coffee shop',
@@ -757,7 +758,7 @@ describe('TransactionResource Receipt Extraction', function () {
                 'receipts' => [$file],
             ])
             ->assertFormSet([
-                'type' => 'expense',
+                'type' => TransactionType::Expense,
                 'amount' => 25.50,
                 'date' => '2025-01-15',
                 'description' => 'Coffee shop',
@@ -774,7 +775,7 @@ describe('TransactionResource Receipt Extraction', function () {
             'user_id' => $this->user->id,
             'account_id' => $this->account->id,
             'category_id' => $this->expenseCategory->id,
-            'type' => 'expense',
+            'type' => TransactionType::Expense->value,
             'amount' => 10.00,
             'description' => 'Initial description',
         ]);
@@ -789,7 +790,7 @@ describe('TransactionResource Receipt Extraction', function () {
         $fake = Prism::fake([
             StructuredResponseFake::make()
                 ->withStructured([
-                    'type' => 'income',
+                    'type' => TransactionType::Income,
                     'amount' => '45.75',
                     'date' => '2025-01-16',
                     'description' => 'Restaurant bill',
@@ -806,7 +807,7 @@ describe('TransactionResource Receipt Extraction', function () {
             ])
             ->callFormComponentAction('receipts', 'Auto Fill')
             ->assertFormSet([
-                'type' => 'expense', // Should NOT change (was pre-filled)
+                'type' => TransactionType::Expense, // Should NOT change (was pre-filled)
                 'amount' => 45.75,   // Should change (was cleared)
                 'date' => $transaction->date->format('Y-m-d'), // Should NOT change (has value)
                 'description' => 'Restaurant bill', // Should change (was cleared)
@@ -822,7 +823,7 @@ describe('TransactionResource Receipt Extraction', function () {
         $transaction = Transaction::factory()->create([
             'user_id' => $this->user->id,
             'account_id' => $this->account->id,
-            'type' => 'expense', // Required field
+            'type' => TransactionType::Expense->value, // Required field
             'amount' => 0, // Set to 0 so extraction can update it
             'category_id' => null, // Leave empty so extraction can fill it
             'description' => '', // Leave empty so extraction can fill it
@@ -841,7 +842,7 @@ describe('TransactionResource Receipt Extraction', function () {
         $fake = Prism::fake([
             StructuredResponseFake::make()
                 ->withStructured([
-                    'type' => 'expense',
+                    'type' => TransactionType::Expense,
                     'amount' => '15.00',
                     'date' => '2025-01-15',
                     'description' => 'Extracted from optimized image',
@@ -862,7 +863,7 @@ describe('TransactionResource Receipt Extraction', function () {
         $transaction = Transaction::factory()->create([
             'user_id' => $this->user->id,
             'account_id' => $this->account->id,
-            'type' => 'expense', // Required field
+            'type' => TransactionType::Expense->value, // Required field
             'amount' => 0, // Set to 0 so extraction can update it
             'category_id' => null, // Leave empty so extraction can fill it
             'description' => '', // Leave empty so extraction can fill it
@@ -880,7 +881,7 @@ describe('TransactionResource Receipt Extraction', function () {
         $fake = Prism::fake([
             StructuredResponseFake::make()
                 ->withStructured([
-                    'type' => 'expense',
+                    'type' => TransactionType::Expense,
                     'amount' => '35.25',
                     'date' => '2025-01-15',
                     'description' => 'Extracted from PDF',
@@ -952,7 +953,7 @@ describe('TransactionResource Receipt Extraction', function () {
         $fake = Prism::fake([
             StructuredResponseFake::make()
                 ->withStructured([
-                    'type' => 'income',
+                    'type' => TransactionType::Income,
                     'amount' => '100.00',
                     'date' => '2025-01-20',
                     'description' => 'Extracted description',
@@ -965,13 +966,13 @@ describe('TransactionResource Receipt Extraction', function () {
 
         livewire(CreateTransaction::class)
             ->fillForm([
-                'type' => 'expense', // Pre-filled
+                'type' => TransactionType::Expense, // Pre-filled
                 'amount' => 50.00,   // Pre-filled
                 'date' => '',       // Clear default date to allow extraction
                 'receipts' => [$file],
             ])
             ->assertFormSet([
-                'type' => 'expense',              // Should NOT change (was pre-filled)
+                'type' => TransactionType::Expense,              // Should NOT change (was pre-filled)
                 'amount' => 50.00,               // Should NOT change (was pre-filled)
                 'date' => '2025-01-20',         // Should change (was empty)
                 'description' => 'Extracted description', // Should change (was empty)

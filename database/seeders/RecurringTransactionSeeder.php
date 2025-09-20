@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Enums\TransactionType;
 use App\Models\Account;
 use App\Models\Category;
 use App\Models\RecurringTransaction;
@@ -35,7 +36,7 @@ class RecurringTransactionSeeder extends Seeder
             [
                 'user_id' => $user->id,
                 'description' => 'Monthly Salary',
-                'type' => 'income',
+                'type' => TransactionType::Income,
                 'amount' => 4500, // MYR4,500.00
                 'account_id' => $maybank->id,
                 'category_id' => $categories['Salary']->id ?? null,
@@ -54,7 +55,7 @@ class RecurringTransactionSeeder extends Seeder
             [
                 'user_id' => $user->id,
                 'description' => 'Monthly Rent',
-                'type' => 'expense',
+                'type' => TransactionType::Expense,
                 'amount' => 1200, // MYR1,200.00
                 'account_id' => $maybank->id,
                 'category_id' => $categories['Home & Rent']->id ?? null,
@@ -73,7 +74,7 @@ class RecurringTransactionSeeder extends Seeder
             [
                 'user_id' => $user->id,
                 'description' => 'Unifi Internet',
-                'type' => 'expense',
+                'type' => TransactionType::Expense,
                 'amount' => 99, // MYR99.00
                 'account_id' => $maybank->id,
                 'category_id' => $categories['Bills & Utilities']->id ?? null,
@@ -92,7 +93,7 @@ class RecurringTransactionSeeder extends Seeder
             [
                 'user_id' => $user->id,
                 'description' => 'Car Insurance Premium',
-                'type' => 'expense',
+                'type' => TransactionType::Expense,
                 'amount' => 150, // MYR150.00
                 'account_id' => $maybank->id,
                 'category_id' => $categories['Insurance']->id ?? null,
@@ -111,7 +112,7 @@ class RecurringTransactionSeeder extends Seeder
             [
                 'user_id' => $user->id,
                 'description' => 'Car Loan Payment',
-                'type' => 'expense',
+                'type' => TransactionType::Expense,
                 'amount' => 650, // MYR650.00
                 'account_id' => $maybank->id,
                 'to_account_id' => $carLoan->id,
@@ -131,7 +132,7 @@ class RecurringTransactionSeeder extends Seeder
             [
                 'user_id' => $user->id,
                 'description' => 'Netflix Premium Subscription',
-                'type' => 'expense',
+                'type' => TransactionType::Expense,
                 'amount' => 45, // MYR45.00
                 'account_id' => $maybankVisa->id,
                 'category_id' => $categories['Entertainment']->id ?? null,
@@ -150,7 +151,7 @@ class RecurringTransactionSeeder extends Seeder
             [
                 'user_id' => $user->id,
                 'description' => 'Weekly Groceries Budget',
-                'type' => 'expense',
+                'type' => TransactionType::Expense,
                 'amount' => 100, // MYR100.00
                 'account_id' => $maybankVisa->id,
                 'category_id' => $categories['Groceries']->id ?? null,

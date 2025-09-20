@@ -2,6 +2,7 @@
 
 namespace App\Filament\Widgets;
 
+use App\Enums\TransactionType;
 use App\Models\RecurringTransaction;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
@@ -29,28 +30,14 @@ class UpcomingRecurringTransactions extends BaseWidget
             )
             ->columns([
                 TextColumn::make('type')
-                    ->badge()
-                    ->color(fn (string $state): string => match ($state) {
-                        'income' => 'success',
-                        'expense' => 'danger',
-                        'transfer' => 'info',
-                    })
-                    ->icon(fn (string $state): string => match ($state) {
-                        'income' => 'heroicon-o-arrow-down-circle',
-                        'expense' => 'heroicon-o-arrow-up-circle',
-                        'transfer' => 'heroicon-o-arrow-right-circle',
-                    }),
+                    ->badge(),
 
                 TextColumn::make('description')
                     ->weight('semibold'),
 
                 TextColumn::make('amount')
                     ->formatStateUsing(fn ($state) => 'MYR '.number_format($state, 2))
-                    ->color(fn ($record) => match ($record->type) {
-                        'income' => 'success',
-                        'expense' => 'danger',
-                        default => 'gray',
-                    }),
+                    ->color(fn ($record) => $record->type->getColor()),
 
                 TextColumn::make('next_date')
                     ->label('Due')

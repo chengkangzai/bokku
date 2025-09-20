@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Accounts\RelationManagers;
 
+use App\Enums\TransactionType;
 use App\Models\Transaction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
@@ -54,12 +55,7 @@ class TransactionsRelationManager extends RelationManager
                     ->searchable(),
 
                 TextColumn::make('type')
-                    ->badge()
-                    ->colors([
-                        'success' => 'income',
-                        'danger' => 'expense',
-                        'primary' => 'transfer',
-                    ]),
+                    ->badge(),
 
                 TextColumn::make('description')
                     ->searchable()
@@ -68,16 +64,12 @@ class TransactionsRelationManager extends RelationManager
                 TextColumn::make('amount')
                     ->money('myr')
                     ->sortable()
-                    ->color(fn (Transaction $record) => match ($record->type) {
-                        'income' => 'success',
-                        'expense' => 'danger',
-                        'transfer' => 'primary',
-                    })
+                    ->color(fn (Transaction $record) => $record->type->getColor())
                     ->formatStateUsing(function (Transaction $record) {
                         $accountId = $this->getOwnerRecord()->id;
                         $amount = number_format($record->amount, 2);
 
-                        if ($record->type === 'transfer') {
+                        if ($record->type === TransactionType::Transfer) {
                             // Show + for incoming transfers, - for outgoing
                             if ($record->to_account_id === $accountId) {
                                 return '+RM '.$amount;
@@ -87,8 +79,8 @@ class TransactionsRelationManager extends RelationManager
                         }
 
                         return match ($record->type) {
-                            'income' => '+RM '.$amount,
-                            'expense' => '-RM '.$amount,
+                            TransactionType::Income => '+RM '.$amount,
+                            TransactionType::Expense => '-RM '.$amount,
                             default => 'RM '.$amount,
                         };
                     }),
@@ -101,7 +93,7 @@ class TransactionsRelationManager extends RelationManager
                 TextColumn::make('transfer_info')
                     ->label('Transfer Details')
                     ->getStateUsing(function (Transaction $record) {
-                        if ($record->type !== 'transfer') {
+                        if ($record->type !== TransactionType::Transfer) {
                             return null;
                         }
 
@@ -129,11 +121,7 @@ class TransactionsRelationManager extends RelationManager
             ])
             ->filters([
                 SelectFilter::make('type')
-                    ->options([
-                        'income' => 'Income',
-                        'expense' => 'Expense',
-                        'transfer' => 'Transfer',
-                    ]),
+                    ->options(TransactionType::class),
 
                 TernaryFilter::make('is_reconciled')
                     ->label('Reconciled')
