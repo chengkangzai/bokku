@@ -109,11 +109,16 @@ describe('ReceiptExtractorService', function () {
         file_put_contents($tempPath, '%PDF-1.4 dummy pdf content');
 
         // Mock PDF extraction
-        $this->mock(Pdf::class, function ($mock) {
+        $this->app->bind(Pdf::class, function () {
+            $mock = \Mockery::mock(Pdf::class);
             $mock->shouldReceive('setPdf')
+                ->once()
                 ->andReturnSelf();
             $mock->shouldReceive('text')
+                ->once()
                 ->andReturn('Sample PDF content');
+
+            return $mock;
         });
 
         // Mock Prism response with null structured data
@@ -139,11 +144,29 @@ describe('ReceiptExtractorService', function () {
         file_put_contents($tempPath, '%PDF-1.4 dummy pdf content');
 
         // Mock PDF extraction
-        $this->mock(Pdf::class, function ($mock) {
+        $this->app->bind(Pdf::class, function () {
+            $mock = \Mockery::mock(Pdf::class);
             $mock->shouldReceive('setPdf')
+                ->once()
                 ->andReturnSelf();
             $mock->shouldReceive('text')
+                ->once()
                 ->andReturn('Sample PDF content');
+
+            return $mock;
+        });
+
+        // Mock PDF extraction
+        $this->app->bind(Pdf::class, function () {
+            $mock = \Mockery::mock(Pdf::class);
+            $mock->shouldReceive('setPdf')
+                ->once()
+                ->andReturnSelf();
+            $mock->shouldReceive('text')
+                ->once()
+                ->andReturn('Sample PDF content');
+
+            return $mock;
         });
 
         // Mock Prism response
@@ -185,11 +208,16 @@ describe('ReceiptExtractorService', function () {
         file_put_contents($tempPath, '%PDF-1.4 test content');
 
         // Mock PDF extraction
-        $this->mock(Pdf::class, function ($mock) {
+        $this->app->bind(Pdf::class, function () {
+            $mock = \Mockery::mock(Pdf::class);
             $mock->shouldReceive('setPdf')
+                ->once()
                 ->andReturnSelf();
             $mock->shouldReceive('text')
+                ->once()
                 ->andReturn('Sample PDF content');
+
+            return $mock;
         });
 
         // Mock Prism response
@@ -269,14 +297,18 @@ describe('ReceiptExtractorService', function () {
         file_put_contents($tempPath, '%PDF-1.4 dummy pdf content');
 
         // Mock PDF extraction to throw an exception
-        $this->mock(Pdf::class, function ($mock) {
+        $this->app->bind(Pdf::class, function () {
+            $mock = \Mockery::mock(Pdf::class);
             $mock->shouldReceive('setPdf')
-                ->andThrow(new Exception('PDF processing failed'));
+                ->once()
+                ->andThrow(new Exception('Original PDF error'));
+
+            return $mock;
         });
 
         $service = new ReceiptExtractorService;
         expect(fn () => $service->extractInformation($tempPath, 'application/pdf'))
-            ->toThrow(Exception::class, 'PDF processing failed');
+            ->toThrow(Exception::class, 'PDF processing failed: Original PDF error');
 
         unlink($tempPath);
     });

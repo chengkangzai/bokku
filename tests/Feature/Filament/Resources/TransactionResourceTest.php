@@ -724,7 +724,7 @@ describe('TransactionResource Receipt Extraction', function () {
     beforeEach(function () {
         // Mock config to enable receipt extraction
         config([
-            'prism.providers.openai.api_key' => 'test-api-key'
+            'prism.providers.openai.api_key' => 'test-api-key',
         ]);
 
         $this->user = User::factory()->create();
@@ -818,11 +818,14 @@ describe('TransactionResource Receipt Extraction', function () {
     });
 
     it('uses ai-optimized conversion when available for images', function () {
-        // Create transaction with media
+        // Create transaction with media (with minimal required values)
         $transaction = Transaction::factory()->create([
             'user_id' => $this->user->id,
             'account_id' => $this->account->id,
-            'category_id' => $this->expenseCategory->id,
+            'type' => 'expense', // Required field
+            'amount' => 0, // Set to 0 so extraction can update it
+            'category_id' => null, // Leave empty so extraction can fill it
+            'description' => '', // Leave empty so extraction can fill it
         ]);
 
         // Add image media (will generate ai-optimized conversion)
@@ -855,11 +858,14 @@ describe('TransactionResource Receipt Extraction', function () {
     });
 
     it('falls back to original for pdfs', function () {
-        // Create transaction with PDF media
+        // Create transaction with PDF media (with minimal required values)
         $transaction = Transaction::factory()->create([
             'user_id' => $this->user->id,
             'account_id' => $this->account->id,
-            'category_id' => $this->expenseCategory->id,
+            'type' => 'expense', // Required field
+            'amount' => 0, // Set to 0 so extraction can update it
+            'category_id' => null, // Leave empty so extraction can fill it
+            'description' => '', // Leave empty so extraction can fill it
         ]);
 
         // Add PDF media (will not generate ai-optimized conversion)
@@ -883,11 +889,14 @@ describe('TransactionResource Receipt Extraction', function () {
                 ->withUsage(new Usage(150, 100)),
         ]);
 
-        $this->mock(Pdf::class, function ($mock) {
+        $this->app->bind(Pdf::class, function () {
+            $mock = \Mockery::mock(Pdf::class);
             $mock->shouldReceive('setPdf')
                 ->andReturnSelf();
             $mock->shouldReceive('text')
                 ->andReturn('Sample PDF content for testing');
+
+            return $mock;
         });
 
         livewire(EditTransaction::class, ['record' => $transaction->id])
@@ -916,7 +925,7 @@ describe('TransactionResource Receipt Extraction', function () {
 
         livewire(EditTransaction::class, ['record' => $transaction->id])
             ->callFormComponentAction('receipts', 'Auto Fill')
-            ->assertNotified('Error Occurred');
+            ->assertNotified('Extraction Failed');
     });
 
     it('does not extract if no receipt media exists', function () {
@@ -979,7 +988,7 @@ describe('TransactionResource Receipt Extraction', function () {
 
         // Verify config is cleared
         expect(config('prism.providers.openai.api_key'))->toBe('');
-        expect(!empty(config('prism.providers.openai.api_key')))->toBeFalse();
+        expect(! empty(config('prism.providers.openai.api_key')))->toBeFalse();
 
         // Create transaction with media
         $transaction = Transaction::factory()->create([

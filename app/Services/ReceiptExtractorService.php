@@ -49,9 +49,13 @@ class ReceiptExtractorService
         // Create appropriate content based on mime type
         if ($mimeType === 'application/pdf') {
             // For PDFs: $input is file path, extract text first
-            $pdfText = (new Pdf)
-                ->setPdf($input)
-                ->text();
+            try {
+                $pdfText = app(Pdf::class)
+                    ->setPdf($input)
+                    ->text();
+            } catch (\Exception $e) {
+                throw new \Exception('PDF processing failed: '.$e->getMessage(), 0, $e);
+            }
 
             $userPromptContent = new UserMessage(
                 'Analyze this receipt text and extract the following fields. Please extract the requested information.<content>'.$pdfText.'</content>'
