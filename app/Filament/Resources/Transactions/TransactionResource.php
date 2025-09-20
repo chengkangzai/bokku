@@ -237,7 +237,7 @@ class TransactionResource extends Resource
                                     ->hintActions([
                                         Action::make('Auto Fill')
                                             ->icon('heroicon-o-pencil-square')
-                                            ->visible(fn (?Transaction $record, string $context) => !empty(config('prism.providers.openai.api_key')) && $context == 'edit' && $record->getFirstMedia('receipts') !== null)
+                                            ->visible(fn (?Transaction $record, string $context) => ! empty(config('prism.providers.openai.api_key')) && $context == 'edit' && $record->getFirstMedia('receipts') !== null)
                                             ->action(function (Transaction $record, Set $set, Get $get) {
                                                 try {
                                                     $media = $record->getFirstMedia('receipts');
@@ -379,7 +379,7 @@ class TransactionResource extends Resource
                                     ])
                                     ->maxSize(5120) // 5MB in KB
                                     ->label('Upload Receipts')
-                                    ->helperText(!empty(config('prism.providers.openai.api_key'))
+                                    ->helperText(! empty(config('prism.providers.openai.api_key'))
                                         ? 'Upload receipts, invoices, or related documents (max 5 files, 5MB each)'
                                         : 'Upload receipts, invoices, or related documents (max 5 files, 5MB each). Auto-extraction is currently unavailable - please configure OpenAI API key.'
                                     )
@@ -730,5 +730,4 @@ class TransactionResource extends Resource
 
         return $extractedInfo;
     }
-
 }
