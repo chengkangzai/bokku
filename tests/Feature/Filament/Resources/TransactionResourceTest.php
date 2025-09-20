@@ -722,6 +722,11 @@ describe('TransactionResource Budget Warning Integration', function () {
 
 describe('TransactionResource Receipt Extraction', function () {
     beforeEach(function () {
+        // Mock config to enable receipt extraction
+        config([
+            'prism.providers.openai.api_key' => 'test-api-key'
+        ]);
+
         $this->user = User::factory()->create();
         $this->actingAs($this->user);
 
@@ -966,5 +971,53 @@ describe('TransactionResource Receipt Extraction', function () {
             ->assertNotified('Receipt Information Extracted');
 
         $fake->assertCallCount(1);
+    });
+
+    it('hides auto fill button when api key is not configured', function () {
+        // Clear the API key
+        config(['prism.providers.openai.api_key' => '']);
+
+        // Verify config is cleared
+        expect(config('prism.providers.openai.api_key'))->toBe('');
+        expect(!empty(config('prism.providers.openai.api_key')))->toBeFalse();
+
+        // Create transaction with media
+        $transaction = Transaction::factory()->create([
+            'user_id' => $this->user->id,
+            'account_id' => $this->account->id,
+            'category_id' => $this->expenseCategory->id,
+        ]);
+
+        // Add media
+        $testImageContent = base64_decode('/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQH/2wBDAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQH/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwA/');
+        $tempPath = storage_path('app/test-receipt.jpg');
+        file_put_contents($tempPath, $testImageContent);
+        $media = $transaction->addMedia($tempPath)->toMediaCollection('receipts');
+
+        // Verify the Auto Fill button is not visible
+        livewire(EditTransaction::class, ['record' => $transaction->id])
+            ->assertFormComponentActionHidden('receipts', 'Auto Fill');
+    });
+
+    it('shows auto fill button when api key is configured', function () {
+        // Ensure API key is set (should be set in beforeEach)
+        expect(config('prism.providers.openai.api_key'))->toBe('test-api-key');
+
+        // Create transaction with media
+        $transaction = Transaction::factory()->create([
+            'user_id' => $this->user->id,
+            'account_id' => $this->account->id,
+            'category_id' => $this->expenseCategory->id,
+        ]);
+
+        // Add media
+        $testImageContent = base64_decode('/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQH/2wBDAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQH/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwA/');
+        $tempPath = storage_path('app/test-receipt.jpg');
+        file_put_contents($tempPath, $testImageContent);
+        $media = $transaction->addMedia($tempPath)->toMediaCollection('receipts');
+
+        // Verify the Auto Fill button is visible
+        livewire(EditTransaction::class, ['record' => $transaction->id])
+            ->assertFormComponentActionVisible('receipts', 'Auto Fill');
     });
 });
