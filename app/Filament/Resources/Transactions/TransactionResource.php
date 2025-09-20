@@ -42,6 +42,8 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Spatie\PdfToText\Exceptions\CouldNotExtractText;
+use Spatie\PdfToText\Exceptions\PdfNotFound;
 use Spatie\Tags\Tag;
 
 class TransactionResource extends Resource
@@ -243,9 +245,7 @@ class TransactionResource extends Resource
 
                                                     if (str_starts_with($mimeType, 'image/')) {
                                                         // For images: use streams directly
-                                                        $stream = $media->hasGeneratedConversion('ai-optimized')
-                                                            ? $media->stream('ai-optimized')
-                                                            : $media->stream();
+                                                        $stream = $media->stream();
                                                         $content = stream_get_contents($stream);
                                                         fclose($stream);
 
@@ -275,7 +275,7 @@ class TransactionResource extends Resource
                                                             ->success()
                                                             ->send();
                                                     }
-                                                } catch (\Spatie\PdfToText\Exceptions\CouldNotExtractText $e) {
+                                                } catch (CouldNotExtractText $e) {
                                                     \Log::warning('PDF text extraction failed', [
                                                         'transaction_id' => $record->id,
                                                         'error' => $e->getMessage(),
@@ -285,7 +285,7 @@ class TransactionResource extends Resource
                                                         ->body('Could not extract text from the PDF file. Please check if the PDF is valid.')
                                                         ->danger()
                                                         ->send();
-                                                } catch (\Spatie\PdfToText\Exceptions\PdfNotFound $e) {
+                                                } catch (PdfNotFound $e) {
                                                     \Log::error('PDF file not found during extraction', [
                                                         'transaction_id' => $record->id,
                                                         'error' => $e->getMessage(),
@@ -336,7 +336,7 @@ class TransactionResource extends Resource
                                                     ->success()
                                                     ->send();
                                             }
-                                        } catch (\Spatie\PdfToText\Exceptions\CouldNotExtractText $e) {
+                                        } catch (CouldNotExtractText $e) {
                                             \Log::warning('PDF text extraction failed during upload', [
                                                 'file_name' => $uploadedFile->getClientOriginalName(),
                                                 'error' => $e->getMessage(),
@@ -346,7 +346,7 @@ class TransactionResource extends Resource
                                                 ->body('Could not extract text from the PDF. You can fill in the details manually.')
                                                 ->warning()
                                                 ->send();
-                                        } catch (\Spatie\PdfToText\Exceptions\PdfNotFound $e) {
+                                        } catch (PdfNotFound $e) {
                                             \Log::error('PDF file not found during upload extraction', [
                                                 'file_name' => $uploadedFile->getClientOriginalName(),
                                                 'error' => $e->getMessage(),
@@ -731,8 +731,4 @@ class TransactionResource extends Resource
         return $extractedInfo;
     }
 
-    private static function isReceiptExtractionAvailable(): bool
-    {
-        return !empty(config('prism.providers.openai.api_key'));
-    }
 }
