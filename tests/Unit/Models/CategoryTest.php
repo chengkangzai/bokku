@@ -61,7 +61,7 @@ describe('Category Model', function () {
         $user = User::factory()->create();
         $category = Category::factory()->create(['user_id' => $user->id]);
 
-        $specificDate = now()->setMonth(6)->setYear(2023);
+        $specificDate = \Carbon\Carbon::create(2023, 6, 1);
 
         Transaction::factory()->create([
             'user_id' => $user->id,

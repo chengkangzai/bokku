@@ -9,6 +9,7 @@ use App\Models\Account;
 use App\Models\Category;
 use App\Models\Transaction;
 use App\Models\User;
+use Filament\Actions\Testing\TestAction;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Prism\Prism\Prism;
@@ -1004,9 +1005,9 @@ describe('TransactionResource Receipt Extraction', function () {
         file_put_contents($tempPath, $testImageContent);
         $media = $transaction->addMedia($tempPath)->toMediaCollection('receipts');
 
-        // Verify the Auto Fill button is not visible
+        // Verify the Auto Fill button does not exist (because visible() returns false)
         livewire(EditTransaction::class, ['record' => $transaction->id])
-            ->assertFormComponentActionHidden('receipts', 'Auto Fill');
+            ->assertActionDoesNotExist(TestAction::make('Auto Fill')->schemaComponent('receipts'));
     });
 
     it('shows auto fill button when api key is configured', function () {
@@ -1028,6 +1029,6 @@ describe('TransactionResource Receipt Extraction', function () {
 
         // Verify the Auto Fill button is visible
         livewire(EditTransaction::class, ['record' => $transaction->id])
-            ->assertFormComponentActionVisible('receipts', 'Auto Fill');
+            ->assertActionVisible(TestAction::make('Auto Fill')->schemaComponent('receipts'));
     });
 });
