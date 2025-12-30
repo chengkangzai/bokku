@@ -6,6 +6,7 @@ use Filament\Schemas\Components\Section;
 use Filament\Support\Enums\FontFamily;
 use Filament\Tables\Columns\TextColumn;
 use Illuminate\Support\ServiceProvider;
+use Laravel\Passport\Passport;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -30,6 +31,13 @@ class AppServiceProvider extends ServiceProvider
             if ($column->isBadge()) {
                 $column->fontFamily(FontFamily::Sans);
             }
+        });
+
+        // Use custom Client model that skips authorization
+        Passport::useClientModel(\App\Models\PassportClient::class);
+
+        Passport::authorizationView(function ($parameters) {
+            return view('mcp.authorize', $parameters);
         });
     }
 }
