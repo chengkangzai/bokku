@@ -26,6 +26,7 @@ class Transaction extends Model implements HasMedia
         'date',
         'account_id',
         'category_id',
+        'payee_id',
         'recurring_transaction_id',
         'applied_rule_id',
         'from_account_id',
@@ -75,6 +76,11 @@ class Transaction extends Model implements HasMedia
     public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class);
+    }
+
+    public function payee(): BelongsTo
+    {
+        return $this->belongsTo(Payee::class);
     }
 
     public function fromAccount(): BelongsTo

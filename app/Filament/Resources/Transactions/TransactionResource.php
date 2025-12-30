@@ -8,6 +8,7 @@ use App\Filament\Resources\Transactions\Pages\EditTransaction;
 use App\Filament\Resources\Transactions\Pages\ListTransactions;
 use App\Models\Account;
 use App\Models\Category;
+use App\Models\Payee;
 use App\Models\Transaction;
 use App\Models\TransactionRule;
 use App\Services\ReceiptExtractorService;
@@ -206,6 +207,31 @@ class TransactionResource extends Resource
                                         return Category::create($data)->getKey();
                                     })
                                     ->createOptionModalHeading('Create New Category')
+                                    ->visible(fn (Get $get) => ! empty($get('type')) && in_array($get('type'), [TransactionType::Income, TransactionType::Expense])),
+
+                                Select::make('payee_id')
+                                    ->label('Payee')
+                                    ->relationship(
+                                        'payee',
+                                        'name',
+                                        fn (Builder $query) => $query->where('user_id', auth()->id())->where('is_active', true)
+                                    )
+                                    ->native(false)
+                                    ->searchable()
+                                    ->preload()
+                                    ->reactive()
+                                    ->afterStateUpdated(function ($state, Set $set, Get $get) {
+                                        if (! $state || $get('category_id')) {
+                                            return;
+                                        }
+
+                                        $payee = Payee::find($state);
+
+                                        if ($payee && $payee->default_category_id) {
+                                            $set('category_id', $payee->default_category_id);
+                                        }
+                                    })
+                                    ->helperText('Selecting a payee with a default category will auto-fill the category')
                                     ->visible(fn (Get $get) => ! empty($get('type')) && in_array($get('type'), [TransactionType::Income, TransactionType::Expense])),
                             ])
                             ->columns(2)
@@ -490,6 +516,13 @@ class TransactionResource extends Resource
                     ->placeholder('—')
                     ->sortable(),
 
+                TextColumn::make('payee.name')
+                    ->label('Payee')
+                    ->placeholder('—')
+                    ->searchable()
+                    ->sortable()
+                    ->toggleable(),
+
                 TextColumn::make('toAccount.name')
                     ->label('To')
                     ->placeholder('—')
@@ -538,6 +571,14 @@ class TransactionResource extends Resource
                     ->label('Category')
                     ->relationship(
                         'category',
+                        'name',
+                        fn (Builder $query) => $query->where('user_id', auth()->id())
+                    ),
+
+                SelectFilter::make('payee_id')
+                    ->label('Payee')
+                    ->relationship(
+                        'payee',
                         'name',
                         fn (Builder $query) => $query->where('user_id', auth()->id())
                     ),
