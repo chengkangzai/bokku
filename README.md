@@ -33,6 +33,17 @@ Bokku is a self-hosted personal finance manager built with Laravel and Filament,
 - **Dashboard widgets** - Quick overview of your financial status
 - **Mobile-friendly** - Access your finances anywhere
 
+### 🤖 AI Integration (MCP)
+
+Bokku exposes an MCP (Model Context Protocol) server that allows AI assistants to manage your personal finances. The server uses OAuth 2.1 authentication to ensure secure access to your financial data.
+
+**Available Capabilities:**
+- **Tools (18)**: Account, transaction, and category management
+- **Prompts (3)**: Spending analysis, budget advice, financial health assessment
+- **Resources (3)**: Financial overview, account balances, recent transactions
+
+See [AI Integration](#-ai-integration-mcp-1) below for setup instructions.
+
 ## 🛠 Tech Stack
 
 - **Backend**: Laravel 12 (PHP 8.4)
@@ -165,6 +176,62 @@ The AI-powered import system can process various file formats and automatically:
 
 ### Budget Management
 Set monthly/yearly budgets for categories and track spending against your limits with visual indicators and notifications.
+
+## 🤖 AI Integration (MCP)
+
+Bokku exposes an MCP (Model Context Protocol) server that allows AI assistants to manage your personal finances.
+
+### Available Capabilities
+
+**Tools (18):**
+- **Accounts**: List, get, create, update, delete accounts; adjust balances
+- **Transactions**: List, get, create, update, delete transactions; reconcile (single/bulk)
+- **Categories**: List, get, create, update, delete categories
+
+**Prompts (3):**
+- Analyze spending patterns (by period)
+- Budget advice (general or category-specific)
+- Financial health assessment
+
+**Resources (3):**
+- `bokku://overview` - Financial summary
+- `bokku://accounts/balances` - All account balances
+- `bokku://transactions/recent` - Last 20 transactions
+
+### Connecting from Claude Code
+
+```bash
+# Add the Bokku MCP server
+claude mcp add --transport http bokku https://bokku.test/mcp
+
+# Authenticate (opens browser for OAuth flow)
+/mcp
+```
+
+Replace `https://bokku.test` with your actual Bokku URL.
+
+### Connecting from Claude Desktop
+
+Claude Desktop supports remote MCP servers via the Connectors feature:
+
+1. Open Claude Desktop **Settings**
+2. Navigate to **Connectors**
+3. Click **"Add custom connector"**
+4. Enter your Bokku MCP URL: `https://bokku.test/mcp`
+5. Click **"Add"**
+6. Complete the OAuth authorization in the browser
+
+> **Note**: Custom connectors require Claude Pro, Max, Team, or Enterprise plans.
+
+### Testing with MCP Inspector
+
+You can test the MCP server locally using Laravel's built-in inspector:
+
+```bash
+php artisan mcp:inspector mcp/bokku
+```
+
+This launches an interactive tool to explore all available tools, prompts, and resources.
 
 ## 🤝 Inspiration & Credits
 
