@@ -10,6 +10,13 @@ class BudgetStats extends BaseWidget
 {
     protected static ?int $sort = 2;
 
+    public static function canView(): bool
+    {
+        return Budget::where('user_id', auth()->id())
+            ->where('is_active', true)
+            ->exists();
+    }
+
     protected function getStats(): array
     {
         $userId = auth()->id();
@@ -17,15 +24,6 @@ class BudgetStats extends BaseWidget
         $budgets = Budget::where('user_id', $userId)
             ->where('is_active', true)
             ->get();
-
-        if ($budgets->isEmpty()) {
-            return [
-                Stat::make('Active Budgets', '0')
-                    ->description('No budgets set up yet')
-                    ->descriptionIcon('heroicon-m-banknotes')
-                    ->color('gray'),
-            ];
-        }
 
         $totalBudget = $budgets->sum('amount');
         $totalSpent = $budgets->sum(fn (Budget $budget) => $budget->getSpentAmount());
