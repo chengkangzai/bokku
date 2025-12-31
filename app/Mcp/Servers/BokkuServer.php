@@ -14,11 +14,21 @@ use App\Mcp\Tools\Accounts\DeleteAccountTool;
 use App\Mcp\Tools\Accounts\GetAccountTool;
 use App\Mcp\Tools\Accounts\ListAccountsTool;
 use App\Mcp\Tools\Accounts\UpdateAccountTool;
+use App\Mcp\Tools\Budgets\CreateBudgetTool;
+use App\Mcp\Tools\Budgets\DeleteBudgetTool;
+use App\Mcp\Tools\Budgets\GetBudgetTool;
+use App\Mcp\Tools\Budgets\ListBudgetsTool;
+use App\Mcp\Tools\Budgets\UpdateBudgetTool;
 use App\Mcp\Tools\Categories\CreateCategoryTool;
 use App\Mcp\Tools\Categories\DeleteCategoryTool;
 use App\Mcp\Tools\Categories\GetCategoryTool;
 use App\Mcp\Tools\Categories\ListCategoriesTool;
 use App\Mcp\Tools\Categories\UpdateCategoryTool;
+use App\Mcp\Tools\Payees\CreatePayeeTool;
+use App\Mcp\Tools\Payees\DeletePayeeTool;
+use App\Mcp\Tools\Payees\GetPayeeTool;
+use App\Mcp\Tools\Payees\ListPayeesTool;
+use App\Mcp\Tools\Payees\UpdatePayeeTool;
 use App\Mcp\Tools\Transactions\BulkReconcileTool;
 use App\Mcp\Tools\Transactions\CreateTransactionTool;
 use App\Mcp\Tools\Transactions\DeleteAttachmentTool;
@@ -63,6 +73,15 @@ class BokkuServer extends Server
         - List, get, create, update, and delete categories
         - Categories are typed as either 'income' or 'expense'
 
+        ## Payees
+        - List, get, create, update, and delete payees/merchants
+        - Payees can have a default category for automatic categorization
+
+        ## Budgets
+        - List, get, create, update, and delete budgets
+        - Budgets are linked to categories with weekly, monthly, or annual periods
+        - Track spending progress against budget with spent, remaining, and percentage
+
         ## Important Notes
         - All monetary amounts are in decimal format (e.g., 100.50 for $100.50)
         - All data is scoped to the authenticated user
@@ -104,6 +123,20 @@ class BokkuServer extends Server
         CreateCategoryTool::class,
         UpdateCategoryTool::class,
         DeleteCategoryTool::class,
+
+        // Payee Tools
+        ListPayeesTool::class,
+        GetPayeeTool::class,
+        CreatePayeeTool::class,
+        UpdatePayeeTool::class,
+        DeletePayeeTool::class,
+
+        // Budget Tools
+        ListBudgetsTool::class,
+        GetBudgetTool::class,
+        CreateBudgetTool::class,
+        UpdateBudgetTool::class,
+        DeleteBudgetTool::class,
     ];
 
     /**
