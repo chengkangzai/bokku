@@ -27,15 +27,18 @@ class ListAccounts extends ListRecords
 
         return [
             'all' => Tab::make('All')
-                ->badge(Account::where('user_id', $userId)->count()),
+                ->badge(Account::where('user_id', $userId)->count())
+                ->badgeColor('gray'),
             'assets' => Tab::make('Assets')
                 ->icon('heroicon-o-arrow-trending-up')
                 ->modifyQueryUsing(fn (Builder $query) => $query->whereIn('type', [AccountType::Bank, AccountType::Cash]))
-                ->badge(Account::where('user_id', $userId)->whereIn('type', [AccountType::Bank, AccountType::Cash])->count()),
+                ->badge(Account::where('user_id', $userId)->whereIn('type', [AccountType::Bank, AccountType::Cash])->count())
+                ->badgeColor('success'),
             'liabilities' => Tab::make('Liabilities')
                 ->icon('heroicon-o-arrow-trending-down')
                 ->modifyQueryUsing(fn (Builder $query) => $query->whereIn('type', [AccountType::CreditCard, AccountType::Loan]))
-                ->badge(Account::where('user_id', $userId)->whereIn('type', [AccountType::CreditCard, AccountType::Loan])->count()),
+                ->badge(Account::where('user_id', $userId)->whereIn('type', [AccountType::CreditCard, AccountType::Loan])->count())
+                ->badgeColor('danger'),
         ];
     }
 }
