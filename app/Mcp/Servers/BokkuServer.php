@@ -54,6 +54,11 @@ class BokkuServer extends Server
     protected string $version = '1.0.0';
 
     /**
+     * Return all tools in a single page (default is 15).
+     */
+    public int $defaultPaginationLength = 50;
+
+    /**
      * The MCP server's instructions for the LLM.
      */
     protected string $instructions = <<<'MARKDOWN'
