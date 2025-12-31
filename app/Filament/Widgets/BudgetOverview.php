@@ -16,6 +16,13 @@ class BudgetOverview extends BaseWidget
 
     protected int|string|array $columnSpan = '1';
 
+    public static function canView(): bool
+    {
+        return Budget::where('user_id', auth()->id())
+            ->where('is_active', true)
+            ->exists();
+    }
+
     public function table(Table $table): Table
     {
         return $table

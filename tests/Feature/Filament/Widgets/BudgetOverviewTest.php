@@ -19,17 +19,20 @@ beforeEach(function () {
 });
 
 describe('BudgetOverview Widget', function () {
-    it('can render widget successfully', function () {
+    it('can render widget when budgets exist', function () {
+        $category = Category::factory()->expense()->create(['user_id' => $this->user->id]);
+        Budget::factory()->create([
+            'user_id' => $this->user->id,
+            'category_id' => $category->id,
+            'is_active' => true,
+        ]);
+
         livewire(BudgetOverview::class)
             ->assertOk();
     });
 
-    it('displays empty state when no budgets exist', function () {
-        livewire(BudgetOverview::class)
-            ->assertOk()
-            ->assertSeeText('No active budgets')
-            ->assertSeeText('Get started by creating your first budget')
-            ->assertSeeText('Create Budget');
+    it('is hidden when no budgets exist', function () {
+        expect(BudgetOverview::canView())->toBeFalse();
     });
 
     it('can display budget records in table', function () {
