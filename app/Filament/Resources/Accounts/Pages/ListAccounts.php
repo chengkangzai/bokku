@@ -28,22 +28,14 @@ class ListAccounts extends ListRecords
         return [
             'all' => Tab::make('All')
                 ->badge(Account::where('user_id', $userId)->count()),
-            'bank' => Tab::make('Bank')
-                ->icon('heroicon-o-building-library')
-                ->modifyQueryUsing(fn (Builder $query) => $query->where('type', AccountType::Bank))
-                ->badge(Account::where('user_id', $userId)->where('type', AccountType::Bank)->count()),
-            'cash' => Tab::make('Cash')
-                ->icon('heroicon-o-banknotes')
-                ->modifyQueryUsing(fn (Builder $query) => $query->where('type', AccountType::Cash))
-                ->badge(Account::where('user_id', $userId)->where('type', AccountType::Cash)->count()),
-            'credit_card' => Tab::make('Credit Card')
-                ->icon('heroicon-o-credit-card')
-                ->modifyQueryUsing(fn (Builder $query) => $query->where('type', AccountType::CreditCard))
-                ->badge(Account::where('user_id', $userId)->where('type', AccountType::CreditCard)->count()),
-            'loan' => Tab::make('Loan')
-                ->icon('heroicon-o-document-text')
-                ->modifyQueryUsing(fn (Builder $query) => $query->where('type', AccountType::Loan))
-                ->badge(Account::where('user_id', $userId)->where('type', AccountType::Loan)->count()),
+            'assets' => Tab::make('Assets')
+                ->icon('heroicon-o-arrow-trending-up')
+                ->modifyQueryUsing(fn (Builder $query) => $query->whereIn('type', [AccountType::Bank, AccountType::Cash]))
+                ->badge(Account::where('user_id', $userId)->whereIn('type', [AccountType::Bank, AccountType::Cash])->count()),
+            'liabilities' => Tab::make('Liabilities')
+                ->icon('heroicon-o-arrow-trending-down')
+                ->modifyQueryUsing(fn (Builder $query) => $query->whereIn('type', [AccountType::CreditCard, AccountType::Loan]))
+                ->badge(Account::where('user_id', $userId)->whereIn('type', [AccountType::CreditCard, AccountType::Loan])->count()),
         ];
     }
 }
