@@ -30,6 +30,7 @@ use App\Mcp\Tools\Payees\GetPayeeTool;
 use App\Mcp\Tools\Payees\ListPayeesTool;
 use App\Mcp\Tools\Payees\UpdatePayeeTool;
 use App\Mcp\Tools\Transactions\BulkReconcileTool;
+use App\Mcp\Tools\Transactions\ConfirmUploadTool;
 use App\Mcp\Tools\Transactions\CreateTransactionTool;
 use App\Mcp\Tools\Transactions\DeleteAttachmentTool;
 use App\Mcp\Tools\Transactions\DeleteTransactionTool;
@@ -37,6 +38,7 @@ use App\Mcp\Tools\Transactions\GetTransactionTool;
 use App\Mcp\Tools\Transactions\ListAttachmentsTool;
 use App\Mcp\Tools\Transactions\ListTransactionsTool;
 use App\Mcp\Tools\Transactions\ReconcileTransactionTool;
+use App\Mcp\Tools\Transactions\RequestUploadUrlTool;
 use App\Mcp\Tools\Transactions\UpdateTransactionTool;
 use App\Mcp\Tools\Transactions\UploadAttachmentTool;
 use Laravel\Mcp\Server;
@@ -120,6 +122,8 @@ class BokkuServer extends Server
         // Attachment Tools
         ListAttachmentsTool::class,
         UploadAttachmentTool::class,
+        RequestUploadUrlTool::class,
+        ConfirmUploadTool::class,
         DeleteAttachmentTool::class,
 
         // Category Tools

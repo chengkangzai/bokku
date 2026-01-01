@@ -51,7 +51,21 @@ describe('User Model', function () {
 
     it('can access filament panel', function () {
         $user = User::factory()->create();
-        $panel = new \Filament\Panel('admin');
+        $panel = (new \Filament\Panel)->id('admin');
+
+        expect($user->canAccessPanel($panel))->toBeTrue();
+    });
+
+    it('non-admin cannot access superadmin panel', function () {
+        $user = User::factory()->create(['is_admin' => false]);
+        $panel = (new \Filament\Panel)->id('superadmin');
+
+        expect($user->canAccessPanel($panel))->toBeFalse();
+    });
+
+    it('admin can access superadmin panel', function () {
+        $user = User::factory()->create(['is_admin' => true]);
+        $panel = (new \Filament\Panel)->id('superadmin');
 
         expect($user->canAccessPanel($panel))->toBeTrue();
     });

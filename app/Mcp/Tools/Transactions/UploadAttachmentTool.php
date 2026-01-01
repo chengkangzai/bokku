@@ -12,7 +12,7 @@ use Laravel\Mcp\Server\Tool;
 
 class UploadAttachmentTool extends Tool
 {
-    protected string $description = 'Upload a receipt/attachment to a transaction using base64-encoded content. Supports JPEG, PNG, GIF, WebP images and PDF files.';
+    protected string $description = 'Upload a small attachment (under 500KB recommended) using base64-encoded content. Supports JPEG, PNG, GIF, WebP, PDF. For larger files, use request-upload-url-tool instead for better performance.';
 
     private const ALLOWED_MIME_TYPES = [
         'image/jpeg',
