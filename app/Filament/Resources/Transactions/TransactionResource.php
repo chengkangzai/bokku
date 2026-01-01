@@ -252,6 +252,8 @@ class TransactionResource extends Resource
                                     ->multiple()
                                     ->reorderable()
                                     ->maxFiles(5)
+                                    ->openable()
+                                    ->downloadable()
                                     ->hintActions([
                                         Action::make('Auto Fill')
                                             ->icon('heroicon-o-pencil-square')
