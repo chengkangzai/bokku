@@ -11,7 +11,16 @@ use Filament\Widgets\TableWidget as BaseWidget;
 
 class UpcomingRecurringTransactions extends BaseWidget
 {
-    protected static ?int $sort = 4;
+    protected static ?int $sort = 5;
+
+    public static function canView(): bool
+    {
+        return RecurringTransaction::query()
+            ->where('user_id', auth()->id())
+            ->active()
+            ->upcoming(14)
+            ->exists();
+    }
 
     protected int|string|array $columnSpan = 'full';
 
