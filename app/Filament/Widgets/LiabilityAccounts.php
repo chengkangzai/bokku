@@ -2,19 +2,21 @@
 
 namespace App\Filament\Widgets;
 
+use App\Enums\AccountType;
 use App\Models\Account;
 use Filament\Actions\Action;
+use Filament\Tables\Columns\Summarizers\Sum;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget as BaseWidget;
 
-class AccountBalances extends BaseWidget
+class LiabilityAccounts extends BaseWidget
 {
-    protected static ?int $sort = 3;
+    protected static ?int $sort = 4;
 
     protected int|string|array $columnSpan = 1;
 
-    protected static ?string $heading = 'Account Balances';
+    protected static ?string $heading = 'Liabilities';
 
     public function table(Table $table): Table
     {
@@ -23,6 +25,7 @@ class AccountBalances extends BaseWidget
                 Account::query()
                     ->where('user_id', auth()->id())
                     ->where('is_active', true)
+                    ->whereIn('type', [AccountType::Loan, AccountType::CreditCard])
             )
             ->columns([
                 TextColumn::make('name'),
@@ -31,9 +34,14 @@ class AccountBalances extends BaseWidget
                     ->badge(),
 
                 TextColumn::make('balance')
-                    ->label('Balance/Outstanding')
+                    ->label('Outstanding')
                     ->formatStateUsing(fn (Account $record) => $record->formatted_balance)
-                    ->color(fn (Account $record) => $record->type === 'loan' ? 'danger' : ($record->balance >= 0 ? 'success' : 'danger')),
+                    ->color('danger')
+                    ->summarize(
+                        Sum::make()
+                            ->label('Total')
+                            ->formatStateUsing(fn ($state) => 'MYR '.number_format($state / 100, 2))
+                    ),
             ])
             ->recordActions([
                 Action::make('view')
