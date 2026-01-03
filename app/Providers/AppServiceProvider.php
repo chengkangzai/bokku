@@ -2,13 +2,14 @@
 
 namespace App\Providers;
 
-use App\Observers\MediaObserver;
+use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
 use Filament\Schemas\Components\Section;
 use Filament\Support\Enums\FontFamily;
 use Filament\Tables\Columns\TextColumn;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Passport\Passport;
-use Spatie\MediaLibrary\MediaCollections\Models\Media;
+use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
+use Spatie\Image\Image;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -25,7 +26,26 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        Media::observe(MediaObserver::class);
+        SpatieMediaLibraryFileUpload::configureUsing(function (SpatieMediaLibraryFileUpload $upload) {
+            $upload->afterStateUpdated(function ($state) {
+                if (! $state) {
+                    return;
+                }
+
+                foreach ((array) $state as $file) {
+                    if ($file instanceof TemporaryUploadedFile && str_starts_with($file->getMimeType(), 'image/')) {
+                        $path = $file->getRealPath();
+                        if ($path && file_exists($path)) {
+                            try {
+                                Image::load($path)->optimize()->save();
+                            } catch (\Throwable $e) {
+                                \Log::warning("Failed to optimize image: {$e->getMessage()}");
+                            }
+                        }
+                    }
+                }
+            });
+        });
 
         Section::configureUsing(function (Section $section) {
             $section->compact();
