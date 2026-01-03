@@ -40,7 +40,6 @@ use App\Mcp\Tools\Transactions\ListTransactionsTool;
 use App\Mcp\Tools\Transactions\ReconcileTransactionTool;
 use App\Mcp\Tools\Transactions\RequestUploadUrlTool;
 use App\Mcp\Tools\Transactions\UpdateTransactionTool;
-use App\Mcp\Tools\Transactions\UploadAttachmentTool;
 use Laravel\Mcp\Server;
 
 class BokkuServer extends Server
@@ -121,7 +120,6 @@ class BokkuServer extends Server
 
         // Attachment Tools
         ListAttachmentsTool::class,
-        UploadAttachmentTool::class,
         RequestUploadUrlTool::class,
         ConfirmUploadTool::class,
         DeleteAttachmentTool::class,
