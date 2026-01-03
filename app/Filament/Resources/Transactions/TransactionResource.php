@@ -403,9 +403,7 @@ class TransactionResource extends Resource
                                         ? 'Upload receipts, invoices, or related documents (max 5 files, 5MB each)'
                                         : 'Upload receipts, invoices, or related documents (max 5 files, 5MB each). Auto-extraction is currently unavailable - please configure OpenAI API key.'
                                     )
-                                    ->columnSpanFull()
-                                    ->conversion('thumb')
-                                    ->conversionsDisk('s3'),
+                                    ->columnSpanFull(),
                             ]),
 
                         Section::make('Additional Information')
