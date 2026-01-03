@@ -8,6 +8,7 @@ use Filament\Support\Enums\FontFamily;
 use Filament\Tables\Columns\TextColumn;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Passport\Passport;
+use Livewire\Features\SupportFileUploads\FileUploadConfiguration;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Spatie\Image\Image;
 
@@ -28,29 +29,42 @@ class AppServiceProvider extends ServiceProvider
     {
         SpatieMediaLibraryFileUpload::configureUsing(function (SpatieMediaLibraryFileUpload $upload) {
             $upload->afterStateUpdated(function ($state) {
-                \Log::debug('SpatieMediaLibraryFileUpload afterStateUpdated triggered', ['state_type' => gettype($state)]);
-
                 if (! $state) {
                     return;
                 }
 
                 foreach ((array) $state as $file) {
-                    \Log::debug('Processing file', ['class' => get_class($file), 'mime' => $file instanceof TemporaryUploadedFile ? $file->getMimeType() : 'N/A']);
+                    if (! $file instanceof TemporaryUploadedFile) {
+                        continue;
+                    }
 
-                    if ($file instanceof TemporaryUploadedFile && str_starts_with($file->getMimeType(), 'image/')) {
-                        $path = $file->getRealPath();
-                        \Log::debug('Attempting optimization', ['path' => $path, 'exists' => file_exists($path)]);
+                    $mimeType = $file->getMimeType();
+                    if (! $mimeType || ! str_starts_with($mimeType, 'image/')) {
+                        continue;
+                    }
 
-                        if ($path && file_exists($path)) {
-                            try {
-                                $originalSize = filesize($path);
-                                Image::load($path)->optimize()->save();
-                                $newSize = filesize($path);
-                                \Log::info("Optimized image: {$originalSize} -> {$newSize} bytes");
-                            } catch (\Throwable $e) {
-                                \Log::warning("Failed to optimize image: {$e->getMessage()}");
-                            }
+                    try {
+                        $storage = FileUploadConfiguration::storage();
+                        $relativePath = FileUploadConfiguration::path($file->getFilename(), false);
+                        $tempLocalPath = storage_path('app/optimize_'.uniqid().'.'.$file->getClientOriginalExtension());
+
+                        // Download from storage to local
+                        file_put_contents($tempLocalPath, $storage->get($relativePath));
+                        $originalSize = filesize($tempLocalPath);
+
+                        // Optimize locally
+                        Image::load($tempLocalPath)->optimize()->save();
+                        $newSize = filesize($tempLocalPath);
+
+                        // Re-upload to storage if optimized
+                        if ($newSize < $originalSize) {
+                            $storage->put($relativePath, file_get_contents($tempLocalPath));
+                            \Log::info("Optimized image: {$originalSize} -> {$newSize} bytes");
                         }
+
+                        unlink($tempLocalPath);
+                    } catch (\Throwable $e) {
+                        \Log::warning("Failed to optimize image: {$e->getMessage()}");
                     }
                 }
             });
