@@ -4,7 +4,6 @@ namespace App\Providers;
 
 use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
 use Filament\Schemas\Components\Section;
-use Filament\Schemas\Components\Utilities\Set;
 use Filament\Support\Enums\FontFamily;
 use Filament\Tables\Columns\TextColumn;
 use Illuminate\Support\Facades\Log;
@@ -30,60 +29,38 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         SpatieMediaLibraryFileUpload::configureUsing(function (SpatieMediaLibraryFileUpload $upload) {
-            $upload->afterStateUpdated(function ($state, Set $set, $component) {
+            $upload->afterStateUpdated(function ($state) {
                 // Skip in test environment
                 if (! $state || app()->runningUnitTests()) {
                     return;
                 }
 
-                $newState = [];
-                foreach ((array) $state as $key => $file) {
+                foreach ((array) $state as $file) {
                     if (! $file instanceof TemporaryUploadedFile) {
-                        $newState[$key] = $file;
-
                         continue;
                     }
 
                     $mimeType = $file->getMimeType();
                     if (! $mimeType || ! str_starts_with($mimeType, 'image/') || $mimeType === 'image/webp') {
-                        $newState[$key] = $file;
-
                         continue;
                     }
 
                     try {
                         $storage = FileUploadConfiguration::storage();
-                        $oldRelativePath = FileUploadConfiguration::path($file->getFilename(), false);
-                        $oldFullPath = $storage->path($oldRelativePath);
+                        $relativePath = FileUploadConfiguration::path($file->getFilename(), false);
+                        $fullPath = $storage->path($relativePath);
 
-                        // Build new WebP filename
-                        $oldFilename = $file->getFilename();
-                        $newFilename = preg_replace('/\.[^.]+$/', '.webp', $oldFilename);
-                        $newRelativePath = FileUploadConfiguration::path($newFilename, false);
-                        $newFullPath = $storage->path($newRelativePath);
+                        $originalSize = filesize($fullPath);
 
-                        $originalSize = filesize($oldFullPath);
-
-                        // Convert directly to new path (local disk)
-                        Image::load($oldFullPath)->format('webp')->quality(80)->save($newFullPath);
-                        $newSize = filesize($newFullPath);
-
-                        // Delete old file
-                        $storage->delete($oldRelativePath);
-
-                        // Create new TemporaryUploadedFile for the WebP
-                        $newFile = TemporaryUploadedFile::createFromLivewire($newFilename);
-                        $newState[$key] = $newFile;
+                        // Convert to WebP in place (keep same path, replace content)
+                        Image::load($fullPath)->format('webp')->quality(80)->save($fullPath);
+                        $newSize = filesize($fullPath);
 
                         Log::info("Converted to WebP: {$originalSize} -> {$newSize} bytes");
                     } catch (\Throwable $e) {
                         Log::warning("Failed to convert to WebP: {$e->getMessage()}");
-                        $newState[$key] = $file;
                     }
                 }
-
-                // Update the field state with new WebP files
-                $set($component->getStatePath(), $newState);
             });
         });
 
