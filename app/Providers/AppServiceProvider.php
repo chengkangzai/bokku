@@ -28,16 +28,25 @@ class AppServiceProvider extends ServiceProvider
     {
         SpatieMediaLibraryFileUpload::configureUsing(function (SpatieMediaLibraryFileUpload $upload) {
             $upload->afterStateUpdated(function ($state) {
+                \Log::debug('SpatieMediaLibraryFileUpload afterStateUpdated triggered', ['state_type' => gettype($state)]);
+
                 if (! $state) {
                     return;
                 }
 
                 foreach ((array) $state as $file) {
+                    \Log::debug('Processing file', ['class' => get_class($file), 'mime' => $file instanceof TemporaryUploadedFile ? $file->getMimeType() : 'N/A']);
+
                     if ($file instanceof TemporaryUploadedFile && str_starts_with($file->getMimeType(), 'image/')) {
                         $path = $file->getRealPath();
+                        \Log::debug('Attempting optimization', ['path' => $path, 'exists' => file_exists($path)]);
+
                         if ($path && file_exists($path)) {
                             try {
+                                $originalSize = filesize($path);
                                 Image::load($path)->optimize()->save();
+                                $newSize = filesize($path);
+                                \Log::info("Optimized image: {$originalSize} -> {$newSize} bytes");
                             } catch (\Throwable $e) {
                                 \Log::warning("Failed to optimize image: {$e->getMessage()}");
                             }
