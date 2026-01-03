@@ -4,8 +4,10 @@ namespace App\Providers;
 
 use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Set;
 use Filament\Support\Enums\FontFamily;
 use Filament\Tables\Columns\TextColumn;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Passport\Passport;
 use Livewire\Features\SupportFileUploads\FileUploadConfiguration;
@@ -28,44 +30,73 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         SpatieMediaLibraryFileUpload::configureUsing(function (SpatieMediaLibraryFileUpload $upload) {
-            $upload->afterStateUpdated(function ($state) {
-                if (! $state) {
+            $upload->afterStateUpdated(function ($state, Set $set, $component) {
+                // Skip WebP conversion in test environment
+                if (! $state || app()->runningUnitTests()) {
                     return;
                 }
 
-                foreach ((array) $state as $file) {
+                $newState = [];
+                $stateChanged = false;
+
+                foreach ((array) $state as $key => $file) {
                     if (! $file instanceof TemporaryUploadedFile) {
+                        $newState[$key] = $file;
+
                         continue;
                     }
 
                     $mimeType = $file->getMimeType();
-                    if (! $mimeType || ! str_starts_with($mimeType, 'image/')) {
+                    if (! $mimeType || ! str_starts_with($mimeType, 'image/') || $mimeType === 'image/webp') {
+                        $newState[$key] = $file;
+
                         continue;
                     }
 
                     try {
                         $storage = FileUploadConfiguration::storage();
-                        $relativePath = FileUploadConfiguration::path($file->getFilename(), false);
-                        $tempLocalPath = storage_path('app/optimize_'.uniqid().'.'.$file->getClientOriginalExtension());
+                        $oldRelativePath = FileUploadConfiguration::path($file->getFilename(), false);
 
-                        // Download from storage to local
-                        file_put_contents($tempLocalPath, $storage->get($relativePath));
+                        // Build new WebP filename (replace extension)
+                        $oldFilename = $file->getFilename();
+                        $newFilename = preg_replace('/\.[^.]+$/', '.webp', $oldFilename);
+                        $newRelativePath = FileUploadConfiguration::path($newFilename, false);
+
+                        // Download, convert, upload
+                        $tempLocalPath = storage_path('app/convert_'.uniqid().'.tmp');
+                        $tempWebpPath = storage_path('app/convert_'.uniqid().'.webp');
+
+                        file_put_contents($tempLocalPath, $storage->get($oldRelativePath));
+                        Image::load($tempLocalPath)->format('webp')->quality(80)->save($tempWebpPath);
+
                         $originalSize = filesize($tempLocalPath);
+                        $newSize = filesize($tempWebpPath);
 
-                        // Optimize locally
-                        Image::load($tempLocalPath)->optimize()->save();
-                        $newSize = filesize($tempLocalPath);
+                        // Upload new WebP file
+                        $storage->put($newRelativePath, file_get_contents($tempWebpPath));
 
-                        // Re-upload to storage if optimized
-                        if ($newSize < $originalSize) {
-                            $storage->put($relativePath, file_get_contents($tempLocalPath));
-                            \Log::info("Optimized image: {$originalSize} -> {$newSize} bytes");
-                        }
+                        // Delete old file
+                        $storage->delete($oldRelativePath);
 
+                        // Cleanup local files
                         unlink($tempLocalPath);
+                        unlink($tempWebpPath);
+
+                        // Create new TemporaryUploadedFile for the WebP
+                        $newFile = TemporaryUploadedFile::createFromLivewire($newFilename);
+                        $newState[$key] = $newFile;
+                        $stateChanged = true;
+
+                        Log::info("Converted to WebP: {$originalSize} -> {$newSize} bytes");
                     } catch (\Throwable $e) {
-                        \Log::warning("Failed to optimize image: {$e->getMessage()}");
+                        Log::warning("Failed to convert to WebP: {$e->getMessage()}");
+                        $newState[$key] = $file;
                     }
+                }
+
+                // Update the field state with new WebP files if changed
+                if ($stateChanged) {
+                    $set($component->getStatePath(), $newState);
                 }
             });
         });
