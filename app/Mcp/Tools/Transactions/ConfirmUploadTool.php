@@ -68,9 +68,6 @@ class ConfirmUploadTool extends Tool
                 'mime_type' => $media->mime_type,
                 'size' => $media->size,
                 'url' => $media->getTemporaryUrl(now()->addMinutes(5)),
-                'thumb_url' => str_starts_with($media->mime_type, 'image/')
-                    ? $media->getTemporaryUrl(now()->addMinutes(5), 'thumb')
-                    : null,
             ],
         ]);
     }

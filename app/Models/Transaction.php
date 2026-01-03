@@ -11,7 +11,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
-use Spatie\MediaLibrary\MediaCollections\Models\Media;
 use Spatie\Tags\HasTags;
 
 class Transaction extends Model implements HasMedia
@@ -156,25 +155,5 @@ class Transaction extends Model implements HasMedia
                 'image/webp',
                 'application/pdf',
             ]);
-    }
-
-    public function registerMediaConversions(?Media $media = null): void
-    {
-        $this->addMediaConversion('thumb')
-            ->width(150)
-            ->height(150)
-            ->sharpen(10)
-            ->nonQueued();
-
-        // Only create ai-optimized conversion for images
-        if ($media === null || str_starts_with($media->mime_type ?? '', 'image/')) {
-            $this->addMediaConversion('ai-optimized')
-                ->width(1024)
-                ->height(1024)
-                ->quality(85)
-                ->sharpen(5)
-                ->nonQueued()
-                ->performOnCollections('receipts');
-        }
     }
 }
