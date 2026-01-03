@@ -336,7 +336,7 @@ describe('TransactionResource Navigation Badge', function () {
 
 describe('TransactionResource Media Attachments', function () {
     beforeEach(function () {
-        Storage::fake('public');
+        Storage::fake('s3');
     });
 
     it('can upload receipt when creating transaction', function () {
