@@ -36,11 +36,14 @@ class GetPayeeTool extends Tool
             'payee' => [
                 'id' => $payee->id,
                 'name' => $payee->name,
+                'type' => $payee->type?->value,
                 'default_category' => $payee->defaultCategory ? [
                     'id' => $payee->defaultCategory->id,
                     'name' => $payee->defaultCategory->name,
                     'type' => $payee->defaultCategory->type,
                 ] : null,
+                'notes' => $payee->notes,
+                'total_amount' => $payee->total_amount,
                 'is_active' => $payee->is_active,
                 'transaction_count' => $payee->transactions_count,
                 'created_at' => $payee->created_at->toIso8601String(),

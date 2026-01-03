@@ -159,12 +159,15 @@ describe('PayeeResource Table Functionality', function () {
     it('can search payees by name', function () {
         $searchablePayee = Payee::factory()->create([
             'user_id' => $this->user->id,
-            'name' => 'Starbucks Coffee',
+            'name' => 'Unique_SearchTest_Payee',
         ]);
-        $otherPayees = Payee::factory()->count(2)->create(['user_id' => $this->user->id]);
+        $otherPayees = Payee::factory()->count(2)->create([
+            'user_id' => $this->user->id,
+            'name' => fn () => 'OtherPayee_'.fake()->unique()->numberBetween(1000, 99999),
+        ]);
 
         livewire(ListPayees::class)
-            ->searchTable('Starbucks')
+            ->searchTable('SearchTest')
             ->assertCanSeeTableRecords([$searchablePayee])
             ->assertCanNotSeeTableRecords($otherPayees)
             ->assertCountTableRecords(1);

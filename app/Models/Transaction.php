@@ -46,6 +46,7 @@ class Transaction extends Model implements HasMedia
     {
         static::created(function (Transaction $transaction) {
             $transaction->updateAccountBalances();
+            $transaction->payee?->recalculateTotalAmount();
 
             // Apply rules to new transactions (but not those from recurring transactions)
             if (! $transaction->recurring_transaction_id) {
@@ -55,10 +56,17 @@ class Transaction extends Model implements HasMedia
 
         static::updated(function (Transaction $transaction) {
             $transaction->updateAccountBalances();
+            $transaction->payee?->recalculateTotalAmount();
+
+            // If payee changed, update old payee's total too
+            if ($transaction->wasChanged('payee_id') && $transaction->getOriginal('payee_id')) {
+                Payee::find($transaction->getOriginal('payee_id'))?->recalculateTotalAmount();
+            }
         });
 
         static::deleted(function (Transaction $transaction) {
             $transaction->updateAccountBalances();
+            $transaction->payee?->recalculateTotalAmount();
         });
     }
 

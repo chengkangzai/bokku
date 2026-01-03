@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\PayeeType;
 use App\Models\Category;
 use App\Models\Payee;
 use App\Models\User;
@@ -31,7 +32,10 @@ class PayeeFactory extends Factory
         return [
             'user_id' => User::factory(),
             'name' => $payeeName,
+            'type' => fake()->optional(0.7)->randomElement(PayeeType::cases()),
             'default_category_id' => null,
+            'notes' => fake()->optional(0.3)->sentence(),
+            'total_amount' => 0,
             'is_active' => true,
         ];
     }

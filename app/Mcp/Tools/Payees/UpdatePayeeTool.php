@@ -19,7 +19,9 @@ class UpdatePayeeTool extends Tool
         $validated = $request->validate([
             'id' => ['required', 'integer'],
             'name' => ['nullable', 'string', 'max:255'],
+            'type' => ['nullable', 'string', 'in:merchant,person,company,government,utility'],
             'default_category_id' => ['nullable', 'integer'],
+            'notes' => ['nullable', 'string'],
             'is_active' => ['nullable', 'boolean'],
         ], [
             'id.required' => 'Payee ID is required.',
@@ -59,6 +61,14 @@ class UpdatePayeeTool extends Tool
             $payee->default_category_id = $validated['default_category_id'];
         }
 
+        if (array_key_exists('type', $validated)) {
+            $payee->type = $validated['type'];
+        }
+
+        if (array_key_exists('notes', $validated)) {
+            $payee->notes = $validated['notes'];
+        }
+
         if (isset($validated['is_active'])) {
             $payee->is_active = $validated['is_active'];
         }
@@ -71,10 +81,13 @@ class UpdatePayeeTool extends Tool
             'payee' => [
                 'id' => $payee->id,
                 'name' => $payee->name,
+                'type' => $payee->type?->value,
                 'default_category' => $payee->defaultCategory ? [
                     'id' => $payee->defaultCategory->id,
                     'name' => $payee->defaultCategory->name,
                 ] : null,
+                'notes' => $payee->notes,
+                'total_amount' => $payee->total_amount,
                 'is_active' => $payee->is_active,
             ],
         ]);
@@ -91,8 +104,13 @@ class UpdatePayeeTool extends Tool
                 ->required(),
             'name' => $schema->string()
                 ->description('The new payee name'),
+            'type' => $schema->string()
+                ->description('The payee type')
+                ->enum(['merchant', 'person', 'company', 'government', 'utility']),
             'default_category_id' => $schema->integer()
                 ->description('Default category ID for transactions with this payee'),
+            'notes' => $schema->string()
+                ->description('Notes about the payee'),
             'is_active' => $schema->boolean()
                 ->description('Whether the payee is active'),
         ];

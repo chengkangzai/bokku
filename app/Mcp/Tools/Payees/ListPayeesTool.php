@@ -34,10 +34,12 @@ class ListPayeesTool extends Tool
             ->map(fn (Payee $payee) => [
                 'id' => $payee->id,
                 'name' => $payee->name,
+                'type' => $payee->type?->value,
                 'default_category' => $payee->defaultCategory ? [
                     'id' => $payee->defaultCategory->id,
                     'name' => $payee->defaultCategory->name,
                 ] : null,
+                'total_amount' => $payee->total_amount,
                 'is_active' => $payee->is_active,
                 'transaction_count' => $payee->transactions_count,
             ]);

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Payees;
 
+use App\Enums\PayeeType;
 use App\Filament\Resources\Payees\Pages\CreatePayee;
 use App\Filament\Resources\Payees\Pages\EditPayee;
 use App\Filament\Resources\Payees\Pages\ListPayees;
@@ -11,6 +12,7 @@ use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Resources\Resource;
@@ -18,6 +20,7 @@ use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
@@ -43,6 +46,10 @@ class PayeeResource extends Resource
                             ->maxLength(255)
                             ->placeholder('e.g., Starbucks, Amazon, Electric Company'),
 
+                        Select::make('type')
+                            ->options(PayeeType::class)
+                            ->native(false),
+
                         Select::make('default_category_id')
                             ->label('Default Category')
                             ->relationship(
@@ -59,6 +66,10 @@ class PayeeResource extends Resource
                             ->label('Active')
                             ->default(true)
                             ->helperText('Inactive payees will not appear in transaction forms'),
+
+                        Textarea::make('notes')
+                            ->rows(3)
+                            ->columnSpanFull(),
                     ])->columns(2)->columnSpanFull(),
             ]);
     }
@@ -71,6 +82,10 @@ class PayeeResource extends Resource
                     ->searchable()
                     ->sortable(),
 
+                TextColumn::make('type')
+                    ->badge()
+                    ->placeholder('—'),
+
                 TextColumn::make('defaultCategory.name')
                     ->label('Default Category')
                     ->placeholder('—')
@@ -81,11 +96,19 @@ class PayeeResource extends Resource
                     ->label('Transactions')
                     ->sortable(),
 
+                TextColumn::make('total_amount')
+                    ->label('Total Spent')
+                    ->money('MYR')
+                    ->sortable(),
+
                 IconColumn::make('is_active')
                     ->boolean()
                     ->label('Active'),
             ])
             ->filters([
+                SelectFilter::make('type')
+                    ->options(PayeeType::class),
+
                 TernaryFilter::make('is_active')
                     ->label('Active')
                     ->placeholder('All payees')
