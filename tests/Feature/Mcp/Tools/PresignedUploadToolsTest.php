@@ -150,7 +150,7 @@ describe('RequestUploadUrlTool', function () {
 });
 
 describe('ConfirmUploadTool', function () {
-    it('confirms upload and creates attachment', function () {
+    it('confirms upload and converts PNG to WebP', function () {
         $pendingUpload = PendingUpload::create([
             'user_id' => $this->user->id,
             'transaction_id' => $this->transaction->id,
@@ -162,7 +162,6 @@ describe('ConfirmUploadTool', function () {
             'expires_at' => now()->addMinutes(15),
         ]);
 
-        // Simulate file uploaded to storage with valid PNG content
         Storage::disk('s3')->put($pendingUpload->storage_key, $this->validPngContent);
 
         $response = BokkuServer::actingAs($this->user)->tool(ConfirmUploadTool::class, [
@@ -171,10 +170,63 @@ describe('ConfirmUploadTool', function () {
 
         $response->assertOk()
             ->assertSee('Attachment uploaded successfully')
-            ->assertSee('receipt.png');
+            ->assertSee('receipt.webp');
 
         expect($this->transaction->getMedia('receipts')->count())->toBe(1)
             ->and(PendingUpload::count())->toBe(0);
+
+        $media = $this->transaction->getMedia('receipts')->first();
+        expect($media->file_name)->toBe('receipt.webp');
+    });
+
+    it('does not convert WebP files', function () {
+        $pendingUpload = PendingUpload::create([
+            'user_id' => $this->user->id,
+            'transaction_id' => $this->transaction->id,
+            'upload_token' => str_repeat('w', 64),
+            'storage_key' => 'pending-uploads/1/test.webp',
+            'original_filename' => 'already-webp.webp',
+            'mime_type' => 'image/webp',
+            'expected_size' => 1024,
+            'expires_at' => now()->addMinutes(15),
+        ]);
+
+        Storage::disk('s3')->put($pendingUpload->storage_key, $this->validPngContent);
+
+        $response = BokkuServer::actingAs($this->user)->tool(ConfirmUploadTool::class, [
+            'upload_token' => $pendingUpload->upload_token,
+        ]);
+
+        $response->assertOk()
+            ->assertSee('already-webp.webp');
+
+        $media = $this->transaction->getMedia('receipts')->first();
+        expect($media->file_name)->toBe('already-webp.webp');
+    });
+
+    it('does not convert PDF files', function () {
+        $pendingUpload = PendingUpload::create([
+            'user_id' => $this->user->id,
+            'transaction_id' => $this->transaction->id,
+            'upload_token' => str_repeat('p', 64),
+            'storage_key' => 'pending-uploads/1/test.pdf',
+            'original_filename' => 'document.pdf',
+            'mime_type' => 'application/pdf',
+            'expected_size' => 1024,
+            'expires_at' => now()->addMinutes(15),
+        ]);
+
+        Storage::disk('s3')->put($pendingUpload->storage_key, '%PDF-1.4 fake pdf content');
+
+        $response = BokkuServer::actingAs($this->user)->tool(ConfirmUploadTool::class, [
+            'upload_token' => $pendingUpload->upload_token,
+        ]);
+
+        $response->assertOk()
+            ->assertSee('document.pdf');
+
+        $media = $this->transaction->getMedia('receipts')->first();
+        expect($media->file_name)->toBe('document.pdf');
     });
 
     it('returns error for non-existent token', function () {

@@ -3,12 +3,15 @@
 namespace App\Mcp\Tools\Transactions;
 
 use App\Models\PendingUpload;
+use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
 use Laravel\Mcp\ResponseFactory;
 use Laravel\Mcp\Server\Tool;
+use Spatie\Image\Image;
 
 class ConfirmUploadTool extends Tool
 {
@@ -54,8 +57,19 @@ class ConfirmUploadTool extends Tool
 
         $transaction = $pendingUpload->transaction;
 
-        $media = $transaction->addMediaFromDisk($pendingUpload->storage_key, 's3')
-            ->usingFileName($pendingUpload->original_filename)
+        $storageKey = $pendingUpload->storage_key;
+        $originalFilename = $pendingUpload->original_filename;
+
+        if (str_starts_with($pendingUpload->mime_type, 'image/') && $pendingUpload->mime_type !== 'image/webp') {
+            $converted = $this->convertToWebp($pendingUpload, $disk);
+            if ($converted) {
+                $storageKey = $converted['storage_key'];
+                $originalFilename = $converted['filename'];
+            }
+        }
+
+        $media = $transaction->addMediaFromDisk($storageKey, 's3')
+            ->usingFileName($originalFilename)
             ->toMediaCollection('receipts');
 
         $pendingUpload->delete();
@@ -100,5 +114,52 @@ class ConfirmUploadTool extends Tool
         $disk = Storage::disk('s3');
         $disk->delete($pendingUpload->storage_key);
         $pendingUpload->delete();
+    }
+
+    /**
+     * @return array{storage_key: string, filename: string}|null
+     */
+    private function convertToWebp(PendingUpload $pendingUpload, Filesystem $disk): ?array
+    {
+        $tempPath = null;
+        $webpTempPath = null;
+
+        try {
+            $tempPath = tempnam(sys_get_temp_dir(), 'mcp_upload_');
+            file_put_contents($tempPath, $disk->get($pendingUpload->storage_key));
+
+            $webpTempPath = "{$tempPath}.webp";
+            Image::load($tempPath)->format('webp')->quality(80)->save($webpTempPath);
+
+            $originalSize = filesize($tempPath);
+            $newSize = filesize($webpTempPath);
+
+            $newStorageKey = preg_replace('/\.[^.]+$/', '.webp', $pendingUpload->storage_key);
+            $newFilename = preg_replace('/\.[^.]+$/', '.webp', $pendingUpload->original_filename);
+
+            $disk->put($newStorageKey, file_get_contents($webpTempPath));
+            $disk->delete($pendingUpload->storage_key);
+
+            @unlink($tempPath);
+            @unlink($webpTempPath);
+
+            Log::info("MCP: Converted to WebP: {$originalSize} -> {$newSize} bytes");
+
+            return [
+                'storage_key' => $newStorageKey,
+                'filename' => $newFilename,
+            ];
+        } catch (\Throwable $e) {
+            Log::warning("MCP: Failed to convert to WebP: {$e->getMessage()}");
+
+            if ($tempPath) {
+                @unlink($tempPath);
+            }
+            if ($webpTempPath) {
+                @unlink($webpTempPath);
+            }
+
+            return null;
+        }
     }
 }
