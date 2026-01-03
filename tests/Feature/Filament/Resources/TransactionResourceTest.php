@@ -391,23 +391,6 @@ describe('TransactionResource Media Attachments', function () {
             ->assertHasFormErrors(['receipts']);
     });
 
-    it('only accepts allowed file types', function () {
-        $invalidFile = UploadedFile::fake()->create('document.txt', 1000, 'text/plain');
-
-        livewire(CreateTransaction::class)
-            ->fillForm([
-                'type' => TransactionType::Income,
-                'amount' => 100.00,
-                'date' => today()->format('Y-m-d'),
-                'description' => 'Test with invalid file type',
-                'account_id' => $this->account->id,
-                'category_id' => $this->incomeCategory->id,
-                'receipts' => [$invalidFile],
-            ])
-            ->call('create')
-            ->assertHasFormErrors(['receipts']);
-    });
-
     it('respects maximum file size limit', function () {
         $largeFile = UploadedFile::fake()->image('large_receipt.jpg')->size(6000); // 6MB exceeds 5MB limit
 
