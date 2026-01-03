@@ -17,7 +17,7 @@ class ConfirmUploadTool extends Tool
 {
     protected string $description = 'Confirm a completed file upload and attach it to the transaction. Use this after uploading a file using the presigned URL from request-upload-url-tool.';
 
-    private const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+    private const MAX_FILE_SIZE = 12 * 1024 * 1024; // 12MB
 
     public function handle(Request $request): Response|ResponseFactory
     {
@@ -52,7 +52,7 @@ class ConfirmUploadTool extends Tool
         if ($actualSize > self::MAX_FILE_SIZE) {
             $this->cleanupUpload($pendingUpload);
 
-            return Response::error('Uploaded file exceeds 5MB limit.');
+            return Response::error('Uploaded file exceeds 12MB limit.');
         }
 
         $transaction = $pendingUpload->transaction;

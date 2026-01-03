@@ -25,7 +25,7 @@ class RequestUploadUrlTool extends Tool
         'application/pdf',
     ];
 
-    private const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+    private const MAX_FILE_SIZE = 12 * 1024 * 1024; // 12MB
 
     private const MAX_FILES_PER_TRANSACTION = 5;
 
@@ -42,7 +42,7 @@ class RequestUploadUrlTool extends Tool
             'transaction_id.required' => 'Transaction ID is required.',
             'file_name.required' => 'File name is required.',
             'file_size.required' => 'File size is required.',
-            'file_size.max' => 'File size exceeds 5MB limit.',
+            'file_size.max' => 'File size exceeds 12MB limit.',
             'mime_type.required' => 'MIME type is required.',
             'mime_type.in' => 'Invalid file type. Allowed: JPEG, PNG, GIF, WebP, PDF.',
         ]);

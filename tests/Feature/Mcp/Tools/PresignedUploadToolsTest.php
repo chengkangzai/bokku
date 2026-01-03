@@ -87,11 +87,11 @@ describe('RequestUploadUrlTool', function () {
         $response->assertHasErrors();
     });
 
-    it('rejects file size exceeding 5MB', function () {
+    it('rejects file size exceeding 12MB', function () {
         $response = BokkuServer::actingAs($this->user)->tool(RequestUploadUrlTool::class, [
             'transaction_id' => $this->transaction->id,
             'file_name' => 'receipt.png',
-            'file_size' => 6 * 1024 * 1024, // 6MB
+            'file_size' => 13 * 1024 * 1024, // 13MB
             'mime_type' => 'image/png',
         ]);
 
@@ -299,7 +299,7 @@ describe('ConfirmUploadTool', function () {
         $response->assertHasErrors();
     });
 
-    it('rejects file exceeding 5MB', function () {
+    it('rejects file exceeding 12MB', function () {
         $pendingUpload = PendingUpload::create([
             'user_id' => $this->user->id,
             'transaction_id' => $this->transaction->id,
@@ -311,8 +311,8 @@ describe('ConfirmUploadTool', function () {
             'expires_at' => now()->addMinutes(15),
         ]);
 
-        // Upload a file larger than 5MB
-        Storage::disk('s3')->put($pendingUpload->storage_key, str_repeat('x', 6 * 1024 * 1024));
+        // Upload a file larger than 12MB
+        Storage::disk('s3')->put($pendingUpload->storage_key, str_repeat('x', 13 * 1024 * 1024));
 
         $response = BokkuServer::actingAs($this->user)->tool(ConfirmUploadTool::class, [
             'upload_token' => $pendingUpload->upload_token,
