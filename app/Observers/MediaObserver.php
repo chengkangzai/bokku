@@ -17,7 +17,7 @@ class MediaObserver
         }
 
         $disk = Storage::disk($media->disk);
-        $path = $media->getPath();
+        $path = $media->getPathRelativeToRoot();
 
         $tempPath = storage_path('app/temp_'.$media->uuid.'.'.$media->extension);
 
