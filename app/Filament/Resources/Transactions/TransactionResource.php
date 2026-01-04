@@ -379,12 +379,12 @@ class TransactionResource extends Resource
                     ->placeholder('—')
                     ->searchable()
                     ->sortable()
-                    ->toggleable(),
+                    ->toggleable(isToggledHiddenByDefault: true),
 
                 TextColumn::make('toAccount.name')
                     ->label('To')
                     ->placeholder('—')
-                    ->toggleable(),
+                    ->toggleable(isToggledHiddenByDefault: true),
 
                 IconColumn::make('is_reconciled')
                     ->boolean()
@@ -403,7 +403,7 @@ class TransactionResource extends Resource
 
                 SpatieTagsColumn::make('tags')
                     ->type(fn () => 'user_'.auth()->id())
-                    ->toggleable(),
+                    ->toggleable(isToggledHiddenByDefault: true),
 
                 SpatieMediaLibraryImageColumn::make('receipts')
                     ->collection('receipts')
@@ -411,7 +411,8 @@ class TransactionResource extends Resource
                     ->circular()
                     ->stacked()
                     ->limit(3)
-                    ->limitedRemainingText(),
+                    ->limitedRemainingText()
+                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
                 SelectFilter::make('type')

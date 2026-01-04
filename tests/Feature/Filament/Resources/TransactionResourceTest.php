@@ -819,6 +819,6 @@ describe('TransactionResource Payee Integration', function () {
         ]);
 
         livewire(ListTransactions::class)
-            ->assertCanRenderTableColumn('payee.name');
+            ->assertTableColumnExists('payee.name');
     });
 });
