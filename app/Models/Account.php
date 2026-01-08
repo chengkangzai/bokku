@@ -27,6 +27,7 @@ class Account extends Model
         'account_number',
         'notes',
         'is_active',
+        'sort_order',
     ];
 
     protected $casts = [
