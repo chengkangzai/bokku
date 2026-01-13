@@ -142,9 +142,17 @@ class AccountResource extends Resource
                                             ->send();
 
                                         // Refresh the form to show updated values
-                                        $livewire->refreshFormData(['initial_balance']);
+                                        $livewire->refreshFormData(['initial_balance', 'balance']);
                                     })
                             ),
+
+                        TextInput::make('balance')
+                            ->label(fn (?Account $record) => $record?->isLiability() ? 'Outstanding Balance' : 'Current Balance')
+                            ->prefix(fn (?Account $record) => $record?->currency)
+                            ->disabled()
+                            ->dehydrated(false)
+                            ->formatStateUsing(fn (?Account $record) => $record ? number_format($record->balance, 2) : null)
+                            ->visible(fn (Component $livewire) => $livewire instanceof EditAccount),
 
                         Select::make('currency')
                             ->required()
