@@ -19,8 +19,8 @@ beforeEach(function () {
     $this->actingAs($this->user);
 
     // Create test accounts and categories for the user
-    $this->account = Account::factory()->create(['user_id' => $this->user->id]);
-    $this->toAccount = Account::factory()->create(['user_id' => $this->user->id]);
+    $this->account = Account::factory()->create(['user_id' => $this->user->id, 'is_active' => true]);
+    $this->toAccount = Account::factory()->create(['user_id' => $this->user->id, 'is_active' => true]);
     $this->incomeCategory = Category::factory()->create(['user_id' => $this->user->id, 'type' => TransactionType::Income->value]);
     $this->expenseCategory = Category::factory()->create(['user_id' => $this->user->id, 'type' => TransactionType::Expense->value]);
 });
