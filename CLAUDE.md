@@ -569,6 +569,7 @@ Select::make('type')
 TextInput::make('company_name')
     ->required()
     ->visible(fn (Get $get): bool => $get('type') === 'business'),
+
 </code-snippet>
 
 Use `state()` with a `Closure` to compute derived column values:
@@ -578,6 +579,7 @@ use Filament\Tables\Columns\TextColumn;
 
 TextColumn::make('full_name')
     ->state(fn (User $record): string => "{$record->first_name} {$record->last_name}"),
+
 </code-snippet>
 
 Actions encapsulate a button with optional modal form and logic:
@@ -591,6 +593,7 @@ Action::make('updateEmail')
         TextInput::make('email')->email()->required(),
     ])
     ->action(fn (array $data, User $record): void => $record->update($data)),
+
 </code-snippet>
 
 ### Testing
@@ -603,6 +606,7 @@ Authenticate before testing panel functionality. Filament uses Livewire, so use 
         ->searchTable($users->first()->name)
         ->assertCanSeeTableRecords($users->take(1))
         ->assertCanNotSeeTableRecords($users->skip(1));
+
 </code-snippet>
 
 <code-snippet name="Filament Create Resource Test" lang="php">
@@ -619,6 +623,7 @@ Authenticate before testing panel functionality. Filament uses Livewire, so use 
         'name' => 'Test',
         'email' => 'test@example.com',
     ]);
+
 </code-snippet>
 
 <code-snippet name="Testing Validation" lang="php">
@@ -633,6 +638,7 @@ Authenticate before testing panel functionality. Filament uses Livewire, so use 
             'email' => 'email',
         ])
         ->assertNotNotified();
+
 </code-snippet>
 
 <code-snippet name="Calling Actions" lang="php">
@@ -649,13 +655,14 @@ Authenticate before testing panel functionality. Filament uses Livewire, so use 
             'role' => 'admin',
         ])
         ->assertNotified();
+
 </code-snippet>
 
 ### Common Mistakes
 
 **Commonly Incorrect Namespaces:**
 - Form fields (TextInput, Select, etc.): `Filament\Forms\Components\`
-- Infolist entries (for read-only views) (TextEntry, IconEntry, etc.): `Filament\Forms\Components\`
+- Infolist entries (for read-only views) (TextEntry, IconEntry, etc.): `Filament\Infolists\Components\`
 - Layout components (Grid, Section, Fieldset, Tabs, Wizard, etc.): `Filament\Schemas\Components\`
 - Schema utilities (Get, Set, etc.): `Filament\Schemas\Components\Utilities\`
 - Actions: `Filament\Actions\` (no `Filament\Tables\Actions\` etc.)
