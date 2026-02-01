@@ -34,20 +34,22 @@ class TransactionsRelationManager extends RelationManager
             ]);
     }
 
+    protected function getTableQuery(): Builder
+    {
+        $accountId = $this->getOwnerRecord()->id;
+
+        return Transaction::query()
+            ->where('user_id', $this->getOwnerRecord()->user_id)
+            ->where(function ($query) use ($accountId) {
+                $query->where('account_id', $accountId)
+                    ->orWhere('from_account_id', $accountId)
+                    ->orWhere('to_account_id', $accountId);
+            });
+    }
+
     public function table(Table $table): Table
     {
         return $table
-            ->modifyQueryUsing(function (Builder $query) {
-                $accountId = $this->getOwnerRecord()->id;
-
-                // Get all transactions where this account is involved
-                // This includes regular transactions, transfers from, and transfers to
-                $query->where(function ($q) use ($accountId) {
-                    $q->where('account_id', $accountId)
-                        ->orWhere('from_account_id', $accountId)
-                        ->orWhere('to_account_id', $accountId);
-                });
-            })
             ->columns([
                 TextColumn::make('date')
                     ->date()

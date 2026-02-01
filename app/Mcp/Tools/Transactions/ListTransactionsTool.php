@@ -27,12 +27,14 @@ class ListTransactionsTool extends Tool
             'to_date' => ['nullable', 'date'],
             'is_reconciled' => ['nullable', 'boolean'],
             'search' => ['nullable', 'string', 'max:100'],
+            'tags' => ['nullable', 'array'],
+            'tags.*' => ['string'],
             'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
             'page' => ['nullable', 'integer', 'min:1'],
         ]);
 
         $query = Transaction::where('user_id', $request->user()->id)
-            ->with(['account', 'category'])
+            ->with(['account', 'category', 'tags'])
             ->orderByDesc('date')
             ->orderByDesc('id');
 
@@ -69,6 +71,10 @@ class ListTransactionsTool extends Tool
             });
         }
 
+        if (isset($validated['tags'])) {
+            $query->withAnyUserTags($validated['tags'], $request->user()->id);
+        }
+
         $perPage = $validated['per_page'] ?? 20;
         $page = $validated['page'] ?? 1;
 
@@ -85,6 +91,7 @@ class ListTransactionsTool extends Tool
                 'account' => $transaction->account?->name,
                 'category' => $transaction->category?->name,
                 'is_reconciled' => $transaction->is_reconciled,
+                'tags' => $transaction->getUserTags()->pluck('name')->toArray(),
             ])->toArray(),
             'pagination' => [
                 'current_page' => $transactions->currentPage(),
@@ -116,6 +123,8 @@ class ListTransactionsTool extends Tool
                 ->description('Filter by reconciliation status'),
             'search' => $schema->string()
                 ->description('Search in description, notes, and reference'),
+            'tags' => $schema->array()
+                ->description('Filter by any of these tag names (OR logic)'),
             'per_page' => $schema->integer()
                 ->description('Number of transactions per page (default: 20, max: 100)')
                 ->default(20),

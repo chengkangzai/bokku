@@ -53,7 +53,7 @@ trait HasUserScopedTags
      */
     public function scopeWithAnyUserTags(Builder $query, array $tags, int $userId): Builder
     {
-        return $query->withAnyTagsOfType($tags, 'user_'.$userId);
+        return $query->withAnyTags($tags, 'user_'.$userId);
     }
 
     /**

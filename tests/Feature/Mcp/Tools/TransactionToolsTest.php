@@ -623,3 +623,303 @@ describe('BulkReconcileTool', function () {
             ->assertSee('5');
     });
 });
+
+describe('CreateTransactionTool with tags', function () {
+    it('can create transaction with tags', function () {
+        $response = BokkuServer::actingAs($this->user)->tool(CreateTransactionTool::class, [
+            'type' => 'expense',
+            'account_id' => $this->account->id,
+            'amount' => 50.00,
+            'description' => 'Grocery shopping',
+            'date' => now()->toDateString(),
+            'tags' => ['groceries', 'essential'],
+        ]);
+
+        $response->assertOk();
+
+        $transaction = Transaction::where('description', 'Grocery shopping')->first();
+        expect($transaction->getUserTags()->pluck('name')->toArray())
+            ->toBe(['groceries', 'essential']);
+    });
+
+    it('creates transaction without tags when not provided', function () {
+        $response = BokkuServer::actingAs($this->user)->tool(CreateTransactionTool::class, [
+            'type' => 'expense',
+            'account_id' => $this->account->id,
+            'amount' => 50.00,
+            'description' => 'Test transaction',
+            'date' => now()->toDateString(),
+        ]);
+
+        $response->assertOk();
+
+        $transaction = Transaction::where('description', 'Test transaction')->first();
+        expect($transaction->getUserTags()->count())->toBe(0);
+    });
+
+    it('validates tags is array', function () {
+        $response = BokkuServer::actingAs($this->user)->tool(CreateTransactionTool::class, [
+            'type' => 'expense',
+            'account_id' => $this->account->id,
+            'amount' => 50.00,
+            'description' => 'Test',
+            'date' => now()->toDateString(),
+            'tags' => 'not-an-array',
+        ]);
+
+        $response->assertHasErrors();
+    });
+
+    it('scopes tags to user', function () {
+        $response = BokkuServer::actingAs($this->user)->tool(CreateTransactionTool::class, [
+            'type' => 'expense',
+            'account_id' => $this->account->id,
+            'amount' => 50.00,
+            'description' => 'Tagged transaction',
+            'date' => now()->toDateString(),
+            'tags' => ['user-tag'],
+        ]);
+
+        $response->assertOk();
+
+        $transaction = Transaction::where('description', 'Tagged transaction')->first();
+        $tag = $transaction->tags->first();
+        expect($tag->type)->toBe('user_'.$this->user->id);
+    });
+
+    it('returns tags in create response', function () {
+        $response = BokkuServer::actingAs($this->user)->tool(CreateTransactionTool::class, [
+            'type' => 'expense',
+            'account_id' => $this->account->id,
+            'amount' => 50.00,
+            'description' => 'Test',
+            'date' => now()->toDateString(),
+            'tags' => ['tag1', 'tag2'],
+        ]);
+
+        $response->assertOk()
+            ->assertSee('tag1')
+            ->assertSee('tag2');
+    });
+});
+
+describe('UpdateTransactionTool with tags', function () {
+    it('can add tags to existing transaction', function () {
+        $transaction = Transaction::factory()->expense()->create([
+            'user_id' => $this->user->id,
+            'account_id' => $this->account->id,
+        ]);
+
+        expect($transaction->getUserTags()->count())->toBe(0);
+
+        $response = BokkuServer::actingAs($this->user)->tool(UpdateTransactionTool::class, [
+            'id' => $transaction->id,
+            'tags' => ['new-tag', 'another-tag'],
+        ]);
+
+        $response->assertOk();
+
+        $transaction->refresh();
+        expect($transaction->getUserTags()->pluck('name')->toArray())
+            ->toBe(['new-tag', 'another-tag']);
+    });
+
+    it('can replace tags on existing transaction', function () {
+        $transaction = Transaction::factory()->expense()->create([
+            'user_id' => $this->user->id,
+            'account_id' => $this->account->id,
+        ]);
+        $transaction->syncUserTags(['old-tag', 'outdated']);
+
+        $response = BokkuServer::actingAs($this->user)->tool(UpdateTransactionTool::class, [
+            'id' => $transaction->id,
+            'tags' => ['new-tag', 'updated'],
+        ]);
+
+        $response->assertOk();
+
+        $transaction->refresh();
+        expect($transaction->getUserTags()->pluck('name')->toArray())
+            ->toBe(['new-tag', 'updated'])
+            ->not->toContain('old-tag')
+            ->not->toContain('outdated');
+    });
+
+    it('can remove all tags', function () {
+        $transaction = Transaction::factory()->expense()->create([
+            'user_id' => $this->user->id,
+            'account_id' => $this->account->id,
+        ]);
+        $transaction->syncUserTags(['tag1', 'tag2']);
+
+        $response = BokkuServer::actingAs($this->user)->tool(UpdateTransactionTool::class, [
+            'id' => $transaction->id,
+            'tags' => [],
+        ]);
+
+        $response->assertOk();
+
+        $transaction->refresh();
+        expect($transaction->getUserTags()->count())->toBe(0);
+    });
+
+    it('scopes updated tags to user', function () {
+        $transaction = Transaction::factory()->expense()->create([
+            'user_id' => $this->user->id,
+            'account_id' => $this->account->id,
+        ]);
+
+        $response = BokkuServer::actingAs($this->user)->tool(UpdateTransactionTool::class, [
+            'id' => $transaction->id,
+            'tags' => ['scoped-tag'],
+        ]);
+
+        $response->assertOk();
+
+        $transaction->refresh();
+        $tag = $transaction->tags->first();
+        expect($tag->type)->toBe('user_'.$this->user->id);
+    });
+
+    it('returns tags in update response', function () {
+        $transaction = Transaction::factory()->expense()->create([
+            'user_id' => $this->user->id,
+            'account_id' => $this->account->id,
+        ]);
+
+        $response = BokkuServer::actingAs($this->user)->tool(UpdateTransactionTool::class, [
+            'id' => $transaction->id,
+            'tags' => ['updated-tag'],
+        ]);
+
+        $response->assertOk()
+            ->assertSee('updated-tag');
+    });
+});
+
+describe('GetTransactionTool with tags', function () {
+    it('returns tags in response', function () {
+        $transaction = Transaction::factory()->expense()->create([
+            'user_id' => $this->user->id,
+            'account_id' => $this->account->id,
+        ]);
+        $transaction->syncUserTags(['important', 'recurring']);
+
+        $response = BokkuServer::actingAs($this->user)->tool(GetTransactionTool::class, [
+            'id' => $transaction->id,
+        ]);
+
+        $response->assertOk()
+            ->assertSee('important')
+            ->assertSee('recurring');
+    });
+
+    it('returns empty array when no tags', function () {
+        $transaction = Transaction::factory()->expense()->create([
+            'user_id' => $this->user->id,
+            'account_id' => $this->account->id,
+        ]);
+
+        $response = BokkuServer::actingAs($this->user)->tool(GetTransactionTool::class, [
+            'id' => $transaction->id,
+        ]);
+
+        $response->assertOk();
+    });
+});
+
+describe('ListTransactionsTool with tags', function () {
+    it('filters by single tag', function () {
+        $tagged = Transaction::factory()->expense()->create([
+            'user_id' => $this->user->id,
+            'account_id' => $this->account->id,
+            'description' => 'Tagged transaction',
+        ]);
+        $tagged->syncUserTags(['groceries']);
+
+        $untagged = Transaction::factory()->expense()->create([
+            'user_id' => $this->user->id,
+            'account_id' => $this->account->id,
+            'description' => 'Untagged transaction',
+        ]);
+
+        $response = BokkuServer::actingAs($this->user)->tool(ListTransactionsTool::class, [
+            'tags' => ['groceries'],
+        ]);
+
+        $response->assertOk()
+            ->assertSee('Tagged transaction')
+            ->assertDontSee('Untagged transaction');
+    });
+
+    it('filters by multiple tags (OR logic)', function () {
+        $groceries = Transaction::factory()->expense()->create([
+            'user_id' => $this->user->id,
+            'account_id' => $this->account->id,
+            'description' => 'Groceries',
+        ]);
+        $groceries->syncUserTags(['groceries']);
+
+        $bills = Transaction::factory()->expense()->create([
+            'user_id' => $this->user->id,
+            'account_id' => $this->account->id,
+            'description' => 'Bills',
+        ]);
+        $bills->syncUserTags(['bills']);
+
+        $other = Transaction::factory()->expense()->create([
+            'user_id' => $this->user->id,
+            'account_id' => $this->account->id,
+            'description' => 'Other',
+        ]);
+        $other->syncUserTags(['entertainment']);
+
+        $response = BokkuServer::actingAs($this->user)->tool(ListTransactionsTool::class, [
+            'tags' => ['groceries', 'bills'],
+        ]);
+
+        $response->assertOk()
+            ->assertSee('Groceries')
+            ->assertSee('Bills')
+            ->assertDontSee('Other');
+    });
+
+    it('returns tags in list response', function () {
+        $transaction = Transaction::factory()->expense()->create([
+            'user_id' => $this->user->id,
+            'account_id' => $this->account->id,
+            'description' => 'Tagged expense',
+        ]);
+        $transaction->syncUserTags(['tag1', 'tag2']);
+
+        $response = BokkuServer::actingAs($this->user)->tool(ListTransactionsTool::class);
+
+        $response->assertOk()
+            ->assertSee('tag1')
+            ->assertSee('tag2');
+    });
+
+    it('does not return other users tags', function () {
+        $otherAccount = Account::factory()->create(['user_id' => $this->otherUser->id]);
+        $otherTransaction = Transaction::factory()->expense()->create([
+            'user_id' => $this->otherUser->id,
+            'account_id' => $otherAccount->id,
+            'description' => 'Other user transaction',
+        ]);
+        $otherTransaction->syncUserTags(['shared-tag-name']);
+
+        $userTransaction = Transaction::factory()->expense()->create([
+            'user_id' => $this->user->id,
+            'account_id' => $this->account->id,
+            'description' => 'User transaction',
+        ]);
+        $userTransaction->syncUserTags(['user-specific']);
+
+        $response = BokkuServer::actingAs($this->user)->tool(ListTransactionsTool::class, [
+            'tags' => ['shared-tag-name'],
+        ]);
+
+        $response->assertOk()
+            ->assertDontSee('Other user transaction');
+    });
+});

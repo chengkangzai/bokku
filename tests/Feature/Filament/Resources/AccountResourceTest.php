@@ -429,3 +429,130 @@ describe('AccountResource Balance Adjustment', function () {
         expect($account->refresh()->initial_balance)->toBe($originalInitialBalance);
     });
 });
+
+describe('AccountResource TransactionsRelationManager', function () {
+    it('shows regular transactions for the account', function () {
+        $account = Account::factory()->create(['user_id' => $this->user->id]);
+
+        $incomeTransaction = \App\Models\Transaction::factory()->income()->create([
+            'user_id' => $this->user->id,
+            'account_id' => $account->id,
+            'description' => 'Salary',
+        ]);
+
+        $expenseTransaction = \App\Models\Transaction::factory()->expense()->create([
+            'user_id' => $this->user->id,
+            'account_id' => $account->id,
+            'description' => 'Groceries',
+        ]);
+
+        livewire(\App\Filament\Resources\Accounts\RelationManagers\TransactionsRelationManager::class, [
+            'ownerRecord' => $account,
+            'pageClass' => \App\Filament\Resources\Accounts\Pages\EditAccount::class,
+        ])
+            ->assertCanSeeTableRecords([$incomeTransaction, $expenseTransaction])
+            ->assertCountTableRecords(2);
+    });
+
+    it('shows outgoing transfers from the account', function () {
+        $fromAccount = Account::factory()->create(['user_id' => $this->user->id, 'name' => 'Checking']);
+        $toAccount = Account::factory()->create(['user_id' => $this->user->id, 'name' => 'Savings']);
+
+        $transferTransaction = \App\Models\Transaction::factory()->transfer()->create([
+            'user_id' => $this->user->id,
+            'account_id' => $fromAccount->id,
+            'from_account_id' => $fromAccount->id,
+            'to_account_id' => $toAccount->id,
+            'description' => 'Transfer to savings',
+        ]);
+
+        livewire(\App\Filament\Resources\Accounts\RelationManagers\TransactionsRelationManager::class, [
+            'ownerRecord' => $fromAccount,
+            'pageClass' => \App\Filament\Resources\Accounts\Pages\EditAccount::class,
+        ])
+            ->assertCanSeeTableRecords([$transferTransaction])
+            ->assertCountTableRecords(1);
+    });
+
+    it('shows incoming transfers to the account', function () {
+        $fromAccount = Account::factory()->create(['user_id' => $this->user->id, 'name' => 'Checking']);
+        $toAccount = Account::factory()->create(['user_id' => $this->user->id, 'name' => 'Savings']);
+
+        $transferTransaction = \App\Models\Transaction::factory()->transfer()->create([
+            'user_id' => $this->user->id,
+            'account_id' => $fromAccount->id,
+            'from_account_id' => $fromAccount->id,
+            'to_account_id' => $toAccount->id,
+            'description' => 'Transfer from checking',
+        ]);
+
+        livewire(\App\Filament\Resources\Accounts\RelationManagers\TransactionsRelationManager::class, [
+            'ownerRecord' => $toAccount,
+            'pageClass' => \App\Filament\Resources\Accounts\Pages\EditAccount::class,
+        ])
+            ->assertCanSeeTableRecords([$transferTransaction])
+            ->assertCountTableRecords(1);
+    });
+
+    it('shows all related transactions including regular and transfers', function () {
+        $account = Account::factory()->create(['user_id' => $this->user->id, 'name' => 'Main Account']);
+        $otherAccount = Account::factory()->create(['user_id' => $this->user->id, 'name' => 'Secondary Account']);
+
+        // Regular transaction
+        $expense = \App\Models\Transaction::factory()->expense()->create([
+            'user_id' => $this->user->id,
+            'account_id' => $account->id,
+            'description' => 'Purchase',
+        ]);
+
+        // Outgoing transfer
+        $transferOut = \App\Models\Transaction::factory()->transfer()->create([
+            'user_id' => $this->user->id,
+            'account_id' => $account->id,
+            'from_account_id' => $account->id,
+            'to_account_id' => $otherAccount->id,
+            'description' => 'Transfer out',
+        ]);
+
+        // Incoming transfer
+        $transferIn = \App\Models\Transaction::factory()->transfer()->create([
+            'user_id' => $this->user->id,
+            'account_id' => $otherAccount->id,
+            'from_account_id' => $otherAccount->id,
+            'to_account_id' => $account->id,
+            'description' => 'Transfer in',
+        ]);
+
+        livewire(\App\Filament\Resources\Accounts\RelationManagers\TransactionsRelationManager::class, [
+            'ownerRecord' => $account,
+            'pageClass' => \App\Filament\Resources\Accounts\Pages\EditAccount::class,
+        ])
+            ->assertCanSeeTableRecords([$expense, $transferOut, $transferIn])
+            ->assertCountTableRecords(3);
+    });
+
+    it('does not show transactions from other accounts', function () {
+        $account = Account::factory()->create(['user_id' => $this->user->id]);
+        $otherAccount = Account::factory()->create(['user_id' => $this->user->id]);
+
+        $accountTransaction = \App\Models\Transaction::factory()->expense()->create([
+            'user_id' => $this->user->id,
+            'account_id' => $account->id,
+            'description' => 'My transaction',
+        ]);
+
+        $otherTransaction = \App\Models\Transaction::factory()->expense()->create([
+            'user_id' => $this->user->id,
+            'account_id' => $otherAccount->id,
+            'description' => 'Other transaction',
+        ]);
+
+        livewire(\App\Filament\Resources\Accounts\RelationManagers\TransactionsRelationManager::class, [
+            'ownerRecord' => $account,
+            'pageClass' => \App\Filament\Resources\Accounts\Pages\EditAccount::class,
+        ])
+            ->assertCanSeeTableRecords([$accountTransaction])
+            ->assertCanNotSeeTableRecords([$otherTransaction])
+            ->assertCountTableRecords(1);
+    });
+});

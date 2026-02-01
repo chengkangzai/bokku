@@ -28,6 +28,8 @@ class UpdateTransactionTool extends Tool
             'reference' => ['nullable', 'string', 'max:255'],
             'notes' => ['nullable', 'string'],
             'is_reconciled' => ['nullable', 'boolean'],
+            'tags' => ['nullable', 'array'],
+            'tags.*' => ['string', 'max:255'],
         ], [
             'id.required' => 'Please specify the transaction ID to update.',
         ]);
@@ -79,6 +81,10 @@ class UpdateTransactionTool extends Tool
 
         $transaction->update($updates);
 
+        if (isset($validated['tags'])) {
+            $transaction->syncUserTags($validated['tags']);
+        }
+
         return Response::structured([
             'message' => 'Transaction updated successfully.',
             'transaction' => [
@@ -89,6 +95,7 @@ class UpdateTransactionTool extends Tool
                 'description' => $transaction->description,
                 'date' => $transaction->date->toDateString(),
                 'is_reconciled' => $transaction->is_reconciled,
+                'tags' => $transaction->getUserTags()->pluck('name')->toArray(),
             ],
         ]);
     }
@@ -121,6 +128,8 @@ class UpdateTransactionTool extends Tool
                 ->description('New notes'),
             'is_reconciled' => $schema->boolean()
                 ->description('Whether the transaction is reconciled'),
+            'tags' => $schema->array()
+                ->description('Optional array of tag names to sync with the transaction (replaces existing tags)'),
         ];
     }
 }

@@ -24,7 +24,7 @@ class GetTransactionTool extends Tool
         ]);
 
         $transaction = Transaction::where('user_id', $request->user()->id)
-            ->with(['account', 'category', 'payee', 'fromAccount', 'toAccount'])
+            ->with(['account', 'category', 'payee', 'fromAccount', 'toAccount', 'tags'])
             ->find($validated['id']);
 
         if (! $transaction) {
@@ -62,6 +62,7 @@ class GetTransactionTool extends Tool
                 'reference' => $transaction->reference,
                 'notes' => $transaction->notes,
                 'is_reconciled' => $transaction->is_reconciled,
+                'tags' => $transaction->getUserTags()->pluck('name')->toArray(),
                 'created_at' => $transaction->created_at->toIso8601String(),
                 'updated_at' => $transaction->updated_at->toIso8601String(),
             ],

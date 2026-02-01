@@ -57,6 +57,16 @@ class Account extends Model
         return $this->hasMany(Transaction::class, 'to_account_id');
     }
 
+    public function allTransactions()
+    {
+        return Transaction::query()
+            ->where(function ($query) {
+                $query->where('account_id', $this->id)
+                    ->orWhere('from_account_id', $this->id)
+                    ->orWhere('to_account_id', $this->id);
+            });
+    }
+
     public function updateBalance(): void
     {
         $income = $this->transactions()

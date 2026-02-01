@@ -32,6 +32,8 @@ class CreateTransactionTool extends Tool
             'reference' => ['nullable', 'string', 'max:255'],
             'notes' => ['nullable', 'string'],
             'is_reconciled' => ['nullable', 'boolean'],
+            'tags' => ['nullable', 'array'],
+            'tags.*' => ['string', 'max:255'],
         ], [
             'type.required' => 'Please specify the transaction type (income, expense, or transfer).',
             'amount.required' => 'Please specify the transaction amount.',
@@ -105,6 +107,10 @@ class CreateTransactionTool extends Tool
 
         $transaction = Transaction::create($transactionData);
 
+        if (isset($validated['tags'])) {
+            $transaction->syncUserTags($validated['tags']);
+        }
+
         return Response::structured([
             'message' => 'Transaction created successfully.',
             'transaction' => [
@@ -115,6 +121,7 @@ class CreateTransactionTool extends Tool
                 'description' => $transaction->description,
                 'date' => $transaction->date->toDateString(),
                 'is_reconciled' => $transaction->is_reconciled,
+                'tags' => $transaction->getUserTags()->pluck('name')->toArray(),
             ],
         ]);
     }
@@ -155,6 +162,8 @@ class CreateTransactionTool extends Tool
             'is_reconciled' => $schema->boolean()
                 ->description('Whether the transaction is reconciled')
                 ->default(false),
+            'tags' => $schema->array()
+                ->description('Optional array of tag names to attach to the transaction'),
         ];
     }
 }
