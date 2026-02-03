@@ -107,6 +107,7 @@ class TransactionResource extends Resource
                                     ->maxDate(now()),
 
                                 Textarea::make('description')
+                                    ->columnSpanFull()
                                     ->required()
                                     ->maxLength(255)
                                     ->placeholder('e.g., Grocery shopping at Walmart'),
