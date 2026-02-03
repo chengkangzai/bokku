@@ -106,7 +106,7 @@ class TransactionResource extends Resource
                                     ->default(now())
                                     ->maxDate(now()),
 
-                                TextInput::make('description')
+                                Textarea::make('description')
                                     ->required()
                                     ->maxLength(255)
                                     ->placeholder('e.g., Grocery shopping at Walmart'),
