@@ -9,3 +9,279 @@
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
 }
+
+/* ============================================
+   Financial Overview - Glass Morphism Design
+   ============================================ */
+
+/* Page Background */
+.fi-page.financial-overview-page {
+    @apply min-h-screen;
+    background: linear-gradient(to bottom right, rgb(2 6 23), rgb(15 23 42), rgb(2 6 23));
+}
+
+.financial-overview-page .fi-section-content {
+    @apply bg-transparent;
+}
+
+/* Glass Card Base */
+.glass-card {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    @apply rounded-2xl;
+}
+
+/* Summary Metrics Grid */
+.summary-metrics-grid {
+    @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8;
+}
+
+.metric-card {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    @apply rounded-2xl p-6 transition-all duration-300 hover:bg-white/10;
+}
+
+.metric-label {
+    @apply text-sm font-medium mb-2;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.metric-value {
+    @apply text-3xl font-bold mb-1;
+    color: rgba(255, 255, 255, 0.95);
+}
+
+.metric-value-positive {
+    @apply text-green-400;
+}
+
+.metric-value-negative {
+    @apply text-red-400;
+}
+
+.metric-trend {
+    @apply text-xs;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+/* Two Column Layout */
+.overview-grid {
+    @apply grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8;
+}
+
+.overview-column {
+    @apply flex flex-col gap-6;
+}
+
+/* Glass Sections */
+.glass-section {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    @apply rounded-2xl p-6;
+}
+
+.section-title {
+    @apply text-lg font-semibold mb-4;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+/* Account Balances */
+.accounts-list {
+    @apply space-y-3;
+}
+
+.account-item {
+    @apply flex items-center justify-between p-3 rounded-lg transition-colors duration-200;
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.account-item:hover {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.account-info {
+    @apply flex flex-col;
+}
+
+.account-name {
+    @apply font-medium;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.account-type {
+    @apply text-xs;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.account-balance {
+    @apply text-lg font-semibold;
+}
+
+.balance-positive {
+    @apply text-green-400;
+}
+
+.balance-negative {
+    @apply text-red-400;
+}
+
+/* Loan Progress */
+.loans-list {
+    @apply space-y-4;
+}
+
+.loan-item {
+    @apply space-y-2;
+}
+
+.loan-header {
+    @apply flex items-center justify-between;
+}
+
+.loan-name {
+    @apply font-medium;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.loan-balance {
+    @apply text-sm;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+/* Top Expenses */
+.expenses-list {
+    @apply space-y-3;
+}
+
+.expense-item {
+    @apply flex items-center justify-between p-3 rounded-lg;
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.expense-info {
+    @apply flex items-center gap-3;
+}
+
+.expense-indicator {
+    @apply w-3 h-3 rounded-full;
+}
+
+.expense-name {
+    @apply font-medium;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.expense-amount {
+    @apply flex flex-col items-end;
+}
+
+.expense-value {
+    @apply font-semibold;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.expense-percentage {
+    @apply text-xs;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+/* Smart Insights */
+.insights-section {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(147, 51, 234, 0.1));
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    @apply rounded-2xl p-6;
+}
+
+.insights-list {
+    @apply space-y-3;
+}
+
+.insight-item {
+    @apply flex items-start gap-3 p-3 rounded-lg;
+}
+
+.insight-warning {
+    background: rgba(251, 191, 36, 0.1);
+    border-left: 3px solid rgb(251 191 36);
+}
+
+.insight-success {
+    background: rgba(34, 197, 94, 0.1);
+    border-left: 3px solid rgb(34 197 94);
+}
+
+.insight-info {
+    background: rgba(59, 130, 246, 0.1);
+    border-left: 3px solid rgb(59 130 246);
+}
+
+.insight-icon {
+    @apply w-5 h-5 flex-shrink-0 mt-0.5;
+}
+
+.insight-warning .insight-icon {
+    @apply text-yellow-400;
+}
+
+.insight-success .insight-icon {
+    @apply text-green-400;
+}
+
+.insight-info .insight-icon {
+    @apply text-blue-400;
+}
+
+.insight-message {
+    @apply text-sm leading-relaxed;
+    color: rgba(255, 255, 255, 0.85);
+}
+
+/* Income Sources */
+.income-list {
+    @apply space-y-3;
+}
+
+.income-item {
+    @apply flex items-center justify-between p-3 rounded-lg;
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.income-name {
+    @apply font-medium;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.income-amount {
+    @apply font-semibold text-green-400;
+}
+
+/* Empty States */
+.empty-state {
+    @apply text-center py-8 text-sm;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+/* Widgets Section */
+.widgets-section {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    @apply rounded-2xl p-6;
+}
+
+/* Override widget backgrounds */
+.financial-overview-page .fi-wi-chart,
+.financial-overview-page .fi-wi-table {
+    @apply bg-transparent border-0;
+}
+
+.financial-overview-page .fi-wi-chart-container,
+.financial-overview-page .fi-ta-ctn {
+    background: rgba(255, 255, 255, 0.03);
+    @apply rounded-lg;
+}
