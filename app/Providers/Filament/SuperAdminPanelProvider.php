@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use Caresome\FilamentNeobrutalism\NeobrutalismeTheme;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -53,6 +54,7 @@ class SuperAdminPanelProvider extends PanelProvider
                 Authenticate::class,
             ])
             ->sidebarCollapsibleOnDesktop()
-            ->spa();
+            ->spa()
+            ->plugin(NeobrutalismeTheme::make());
     }
 }
