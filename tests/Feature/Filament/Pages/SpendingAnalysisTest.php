@@ -1,13 +1,8 @@
 <?php
 
 use App\Filament\Pages\SpendingAnalysis;
-use App\Filament\Widgets\AccountBalancesWidget;
 use App\Filament\Widgets\IncomeSourcesWidget;
-use App\Filament\Widgets\SmartInsightsWidget;
-use App\Filament\Widgets\SpendingStatsOverview;
 use App\Filament\Widgets\TopExpensesWidget;
-use App\Models\Account;
-use App\Models\Budget;
 use App\Models\Category;
 use App\Models\Transaction;
 use App\Models\User;
@@ -48,80 +43,6 @@ it('only accessible by authenticated users', function () {
 
     $this->get(SpendingAnalysis::getUrl())
         ->assertRedirect();
-});
-
-describe('SpendingStatsOverview', function () {
-    it('renders stats overview widget', function () {
-        Transaction::factory()->income()->withAmount(5000)->create([
-            'user_id' => $this->user->id,
-            'date' => now(),
-        ]);
-
-        Transaction::factory()->expense()->withAmount(2000)->create([
-            'user_id' => $this->user->id,
-            'date' => now(),
-        ]);
-
-        livewire(SpendingStatsOverview::class)
-            ->assertSuccessful()
-            ->assertSee('Total Balance')
-            ->assertSee('Monthly Income')
-            ->assertSee('Monthly Expenses')
-            ->assertSee('Savings Rate');
-    });
-
-    it('calculates savings rate correctly', function () {
-        Transaction::factory()->income()->withAmount(5000)->create([
-            'user_id' => $this->user->id,
-            'date' => now(),
-        ]);
-
-        Transaction::factory()->expense()->withAmount(3000)->create([
-            'user_id' => $this->user->id,
-            'date' => now(),
-        ]);
-
-        livewire(SpendingStatsOverview::class)
-            ->assertSuccessful()
-            ->assertSee('40%');
-    });
-
-    it('returns zero savings rate when there is no income', function () {
-        Transaction::factory()->expense()->withAmount(1000)->create([
-            'user_id' => $this->user->id,
-            'date' => now(),
-        ]);
-
-        livewire(SpendingStatsOverview::class)
-            ->assertSuccessful()
-            ->assertSee('0%');
-    });
-});
-
-describe('AccountBalancesWidget', function () {
-    it('displays account balances', function () {
-        Account::factory()->create([
-            'user_id' => $this->user->id,
-            'name' => 'Test Account',
-            'balance' => 100000,
-        ]);
-
-        livewire(AccountBalancesWidget::class)
-            ->assertSuccessful()
-            ->assertSee('Test Account');
-    });
-
-    it('only shows user-specific data', function () {
-        $otherUser = User::factory()->create();
-
-        Account::factory()->create([
-            'user_id' => $otherUser->id,
-            'name' => 'Other User Account',
-        ]);
-
-        livewire(AccountBalancesWidget::class)
-            ->assertDontSee('Other User Account');
-    });
 });
 
 describe('TopExpensesWidget', function () {
@@ -234,63 +155,5 @@ describe('IncomeSourcesWidget', function () {
         livewire(IncomeSourcesWidget::class)
             ->assertSuccessful()
             ->assertSee('Salary');
-    });
-});
-
-describe('SmartInsightsWidget', function () {
-    it('generates smart insights', function () {
-        $widget = livewire(SmartInsightsWidget::class)->instance();
-        $insights = $widget->getInsights();
-
-        expect($insights)->toBeArray()
-            ->not->toBeEmpty();
-
-        expect($insights[0])
-            ->toHaveKeys(['type', 'icon', 'message']);
-    });
-
-    it('shows budget warning insight when budgets are at risk', function () {
-        $category = Category::factory()->expense()->create([
-            'user_id' => $this->user->id,
-            'name' => 'Dining',
-        ]);
-
-        Budget::factory()->monthly()->create([
-            'user_id' => $this->user->id,
-            'category_id' => $category->id,
-            'amount' => 100,
-        ]);
-
-        Transaction::factory()->count(10)->expense()->withAmount(10)->create([
-            'user_id' => $this->user->id,
-            'category_id' => $category->id,
-            'date' => now(),
-        ]);
-
-        $widget = livewire(SmartInsightsWidget::class)->instance();
-        $insights = $widget->getInsights();
-
-        $hasWarning = collect($insights)->contains(fn ($insight) => $insight['type'] === 'warning');
-
-        expect($hasWarning)->toBeTrue();
-    });
-
-    it('shows savings achievement insight when savings rate is high', function () {
-        Transaction::factory()->income()->withAmount(5000)->create([
-            'user_id' => $this->user->id,
-            'date' => now(),
-        ]);
-
-        Transaction::factory()->expense()->withAmount(1000)->create([
-            'user_id' => $this->user->id,
-            'date' => now(),
-        ]);
-
-        $widget = livewire(SmartInsightsWidget::class)->instance();
-        $insights = $widget->getInsights();
-
-        $hasSuccess = collect($insights)->contains(fn ($insight) => $insight['type'] === 'success');
-
-        expect($hasSuccess)->toBeTrue();
     });
 });

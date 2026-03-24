@@ -2,14 +2,11 @@
 
 namespace App\Filament\Pages;
 
-use App\Filament\Widgets\AccountBalancesWidget;
 use App\Filament\Widgets\IncomeSourcesWidget;
-use App\Filament\Widgets\SmartInsightsWidget;
 use App\Filament\Widgets\SpendingByCategoryChart;
 use App\Filament\Widgets\SpendingByCategoryTable;
 use App\Filament\Widgets\SpendingByTagsChart;
 use App\Filament\Widgets\SpendingByTagsTable;
-use App\Filament\Widgets\SpendingStatsOverview;
 use App\Filament\Widgets\SpendingTrendsChart;
 use App\Filament\Widgets\TopExpensesWidget;
 use Filament\Pages\Page;
@@ -30,11 +27,8 @@ class SpendingAnalysis extends Page
     protected function getHeaderWidgets(): array
     {
         $widgets = [
-            SpendingStatsOverview::class,
-            AccountBalancesWidget::class,
             TopExpensesWidget::class,
             IncomeSourcesWidget::class,
-            SmartInsightsWidget::class,
             SpendingByCategoryChart::class,
             SpendingByCategoryTable::class,
         ];
