@@ -16,6 +16,7 @@ use Carbon\Carbon;
 use Filament\Pages\Page;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Spatie\Tags\Tag;
 
 class SpendingAnalysis extends Page
 {
@@ -31,13 +32,26 @@ class SpendingAnalysis extends Page
 
     protected function getHeaderWidgets(): array
     {
-        return [
+        $widgets = [
             SpendingByCategoryChart::class,
             SpendingByCategoryTable::class,
-            SpendingByTagsChart::class,
-            SpendingByTagsTable::class,
-            SpendingTrendsChart::class,
         ];
+
+        if ($this->userHasTags()) {
+            $widgets[] = SpendingByTagsChart::class;
+            $widgets[] = SpendingByTagsTable::class;
+        }
+
+        $widgets[] = SpendingTrendsChart::class;
+
+        return $widgets;
+    }
+
+    protected function userHasTags(): bool
+    {
+        return Tag::query()
+            ->where('type', 'user_'.auth()->id())
+            ->exists();
     }
 
     public function getHeaderWidgetsColumns(): int|array

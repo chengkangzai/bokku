@@ -64,6 +64,7 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->sidebarCollapsibleOnDesktop()
             ->spa()
+            ->viteTheme('resources/css/filament/admin/theme.css')
             ->plugin(NeobrutalismeTheme::make());
     }
 }
