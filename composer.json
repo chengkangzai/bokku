@@ -12,6 +12,7 @@
         "php": "^8.4",
         "ext-fileinfo": "*",
         "caresome/filament-neobrutalism-theme": "^2.0",
+        "danihidayatx/image-optimizer": "^2.1",
         "filament/filament": "^5.1.3",
         "filament/spatie-laravel-media-library-plugin": "^5.1.3",
         "filament/spatie-laravel-tags-plugin": "^5.1.3",

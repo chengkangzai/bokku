@@ -252,6 +252,7 @@ class TransactionResource extends Resource
                                     ->maxFiles(5)
                                     ->openable()
                                     ->downloadable()
+                                    ->optimize('webp', 100)
                                     ->acceptedFileTypes([
                                         'image/jpeg',
                                         'image/png',
