@@ -5,7 +5,9 @@ namespace App\Providers;
 use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Set;
+use Filament\Support\Assets\Css;
 use Filament\Support\Enums\FontFamily;
+use Filament\Support\Facades\FilamentAsset;
 use Filament\Tables\Columns\TextColumn;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\ServiceProvider;
@@ -29,6 +31,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        FilamentAsset::register([
+            Css::make('neobrutalism-theme', __DIR__.'/../../vendor/caresome/filament-neobrutalism-theme/resources/css/theme.css'),
+        ], 'caresome/filament-neobrutalism-theme');
+
         SpatieMediaLibraryFileUpload::configureUsing(function (SpatieMediaLibraryFileUpload $upload) {
             $upload->afterStateUpdated(function ($state, Set $set, $component) {
                 if (! $state || app()->runningUnitTests()) {
