@@ -9,6 +9,7 @@ use Filament\Support\Enums\FontFamily;
 use Filament\Tables\Columns\TextColumn;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Str;
 use Laravel\Passport\Passport;
 use Livewire\Features\SupportFileUploads\FileUploadConfiguration;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
@@ -30,6 +31,13 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         SpatieMediaLibraryFileUpload::configureUsing(function (SpatieMediaLibraryFileUpload $upload) {
+            $upload->mediaName(function (TemporaryUploadedFile $file): string {
+                $original = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
+                $ascii = Str::ascii($original);
+
+                return trim($ascii) !== '' ? $ascii : (string) Str::ulid();
+            });
+
             $upload->afterStateUpdated(function ($state, Set $set, $component) {
                 if (! $state || app()->runningUnitTests()) {
                     return;
