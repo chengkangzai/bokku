@@ -44,7 +44,7 @@ return [
     /*
      * The fully qualified class name of the media observer.
      */
-    'media_observer' => Spatie\MediaLibrary\MediaCollections\Models\Observers\MediaObserver::class,
+    'media_observer' => App\Observers\MediaObserver::class,
 
     /*
      * When enabled, media collections will be serialised using the default
