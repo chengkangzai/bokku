@@ -3,6 +3,7 @@
 namespace App\Filament\Widgets;
 
 use App\Enums\AccountType;
+use App\Filament\Resources\Accounts\AccountResource;
 use App\Models\Account;
 use Filament\Actions\Action;
 use Filament\Tables\Columns\Summarizers\Sum;
@@ -26,6 +27,7 @@ class AssetAccounts extends BaseWidget
                     ->where('user_id', auth()->id())
                     ->where('is_active', true)
                     ->whereIn('type', [AccountType::Bank, AccountType::Cash])
+                    ->orderByDesc('balance')
             )
             ->columns([
                 TextColumn::make('name'),
@@ -45,9 +47,10 @@ class AssetAccounts extends BaseWidget
             ])
             ->recordActions([
                 Action::make('view')
-                    ->url(fn (Account $record): string => route('filament.admin.resources.accounts.edit', $record))
+                    ->url(fn (Account $record): string => AccountResource::getUrl('edit', ['record' => $record]))
                     ->icon('heroicon-m-eye'),
             ])
+            ->recordurl(fn (Account $record): string => AccountResource::getUrl('edit', ['record' => $record]))
             ->paginated(false);
     }
 }
