@@ -27,7 +27,7 @@ class LiabilityAccounts extends BaseWidget
                     ->where('user_id', auth()->id())
                     ->where('is_active', true)
                     ->whereIn('type', [AccountType::Loan, AccountType::CreditCard])
-                    ->orderBy('balance', 'asc')
+                    ->orderByDesc('balance')
             )
             ->columns([
                 TextColumn::make('name'),
