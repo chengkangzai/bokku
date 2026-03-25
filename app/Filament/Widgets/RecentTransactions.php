@@ -2,9 +2,9 @@
 
 namespace App\Filament\Widgets;
 
+use App\Filament\Resources\Transactions\TransactionResource;
 use App\Models\Transaction;
 use Filament\Actions\Action;
-use Filament\Tables\Columns\BadgeColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget as BaseWidget;
@@ -32,7 +32,8 @@ class RecentTransactions extends BaseWidget
                     ->date()
                     ->sortable(),
 
-                BadgeColumn::make('type'),
+                TextColumn::make('type')
+                    ->badge(),
 
                 TextColumn::make('description')
                     ->limit(30),
@@ -49,9 +50,10 @@ class RecentTransactions extends BaseWidget
             ])
             ->recordActions([
                 Action::make('view')
-                    ->url(fn (Transaction $record): string => route('filament.admin.resources.transactions.edit', $record))
+                    ->url(fn (Transaction $record): string => TransactionResource::getUrl('edit', ['record' => $record]))
                     ->icon('heroicon-m-eye'),
             ])
+            ->recordUrl(fn (Transaction $record): string => TransactionResource::getUrl('edit', ['record' => $record]))
             ->paginated(false);
     }
 }

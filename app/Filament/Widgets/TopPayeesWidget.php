@@ -49,6 +49,7 @@ class TopPayeesWidget extends BaseWidget
                     ->url(fn (Payee $record): string => PayeeResource::getUrl('edit', ['record' => $record]))
                     ->icon('heroicon-m-eye'),
             ])
+            ->recordUrl(fn (Payee $record): string => PayeeResource::getUrl('edit', ['record' => $record]))
             ->paginated(false)
             ->emptyStateHeading('No payee spending yet')
             ->emptyStateDescription('Assign payees to your expense transactions to see top spending here.');
