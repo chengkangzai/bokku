@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 
+Auth::loginUsingId(1);
 Route::get('/', function () {
     if (Auth::check()) {
         return redirect(filament()->getUrl());

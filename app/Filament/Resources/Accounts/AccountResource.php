@@ -61,7 +61,7 @@ class AccountResource extends Resource
 
                         TextInput::make('initial_balance')
                             ->required()
-                            ->numeric()
+                            ->lte(0)
                             ->default(0)
                             ->prefix('MYR')
                             ->label(fn (Get $get) => match ($get('type')) {
@@ -77,7 +77,7 @@ class AccountResource extends Resource
                                         default => 'Starting balance for this account'
                                     }
                             )
-                            ->formatStateUsing(fn ($state) => $state !== null ? number_format((float) $state, 2) : null)
+                            ->formatStateUsing(fn (?string $state) => $state ?  number_format($state,2) : null)
                             ->disabled(fn (Component $livewire) => $livewire instanceof EditAccount)
                             ->afterContent(
                                 Action::make('adjustBalance')
@@ -152,7 +152,7 @@ class AccountResource extends Resource
                             ->prefix(fn (?Account $record) => $record?->currency)
                             ->disabled()
                             ->dehydrated(false)
-                            ->formatStateUsing(fn (?string $state) => $state !== null ? number_format((float) $state, 2) : null)
+                            ->formatStateUsing(fn (?string $state) => $state ? number_format($state, 2) : null)
                             ->visible(fn (Component $livewire) => $livewire instanceof EditAccount),
 
                         Select::make('currency')
