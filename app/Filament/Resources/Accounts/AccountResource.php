@@ -77,7 +77,7 @@ class AccountResource extends Resource
                                         default => 'Starting balance for this account'
                                     }
                             )
-                            ->formatStateUsing(fn (?string $state) => $state !== null ? number_format((float) $state, 2) : null)
+                            ->formatStateUsing(fn ($state) => $state !== null ? number_format((float) $state, 2) : null)
                             ->disabled(fn (Component $livewire) => $livewire instanceof EditAccount)
                             ->afterContent(
                                 Action::make('adjustBalance')
