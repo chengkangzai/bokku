@@ -77,7 +77,7 @@
                 @if ($breakdown->isEmpty())
                     <p class="sa-empty">No expenses recorded for {{ $monthLabel }}.</p>
                 @else
-                    <div class="sa-breakdown">
+                    <div class="sa-breakdown" wire:ignore>
                         <div class="sa-donut-wrap">
                             <canvas data-sa-donut width="440" height="440"></canvas>
                             <div class="sa-donut-center">
@@ -130,8 +130,8 @@
                 x-init="window.bokkuSpendingTrends($el)"
                 data-config="{{ json_encode(['trends' => $trends, 'currency' => 'MYR']) }}"
             >
-                <div class="sa-trend-wrap"><canvas data-sa-trend width="2080" height="520"></canvas></div>
-                <div class="sa-readout" data-sa-readout>&nbsp;</div>
+                <div class="sa-trend-wrap" wire:ignore><canvas data-sa-trend width="2080" height="520"></canvas></div>
+                <div class="sa-readout" data-sa-readout wire:ignore>&nbsp;</div>
                 <div class="sa-legend-keys">
                     <span><i class="sa-key" style="background: var(--sa-income)"></i>Income</span>
                     <span><i class="sa-key" style="background: var(--sa-expense)"></i>Expenses</span>
