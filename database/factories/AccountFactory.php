@@ -22,7 +22,7 @@ class AccountFactory extends Factory
         return [
             'user_id' => User::factory(),
             'name' => fake()->company().' '.fake()->randomElement(['Checking', 'Savings', 'Account']),
-            'type' => fake()->randomElement(AccountType::cases()),
+            'type' => AccountType::Bank,
             'icon' => null,
             'color' => fake()->hexColor(),
             'balance' => $initialBalance,

@@ -48,7 +48,8 @@ class AdjustBalanceTool extends Tool
             ]);
         }
 
-        $type = $difference > 0 ? TransactionType::Income : TransactionType::Expense;
+        $isIncrease = $account->isLiability() ? $difference < 0 : $difference > 0;
+        $type = $isIncrease ? TransactionType::Income : TransactionType::Expense;
         $amount = abs($difference);
 
         Transaction::create([
@@ -79,7 +80,7 @@ class AdjustBalanceTool extends Tool
     }
 
     /**
-     * @return array<string, \Illuminate\Contracts\JsonSchema\JsonSchema>
+     * @return array<string, JsonSchema>
      */
     public function schema(JsonSchema $schema): array
     {

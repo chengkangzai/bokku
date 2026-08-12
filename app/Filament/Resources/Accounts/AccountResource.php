@@ -124,11 +124,15 @@ class AccountResource extends Resource
                                             return;
                                         }
 
+                                        $isIncrease = $livewire->record->isLiability()
+                                            ? $adjustmentAmount < 0
+                                            : $adjustmentAmount > 0;
+
                                         // Create adjustment transaction
                                         Transaction::create([
                                             'user_id' => auth()->id(),
                                             'account_id' => $livewire->record->id,
-                                            'type' => $adjustmentAmount > 0 ? TransactionType::Income : TransactionType::Expense,
+                                            'type' => $isIncrease ? TransactionType::Income : TransactionType::Expense,
                                             'amount' => abs($adjustmentAmount),
                                             'description' => 'Balance Adjustment: '.($data['adjustment_note'] ?? 'Manual balance adjustment'),
                                             'date' => now(),

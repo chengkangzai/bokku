@@ -268,7 +268,7 @@ describe('User Net Worth History', function () {
             ->and($history[now()->format('Y-m')])->toBe(800.0);
     });
 
-    it('moves liabilities in the same direction as the stored balance', function () {
+    it('increases liability outstanding when an expense is charged to it', function () {
         $user = User::factory()->create();
 
         $loan = Account::factory()->loan()->create([
@@ -285,9 +285,10 @@ describe('User Net Worth History', function () {
 
         $history = $user->netWorthHistory();
 
-        expect($loan->refresh()->balance)->toBe(4500.0)
+        expect($loan->refresh()->balance)->toBe(5500.0)
             ->and($history[now()->subMonth()->format('Y-m')])->toBe(-5000.0)
-            ->and($history[now()->format('Y-m')])->toBe(-4500.0);
+            ->and($history[now()->format('Y-m')])->toBe(-5500.0)
+            ->and(end($history))->toBe($user->refresh()->net_worth);
     });
 
     it('accounts for transfers between an asset and a liability', function () {
@@ -316,8 +317,10 @@ describe('User Net Worth History', function () {
 
         $history = $user->netWorthHistory();
 
-        expect($history[now()->subMonth()->format('Y-m')])->toBe(1000.0)
-            ->and($history[now()->format('Y-m')])->toBe(0.0)
+        expect($bank->refresh()->balance)->toBe(2500.0)
+            ->and($loan->refresh()->balance)->toBe(1500.0)
+            ->and($history[now()->subMonth()->format('Y-m')])->toBe(1000.0)
+            ->and($history[now()->format('Y-m')])->toBe(1000.0)
             ->and(end($history))->toBe($user->refresh()->net_worth);
     });
 

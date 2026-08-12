@@ -173,6 +173,11 @@ class User extends Authenticatable implements FilamentUser
     }
 
     /**
+     * With liabilities stored as positive outstanding amounts, every transaction moves
+     * net worth by the same amount regardless of account type: income on a liability
+     * shrinks the debt exactly as income on an asset grows the funds, and a transfer
+     * between two of the user's accounts nets to zero.
+     *
      * @param  Collection<int, int>  $signs
      */
     protected function netWorthEffect(Transaction $transaction, Collection $signs): int
@@ -180,14 +185,16 @@ class User extends Authenticatable implements FilamentUser
         $amount = (int) $transaction->getRawOriginal('amount');
 
         if ($transaction->type === TransactionType::Transfer) {
-            return ($signs[$transaction->to_account_id] ?? 0) * $amount
-                - ($signs[$transaction->from_account_id] ?? 0) * $amount;
+            return ($signs->has($transaction->to_account_id) ? $amount : 0)
+                - ($signs->has($transaction->from_account_id) ? $amount : 0);
         }
 
-        $sign = $signs[$transaction->account_id] ?? 0;
+        if (! $signs->has($transaction->account_id)) {
+            return 0;
+        }
 
         return $transaction->type === TransactionType::Income
-            ? $sign * $amount
-            : -$sign * $amount;
+            ? $amount
+            : -$amount;
     }
 }

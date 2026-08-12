@@ -79,7 +79,7 @@ describe('Account Model', function () {
 
     it('updates balance correctly with income and expenses', function () {
         $user = User::factory()->create();
-        $account = Account::factory()->create([
+        $account = Account::factory()->bank()->create([
             'user_id' => $user->id,
             'initial_balance' => 1000.00,
             'balance' => 1000.00,
@@ -106,12 +106,12 @@ describe('Account Model', function () {
 
     it('updates balance correctly with transfers', function () {
         $user = User::factory()->create();
-        $fromAccount = Account::factory()->create([
+        $fromAccount = Account::factory()->bank()->create([
             'user_id' => $user->id,
             'initial_balance' => 1000.00,
             'balance' => 1000.00,
         ]);
-        $toAccount = Account::factory()->create([
+        $toAccount = Account::factory()->bank()->create([
             'user_id' => $user->id,
             'initial_balance' => 500.00,
             'balance' => 500.00,
@@ -132,6 +132,59 @@ describe('Account Model', function () {
 
         expect((float) $fromAccount->balance)->toBe(800.0); // 1000 - 200 (transfer out)
         expect((float) $toAccount->balance)->toBe(700.0);   // 500 + 200 (transfer in)
+    });
+
+    it('reduces liability outstanding when a payment transfer is received', function () {
+        $user = User::factory()->create();
+        $bank = Account::factory()->bank()->create([
+            'user_id' => $user->id,
+            'initial_balance' => 5000.00,
+            'balance' => 5000.00,
+        ]);
+        $loan = Account::factory()->loan()->create([
+            'user_id' => $user->id,
+            'initial_balance' => 16351.41,
+            'balance' => 16351.41,
+        ]);
+
+        Transaction::factory()->create([
+            'user_id' => $user->id,
+            'type' => 'transfer',
+            'amount' => 166.60,
+            'from_account_id' => $bank->id,
+            'to_account_id' => $loan->id,
+            'account_id' => $bank->id,
+            'category_id' => null,
+        ]);
+
+        $bank->updateBalance();
+        $loan->updateBalance();
+
+        expect((float) $bank->balance)->toBe(4833.40);
+        expect((float) $loan->balance)->toBe(16184.81);
+    });
+
+    it('increases liability outstanding with expenses and reduces it with income', function () {
+        $user = User::factory()->create();
+        $creditCard = Account::factory()->creditCard()->create([
+            'user_id' => $user->id,
+            'initial_balance' => 100.00,
+            'balance' => 100.00,
+        ]);
+
+        Transaction::factory()->expense()->withAmount(50.00)->create([
+            'user_id' => $user->id,
+            'account_id' => $creditCard->id,
+        ]);
+
+        Transaction::factory()->income()->withAmount(20.00)->create([
+            'user_id' => $user->id,
+            'account_id' => $creditCard->id,
+        ]);
+
+        $creditCard->updateBalance();
+
+        expect((float) $creditCard->balance)->toBe(130.0); // 100 + 50 charge - 20 refund
     });
 
     it('returns correct type icon from enum', function () {

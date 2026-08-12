@@ -413,6 +413,34 @@ describe('AccountResource Balance Adjustment', function () {
         expect($account->refresh()->balance)->toBe(1500.00);
     });
 
+    it('adjusts a liability balance with the inverted transaction type', function () {
+        $loan = Account::factory()->loan()->create([
+            'user_id' => $this->user->id,
+            'initial_balance' => 1000.00,
+            'balance' => 1000.00,
+        ]);
+
+        livewire(EditAccount::class, ['record' => $loan->getRouteKey()])
+            ->callAction(
+                TestAction::make('adjustBalance')->schemaComponent('initial_balance'),
+                data: [
+                    'new_balance' => 900.00,
+                    'adjustment_note' => 'Statement reconciliation',
+                ]
+            )
+            ->assertHasNoActionErrors()
+            ->assertNotified();
+
+        $this->assertDatabaseHas('transactions', [
+            'user_id' => $this->user->id,
+            'account_id' => $loan->id,
+            'type' => 'income',
+            'amount' => 10000,
+        ]);
+
+        expect($loan->refresh()->balance)->toBe(900.00);
+    });
+
     it('can adjust account balance with negative adjustment', function () {
         $account = Account::factory()->create([
             'user_id' => $this->user->id,

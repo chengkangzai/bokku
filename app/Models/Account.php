@@ -85,8 +85,15 @@ class Account extends Model
             ->where('type', TransactionType::Transfer)
             ->sum('amount');
 
-        // The cast will handle conversion to/from cents
-        $this->balance = ($this->getRawOriginal('initial_balance') + $income - $expenses - $transfersOut + $transfersIn) / 100;
+        $netChange = $income - $expenses - $transfersOut + $transfersIn;
+
+        if ($this->isLiability()) {
+            $netChange = -$netChange;
+        }
+
+        // The cast will handle conversion to/from cents. Liabilities store a positive
+        // outstanding amount, so payments in reduce it and charges increase it.
+        $this->balance = ($this->getRawOriginal('initial_balance') + $netChange) / 100;
         $this->save();
     }
 

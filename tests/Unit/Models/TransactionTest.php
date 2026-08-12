@@ -83,7 +83,7 @@ describe('Transaction Model', function () {
 
     it('updates account balance when created', function () {
         $user = User::factory()->create();
-        $account = Account::factory()->create([
+        $account = Account::factory()->bank()->create([
             'user_id' => $user->id,
             'initial_balance' => 1000.00,
             'balance' => 1000.00,
@@ -272,12 +272,12 @@ describe('Transaction Model', function () {
 
     it('updates both account balances for transfers', function () {
         $user = User::factory()->create();
-        $fromAccount = Account::factory()->create([
+        $fromAccount = Account::factory()->bank()->create([
             'user_id' => $user->id,
             'initial_balance' => 1000.00,
             'balance' => 1000.00,
         ]);
-        $toAccount = Account::factory()->create([
+        $toAccount = Account::factory()->bank()->create([
             'user_id' => $user->id,
             'initial_balance' => 500.00,
             'balance' => 500.00,
