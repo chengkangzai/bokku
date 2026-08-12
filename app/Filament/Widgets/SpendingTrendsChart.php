@@ -17,7 +17,7 @@ class SpendingTrendsChart extends ChartWidget
 
     protected ?string $heading = 'Spending Trends';
 
-    protected int|string|array $columnSpan = 'full';
+    protected int|string|array $columnSpan = 1;
 
     protected bool $hasDeferredFilters = true;
 

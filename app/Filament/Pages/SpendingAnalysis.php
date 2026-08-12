@@ -9,8 +9,8 @@ use App\Filament\Widgets\SpendingByTagsChart;
 use App\Filament\Widgets\SpendingByTagsTable;
 use App\Filament\Widgets\SpendingTrendsChart;
 use App\Filament\Widgets\TopExpensesWidget;
+use App\Models\Transaction;
 use Filament\Pages\Page;
-use Spatie\Tags\Tag;
 
 class SpendingAnalysis extends Page
 {
@@ -45,8 +45,9 @@ class SpendingAnalysis extends Page
 
     protected function userHasTags(): bool
     {
-        return Tag::query()
-            ->where('type', 'user_'.auth()->id())
+        return Transaction::query()
+            ->where('user_id', auth()->id())
+            ->has('tags')
             ->exists();
     }
 

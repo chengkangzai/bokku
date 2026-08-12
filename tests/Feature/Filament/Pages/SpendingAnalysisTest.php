@@ -22,6 +22,27 @@ it('can render the spending analysis page', function () {
         ->assertSuccessful();
 });
 
+it('hides tag widgets when the user has no tagged transactions', function () {
+    $html = $this->get(SpendingAnalysis::getUrl())->getContent();
+
+    expect(substr_count($html, 'wire:name="App\Filament\Widgets\SpendingByTagsChart"'))->toBe(0)
+        ->and(substr_count($html, 'wire:name="App\Filament\Widgets\SpendingByTagsTable"'))->toBe(0);
+});
+
+it('shows tag widgets when the user has tagged transactions', function () {
+    $category = Category::factory()->create(['user_id' => $this->user->id, 'type' => 'expense']);
+    $transaction = Transaction::factory()->expense()->create([
+        'user_id' => $this->user->id,
+        'category_id' => $category->id,
+    ]);
+    $transaction->attachTag('holiday', 'user_'.$this->user->id);
+
+    $html = $this->get(SpendingAnalysis::getUrl())->getContent();
+
+    expect(substr_count($html, 'wire:name="App\Filament\Widgets\SpendingByTagsChart"'))->toBe(1)
+        ->and(substr_count($html, 'wire:name="App\Filament\Widgets\SpendingByTagsTable"'))->toBe(1);
+});
+
 it('renders each widget only once', function () {
     $html = $this->get(SpendingAnalysis::getUrl())->getContent();
 

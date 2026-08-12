@@ -4,6 +4,7 @@ namespace App\Filament\Widgets;
 
 use App\Enums\TransactionType;
 use App\Models\Transaction;
+use Filament\Support\Colors\Color;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget;
@@ -26,7 +27,7 @@ class TopExpensesWidget extends TableWidget
                 TextColumn::make('name')
                     ->label('Category')
                     ->badge()
-                    ->color(fn ($record) => $record->color),
+                    ->color(fn ($record) => filled($record->color) ? Color::hex($record->color) : 'gray'),
 
                 TextColumn::make('total')
                     ->label('Amount')

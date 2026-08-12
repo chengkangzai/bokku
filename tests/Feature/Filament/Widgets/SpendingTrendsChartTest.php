@@ -66,11 +66,11 @@ it('handles empty data gracefully', function () {
         ->assertSuccessful();
 });
 
-it('has correct column span for full width', function () {
+it('spans a single column', function () {
     $widget = new SpendingTrendsChart;
     $reflectionClass = new ReflectionClass(SpendingTrendsChart::class);
     $columnSpanProperty = $reflectionClass->getProperty('columnSpan');
     $columnSpanProperty->setAccessible(true);
 
-    expect($columnSpanProperty->getValue($widget))->toBe('full');
+    expect($columnSpanProperty->getValue($widget))->toBe(1);
 });

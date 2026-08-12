@@ -4,9 +4,11 @@ namespace App\Filament\Widgets;
 
 use App\Enums\TransactionType;
 use App\Models\Transaction;
+use Filament\Support\Colors\Color;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 class SpendingByCategoryTable extends TableWidget
@@ -25,7 +27,7 @@ class SpendingByCategoryTable extends TableWidget
                 TextColumn::make('name')
                     ->label('Category')
                     ->badge()
-                    ->color(fn ($record) => $record->color),
+                    ->color(fn ($record) => filled($record->color) ? Color::hex($record->color) : 'gray'),
 
                 TextColumn::make('count')
                     ->label('Transactions')
@@ -44,7 +46,7 @@ class SpendingByCategoryTable extends TableWidget
             ->paginated(false);
     }
 
-    public function getTableRecords(): \Illuminate\Support\Collection
+    public function getTableRecords(): Collection
     {
         $startDate = now()->startOfMonth();
         $endDate = now()->endOfMonth();
