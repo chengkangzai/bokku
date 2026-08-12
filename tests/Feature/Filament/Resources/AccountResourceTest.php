@@ -305,6 +305,25 @@ describe('AccountResource Table Functionality', function () {
             ->assertCanSeeTableRecords([$accountA, $accountB, $accountC], inOrder: true);
     });
 
+    it('lists accounts by their manual sort order regardless of type', function () {
+        $loan = Account::factory()->loan()->create([
+            'user_id' => $this->user->id,
+            'sort_order' => 0,
+        ]);
+        $creditCard = Account::factory()->creditCard()->create([
+            'user_id' => $this->user->id,
+            'sort_order' => 1,
+        ]);
+        $bank = Account::factory()->create([
+            'user_id' => $this->user->id,
+            'type' => 'bank',
+            'sort_order' => 2,
+        ]);
+
+        livewire(ListAccounts::class)
+            ->assertCanSeeTableRecords([$loan, $creditCard, $bank], inOrder: true);
+    });
+
     it('can render account columns', function () {
         Account::factory()->count(3)->create(['user_id' => $this->user->id]);
 

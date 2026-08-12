@@ -250,11 +250,7 @@ class AccountResource extends Resource
                 ]),
             ])
             ->reorderable('sort_order')
-            ->defaultSort(function (Builder $query): Builder {
-                return $query
-                    ->orderByRaw("CASE type WHEN 'bank' THEN 0 WHEN 'cash' THEN 1 WHEN 'credit_card' THEN 2 WHEN 'loan' THEN 3 ELSE 4 END")
-                    ->orderBy('sort_order');
-            })
+            ->defaultSort('sort_order')
             ->modifyQueryUsing(fn (Builder $query) => $query->where('user_id', auth()->id()));
     }
 
