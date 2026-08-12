@@ -6,7 +6,9 @@ use App\Filament\Resources\Transactions\Pages\EditTransaction;
 use App\Filament\Resources\Transactions\Pages\ListTransactions;
 use App\Filament\Resources\Transactions\TransactionResource;
 use App\Models\Account;
+use App\Models\Budget;
 use App\Models\Category;
+use App\Models\Payee;
 use App\Models\Transaction;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
@@ -145,6 +147,50 @@ describe('TransactionResource Table Functionality', function () {
             ->assertCanSeeTableRecords($userTransactions)
             ->assertCanNotSeeTableRecords($otherUserTransactions)
             ->assertCountTableRecords(2);
+    });
+
+    it('can filter uncategorized transactions', function () {
+        $uncategorized = Transaction::factory()->expense()->create([
+            'user_id' => $this->user->id,
+            'category_id' => null,
+        ]);
+        Transaction::factory()->expense()->create([
+            'user_id' => $this->user->id,
+            'category_id' => $this->expenseCategory->id,
+        ]);
+
+        livewire(ListTransactions::class)
+            ->filterTable('uncategorized')
+            ->assertCanSeeTableRecords([$uncategorized])
+            ->assertCountTableRecords(1);
+    });
+
+    it('can filter transactions by date range', function () {
+        $inRange = Transaction::factory()->expense()->create([
+            'user_id' => $this->user->id,
+            'date' => '2026-08-15',
+        ]);
+        Transaction::factory()->expense()->create([
+            'user_id' => $this->user->id,
+            'date' => '2026-07-15',
+        ]);
+
+        livewire(ListTransactions::class)
+            ->filterTable('date', ['from' => '2026-08-01', 'until' => '2026-08-31'])
+            ->assertCanSeeTableRecords([$inRange])
+            ->assertCountTableRecords(1);
+    });
+
+    it('can assign a category inline from the table', function () {
+        $transaction = Transaction::factory()->expense()->create([
+            'user_id' => $this->user->id,
+            'category_id' => null,
+        ]);
+
+        livewire(ListTransactions::class)
+            ->call('updateTableColumnState', 'category_id', (string) $transaction->getKey(), $this->expenseCategory->id);
+
+        expect($transaction->refresh()->category_id)->toBe($this->expenseCategory->id);
     });
 
     it('can search transactions by description', function () {
@@ -425,7 +471,7 @@ describe('TransactionResource Budget Warning Integration', function () {
             'name' => 'Test Budget Category',
         ]);
 
-        $this->budget = \App\Models\Budget::factory()->create([
+        $this->budget = Budget::factory()->create([
             'user_id' => $this->user->id,
             'category_id' => $this->budgetCategory->id,
             'amount' => 500.00,
@@ -579,7 +625,7 @@ describe('TransactionResource Budget Warning Integration', function () {
     it('shows correct warning for weekly budget period with form validation', function () {
         // Create a weekly budget
         $weeklyCategory = Category::factory()->expense()->create(['user_id' => $this->user->id]);
-        \App\Models\Budget::factory()->weekly()->create([
+        Budget::factory()->weekly()->create([
             'user_id' => $this->user->id,
             'category_id' => $weeklyCategory->id,
             'amount' => 150.00,
@@ -616,7 +662,7 @@ describe('TransactionResource Budget Warning Integration', function () {
     it('shows correct warning for annual budget period with form validation', function () {
         // Create an annual budget
         $annualCategory = Category::factory()->expense()->create(['user_id' => $this->user->id]);
-        \App\Models\Budget::factory()->annual()->create([
+        Budget::factory()->annual()->create([
             'user_id' => $this->user->id,
             'category_id' => $annualCategory->id,
             'amount' => 6000.00,
@@ -658,7 +704,7 @@ describe('TransactionResource Budget Warning Integration', function () {
             'user_id' => $otherUser->id,
             'name' => 'Test Budget Category', // Same name as current user's category
         ]);
-        \App\Models\Budget::factory()->create([
+        Budget::factory()->create([
             'user_id' => $otherUser->id,
             'category_id' => $otherCategory->id,
             'amount' => 1.00, // Very low budget
@@ -685,7 +731,7 @@ describe('TransactionResource Budget Warning Integration', function () {
 
 describe('TransactionResource Payee Integration', function () {
     it('can create transaction with payee', function () {
-        $payee = \App\Models\Payee::factory()->create(['user_id' => $this->user->id]);
+        $payee = Payee::factory()->create(['user_id' => $this->user->id]);
 
         livewire(CreateTransaction::class)
             ->fillForm([
@@ -729,7 +775,7 @@ describe('TransactionResource Payee Integration', function () {
 
     it('auto-fills category when payee with default category is selected', function () {
         $defaultCategory = Category::factory()->expense()->create(['user_id' => $this->user->id]);
-        $payee = \App\Models\Payee::factory()->create([
+        $payee = Payee::factory()->create([
             'user_id' => $this->user->id,
             'default_category_id' => $defaultCategory->id,
         ]);
@@ -749,7 +795,7 @@ describe('TransactionResource Payee Integration', function () {
     it('does not override category if already selected when payee is chosen', function () {
         $existingCategory = Category::factory()->expense()->create(['user_id' => $this->user->id]);
         $defaultCategory = Category::factory()->expense()->create(['user_id' => $this->user->id]);
-        $payee = \App\Models\Payee::factory()->create([
+        $payee = Payee::factory()->create([
             'user_id' => $this->user->id,
             'default_category_id' => $defaultCategory->id,
         ]);
@@ -768,8 +814,8 @@ describe('TransactionResource Payee Integration', function () {
     });
 
     it('only shows active payees in payee select', function () {
-        $activePayee = \App\Models\Payee::factory()->active()->create(['user_id' => $this->user->id]);
-        $inactivePayee = \App\Models\Payee::factory()->inactive()->create(['user_id' => $this->user->id]);
+        $activePayee = Payee::factory()->active()->create(['user_id' => $this->user->id]);
+        $inactivePayee = Payee::factory()->inactive()->create(['user_id' => $this->user->id]);
 
         // Just verify the page loads - the select filtering is tested via the relationship query
         livewire(CreateTransaction::class)
@@ -779,8 +825,8 @@ describe('TransactionResource Payee Integration', function () {
 
     it('only shows user payees in payee select', function () {
         $otherUser = User::factory()->create();
-        \App\Models\Payee::factory()->count(3)->create(['user_id' => $otherUser->id]);
-        $userPayee = \App\Models\Payee::factory()->create(['user_id' => $this->user->id]);
+        Payee::factory()->count(3)->create(['user_id' => $otherUser->id]);
+        $userPayee = Payee::factory()->create(['user_id' => $this->user->id]);
 
         livewire(CreateTransaction::class)
             ->fillForm(['type' => TransactionType::Expense])
@@ -788,7 +834,7 @@ describe('TransactionResource Payee Integration', function () {
     });
 
     it('can filter transactions by payee', function () {
-        $payee = \App\Models\Payee::factory()->create(['user_id' => $this->user->id]);
+        $payee = Payee::factory()->create(['user_id' => $this->user->id]);
         $transactionWithPayee = Transaction::factory()->expense()->create([
             'user_id' => $this->user->id,
             'account_id' => $this->account->id,
@@ -810,7 +856,7 @@ describe('TransactionResource Payee Integration', function () {
     });
 
     it('can display payee column in transaction table', function () {
-        $payee = \App\Models\Payee::factory()->create(['user_id' => $this->user->id]);
+        $payee = Payee::factory()->create(['user_id' => $this->user->id]);
         Transaction::factory()->expense()->create([
             'user_id' => $this->user->id,
             'account_id' => $this->account->id,

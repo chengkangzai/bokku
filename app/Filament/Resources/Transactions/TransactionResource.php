@@ -36,6 +36,7 @@ use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\IconColumn;
+use Filament\Tables\Columns\SelectColumn;
 use Filament\Tables\Columns\SpatieMediaLibraryImageColumn;
 use Filament\Tables\Columns\SpatieTagsColumn;
 use Filament\Tables\Columns\TextColumn;
@@ -373,8 +374,12 @@ class TransactionResource extends Resource
                     ->sortable()
                     ->visible(fn () => true),
 
-                TextColumn::make('category.name')
-                    ->placeholder('—')
+                SelectColumn::make('category_id')
+                    ->label('Category')
+                    ->options(fn (Transaction $record): array => static::categoryOptionsFor($record->type))
+                    ->selectablePlaceholder(true)
+                    ->placeholder('— uncategorized —')
+                    ->disabled(fn (Transaction $record): bool => $record->type === TransactionType::Transfer)
                     ->sortable(),
 
                 TextColumn::make('payee.name')
@@ -444,6 +449,11 @@ class TransactionResource extends Resource
                         'name',
                         fn (Builder $query) => $query->where('user_id', auth()->id())
                     ),
+
+                Filter::make('uncategorized')
+                    ->label('Uncategorized only')
+                    ->toggle()
+                    ->query(fn (Builder $query): Builder => $query->whereNull('category_id')),
 
                 Filter::make('date')
                     ->schema([
@@ -537,6 +547,25 @@ class TransactionResource extends Resource
         return [
             //
         ];
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    protected static function categoryOptionsFor(TransactionType $type): array
+    {
+        if ($type === TransactionType::Transfer) {
+            return [];
+        }
+
+        static $cache = [];
+
+        return $cache[$type->value] ??= Category::query()
+            ->where('user_id', auth()->id())
+            ->where('type', $type->value)
+            ->orderBy('name')
+            ->pluck('name', 'id')
+            ->all();
     }
 
     public static function getPages(): array

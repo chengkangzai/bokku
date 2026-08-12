@@ -103,15 +103,23 @@ class SpendingAnalysis extends Page
             'trends' => $service->trends($userId, $month, $this->trendMonths),
             'hasTags' => $hasTags,
             'monthLabel' => $month->format('M Y'),
-            'drillUrl' => fn (?int $categoryId): ?string => $categoryId === null ? null : TransactionResource::getUrl().'?'.http_build_query([
-                'filters' => [
-                    'category_id' => ['value' => $categoryId],
+            'drillUrl' => function (?int $categoryId) use ($month): string {
+                $filters = [
                     'date' => [
                         'from' => $month->startOfMonth()->toDateString(),
                         'until' => $month->endOfMonth()->toDateString(),
                     ],
-                ],
-            ]),
+                ];
+
+                if ($categoryId === null) {
+                    $filters['uncategorized'] = ['isActive' => true];
+                    $filters['type'] = ['value' => 'expense'];
+                } else {
+                    $filters['category_id'] = ['value' => $categoryId];
+                }
+
+                return TransactionResource::getUrl().'?'.http_build_query(['filters' => $filters]);
+            },
         ];
     }
 }
