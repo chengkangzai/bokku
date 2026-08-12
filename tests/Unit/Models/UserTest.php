@@ -324,6 +324,37 @@ describe('User Net Worth History', function () {
             ->and(end($history))->toBe($user->refresh()->net_worth);
     });
 
+    it('breaks history down into assets and liabilities', function () {
+        $user = User::factory()->create();
+
+        $bank = Account::factory()->bank()->create([
+            'user_id' => $user->id,
+            'initial_balance' => 3000.00,
+            'balance' => 3000.00,
+        ]);
+        $loan = Account::factory()->loan()->create([
+            'user_id' => $user->id,
+            'initial_balance' => 2000.00,
+            'balance' => 2000.00,
+        ]);
+
+        Transaction::factory()->transfer()->withAmount(500.00)->create([
+            'user_id' => $user->id,
+            'account_id' => $bank->id,
+            'category_id' => null,
+            'from_account_id' => $bank->id,
+            'to_account_id' => $loan->id,
+            'date' => now()->startOfMonth(),
+        ]);
+
+        $history = $user->netWorthBreakdownHistory();
+        $latest = end($history);
+        $previous = $history[now()->subMonth()->format('Y-m')];
+
+        expect($previous)->toBe(['assets' => 3000.0, 'liabilities' => 2000.0, 'net' => 1000.0])
+            ->and($latest)->toBe(['assets' => 2500.0, 'liabilities' => 1500.0, 'net' => 1000.0]);
+    });
+
     it('only includes the user own accounts and transactions', function () {
         $user = User::factory()->create();
         $other = User::factory()->create();

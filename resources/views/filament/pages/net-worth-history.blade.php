@@ -42,6 +42,11 @@
             >
                 <div class="nw-chart-wrap" wire:ignore><canvas data-nw-chart width="2080" height="560"></canvas></div>
                 <div class="nw-readout" data-nw-readout wire:ignore>&nbsp;</div>
+                <div class="nw-legend-keys">
+                    <span><i class="nw-key" style="background: var(--nw-good)"></i>Assets</span>
+                    <span><i class="nw-key" style="background: var(--nw-bad)"></i>Liabilities</span>
+                    <span><i class="nw-key" style="background: var(--nw-net)"></i>Net worth (filled)</span>
+                </div>
             </div>
         </section>
 
@@ -52,6 +57,8 @@
                     <thead>
                         <tr>
                             <th>Month</th>
+                            <th class="nw-num">Assets</th>
+                            <th class="nw-num">Liabilities</th>
                             <th class="nw-num">Net Worth</th>
                             <th class="nw-num">Change</th>
                             <th class="nw-num">%</th>
@@ -61,6 +68,8 @@
                         @foreach (array_reverse($rows) as $row)
                             <tr>
                                 <td>{{ $row['label'] }}</td>
+                                <td class="nw-num">{{ $fmt($row['assets']) }}</td>
+                                <td class="nw-num">{{ $fmt($row['liabilities']) }}</td>
                                 <td class="nw-num {{ $row['value'] < 0 ? 'nw-bad' : '' }}">{{ ($row['value'] < 0 ? '−' : '').'MYR '.number_format(abs($row['value']), 2) }}</td>
                                 <td class="nw-num {{ $row['change'] === null ? '' : ($row['change'] < 0 ? 'nw-bad' : 'nw-good') }}">
                                     {{ $row['change'] === null ? '—' : $signedFmt($row['change']) }}
@@ -139,6 +148,8 @@
         .nw-hint { float: right; color: var(--nw-faint); font-weight: 400; letter-spacing: 0.02em; text-transform: none; }
         .nw-chart-wrap canvas { width: 100%; height: 280px; display: block; }
         .nw-readout { font-size: 11px; color: var(--nw-muted); min-height: 18px; margin-top: 8px; }
+        .nw-legend-keys { display: flex; gap: 18px; font-size: 11px; color: var(--nw-muted); margin-top: 6px; flex-wrap: wrap; }
+        .nw-key { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
         .nw-readout b { color: var(--nw-text); }
         .nw-scroll-x { overflow-x: auto; }
         .nw-table { width: 100%; border-collapse: collapse; font-size: 13px; }
@@ -157,6 +168,8 @@
             var config = JSON.parse(root.dataset.config);
             var labels = config.chart.labels;
             var values = config.chart.values;
+            var assets = config.chart.assets;
+            var liabilities = config.chart.liabilities;
             if (! labels.length) return;
             var currency = config.currency;
             var canvas = root.querySelector('[data-nw-chart]');
@@ -174,8 +187,9 @@
                 var W = canvas.width, H = canvas.height;
                 ctx.clearRect(0, 0, W, H);
                 var plotW = W - PAD.l - PAD.r, plotH = H - PAD.t - PAD.b;
-                var maxV = Math.max.apply(null, values);
-                var minV = Math.min.apply(null, values);
+                var all = values.concat(assets, liabilities);
+                var maxV = Math.max.apply(null, all);
+                var minV = Math.min.apply(null, all);
                 var span = Math.max(1, maxV - minV);
                 maxV += span * 0.1;
                 minV -= span * 0.1;
@@ -217,13 +231,19 @@
                 ctx.fillStyle = css('--nw-fill');
                 ctx.fill();
 
-                ctx.strokeStyle = css('--nw-net');
-                ctx.lineWidth = 3;
-                ctx.beginPath();
-                values.forEach(function (v, i) {
-                    i === 0 ? ctx.moveTo(xOf(i), yOf(v)) : ctx.lineTo(xOf(i), yOf(v));
-                });
-                ctx.stroke();
+                var drawLine = function (series, color, width) {
+                    ctx.strokeStyle = color;
+                    ctx.lineWidth = width;
+                    ctx.beginPath();
+                    series.forEach(function (v, i) {
+                        i === 0 ? ctx.moveTo(xOf(i), yOf(v)) : ctx.lineTo(xOf(i), yOf(v));
+                    });
+                    ctx.stroke();
+                };
+
+                drawLine(assets, css('--nw-good'), 2);
+                drawLine(liabilities, css('--nw-bad'), 2);
+                drawLine(values, css('--nw-net'), 3);
 
                 values.forEach(function (v, i) {
                     ctx.beginPath();
@@ -231,6 +251,15 @@
                     ctx.fillStyle = css('--nw-net');
                     ctx.fill();
                 });
+
+                if (hover >= 0) {
+                    [[assets, '--nw-good'], [liabilities, '--nw-bad']].forEach(function (pair) {
+                        ctx.beginPath();
+                        ctx.arc(xOf(hover), yOf(pair[0][hover]), 6, 0, Math.PI * 2);
+                        ctx.fillStyle = css(pair[1]);
+                        ctx.fill();
+                    });
+                }
 
                 var labelEvery = Math.ceil(labels.length / 12);
                 ctx.fillStyle = css('--nw-muted');
@@ -250,8 +279,10 @@
                 if (i < 0 || i >= labels.length) { draw(-1); readout.innerHTML = '&nbsp;'; return; }
                 draw(i);
                 var change = i > 0 ? values[i] - values[i - 1] : null;
-                readout.innerHTML = '<b>' + labels[i] + '</b> — net worth <b style="color:var(--nw-net)">' + fmt(values[i]) + '</b>' +
-                    (change === null ? '' : ' · ' + (change < 0 ? '<b style="color:var(--nw-bad)">−' : '<b style="color:var(--nw-good)">+') + fmt(Math.abs(change)) + '</b> vs prior month');
+                readout.innerHTML = '<b>' + labels[i] + '</b> — assets <b style="color:var(--nw-good)">' + fmt(assets[i]) +
+                    '</b> · liabilities <b style="color:var(--nw-bad)">' + fmt(liabilities[i]) +
+                    '</b> · net <b style="color:var(--nw-net)">' + fmt(values[i]) + '</b>' +
+                    (change === null ? '' : ' (' + (change < 0 ? '<b style="color:var(--nw-bad)">−' : '<b style="color:var(--nw-good)">+') + fmt(Math.abs(change)) + '</b> vs prior)');
             });
             canvas.addEventListener('mouseleave', function () { draw(-1); readout.innerHTML = '&nbsp;'; });
 

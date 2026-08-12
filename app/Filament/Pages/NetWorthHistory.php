@@ -39,16 +39,20 @@ class NetWorthHistory extends Page
         /** @var User $user */
         $user = auth()->user();
 
-        $history = $user->netWorthHistory($this->months);
+        $history = $user->netWorthBreakdownHistory($this->months);
 
         $rows = [];
         $previous = null;
 
-        foreach ($history as $month => $value) {
+        foreach ($history as $month => $point) {
+            $value = $point['net'];
+
             $rows[] = [
                 'month' => $month,
                 'label' => CarbonImmutable::createFromFormat('Y-m', $month)->format('M Y'),
                 'value' => $value,
+                'assets' => $point['assets'],
+                'liabilities' => $point['liabilities'],
                 'change' => $previous === null ? null : round($value - $previous, 2),
                 'percent' => ($previous === null || $previous == 0.0)
                     ? null
@@ -66,6 +70,8 @@ class NetWorthHistory extends Page
             'chart' => [
                 'labels' => array_column($rows, 'label'),
                 'values' => array_column($rows, 'value'),
+                'assets' => array_column($rows, 'assets'),
+                'liabilities' => array_column($rows, 'liabilities'),
             ],
         ];
     }

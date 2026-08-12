@@ -118,6 +118,20 @@ class User extends Authenticatable implements FilamentUser
     /**
      * Reconstruct net worth at the end of each of the last $months months.
      *
+     * @return array<string, float> Keyed by 'Y-m', oldest first
+     */
+    public function netWorthHistory(int $months = 12): array
+    {
+        return array_map(
+            fn (array $point): float => $point['net'],
+            $this->netWorthBreakdownHistory($months)
+        );
+    }
+
+    /**
+     * Reconstruct total assets, total liabilities and net worth at the end of each
+     * of the last $months months.
+     *
      * Replays every transaction on top of each account's initial_balance using the
      * same formula as Account::updateBalance(), so the series always reconciles with
      * the stored balances. The final bucket applies every transaction regardless of
@@ -125,19 +139,27 @@ class User extends Authenticatable implements FilamentUser
      *
      * Loads the user's full transaction history because initial_balance is the baseline.
      *
-     * @return array<string, float> Keyed by 'Y-m', oldest first
+     * @return array<string, array{
+     *     assets: float,
+     *     liabilities: float,
+     *     net: float
+     * }> Keyed by 'Y-m', oldest first
      */
-    public function netWorthHistory(int $months = 12): array
+    public function netWorthBreakdownHistory(int $months = 12): array
     {
         $accounts = $this->accounts()->get(['id', 'type', 'initial_balance']);
 
-        $signs = $accounts->mapWithKeys(
-            fn (Account $account): array => [$account->id => $account->isLiability() ? -1 : 1]
+        $isLiability = $accounts->mapWithKeys(
+            fn (Account $account): array => [$account->id => $account->isLiability()]
         );
 
-        $running = $accounts->sum(
-            fn (Account $account): int => $signs[$account->id] * (int) $account->getRawOriginal('initial_balance')
-        );
+        $assets = $accounts
+            ->reject(fn (Account $account): bool => $account->isLiability())
+            ->sum(fn (Account $account): int => (int) $account->getRawOriginal('initial_balance'));
+
+        $liabilities = $accounts
+            ->filter(fn (Account $account): bool => $account->isLiability())
+            ->sum(fn (Account $account): int => (int) $account->getRawOriginal('initial_balance'));
 
         $cutoffs = collect(range($months - 1, 0))
             ->mapWithKeys(function (int $monthsAgo): array {
@@ -153,48 +175,74 @@ class User extends Authenticatable implements FilamentUser
         $history = [];
         $index = 0;
 
+        $point = function () use (&$assets, &$liabilities): array {
+            return [
+                'assets' => (float) ($assets / 100),
+                'liabilities' => (float) ($liabilities / 100),
+                'net' => (float) (($assets - $liabilities) / 100),
+            ];
+        };
+
         foreach ($cutoffs as $key => $cutoff) {
             while ($index < $transactions->count() && $transactions[$index]->date->lte($cutoff)) {
-                $running += $this->netWorthEffect($transactions[$index], $signs);
+                $this->applyBreakdownEffect($transactions[$index], $isLiability, $assets, $liabilities);
                 $index++;
             }
 
-            $history[$key] = (float) ($running / 100);
+            $history[$key] = $point();
         }
 
         while ($index < $transactions->count()) {
-            $running += $this->netWorthEffect($transactions[$index], $signs);
+            $this->applyBreakdownEffect($transactions[$index], $isLiability, $assets, $liabilities);
             $index++;
         }
 
-        $history[array_key_last($history)] = (float) ($running / 100);
+        $history[array_key_last($history)] = $point();
 
         return $history;
     }
 
     /**
-     * With liabilities stored as positive outstanding amounts, every transaction moves
-     * net worth by the same amount regardless of account type: income on a liability
-     * shrinks the debt exactly as income on an asset grows the funds, and a transfer
-     * between two of the user's accounts nets to zero.
+     * Apply one transaction to the running asset and liability totals (both in cents,
+     * liabilities as positive outstanding). Income grows an asset or shrinks a debt;
+     * expenses do the reverse; a transfer moves value out of its source (asset down,
+     * or liability outstanding up) and into its destination (asset up, or liability
+     * outstanding down) — so a transfer between two owned accounts is net-worth neutral.
      *
-     * @param  Collection<int, int>  $signs
+     * @param  Collection<int, bool>  $isLiability
      */
-    protected function netWorthEffect(Transaction $transaction, Collection $signs): int
-    {
+    protected function applyBreakdownEffect(
+        Transaction $transaction,
+        Collection $isLiability,
+        int &$assets,
+        int &$liabilities
+    ): void {
         $amount = (int) $transaction->getRawOriginal('amount');
 
         if ($transaction->type === TransactionType::Transfer) {
-            return ($signs->has($transaction->to_account_id) ? $amount : 0)
-                - ($signs->has($transaction->from_account_id) ? $amount : 0);
+            if ($isLiability->has($transaction->from_account_id)) {
+                $isLiability[$transaction->from_account_id]
+                    ? $liabilities += $amount
+                    : $assets -= $amount;
+            }
+
+            if ($isLiability->has($transaction->to_account_id)) {
+                $isLiability[$transaction->to_account_id]
+                    ? $liabilities -= $amount
+                    : $assets += $amount;
+            }
+
+            return;
         }
 
-        if (! $signs->has($transaction->account_id)) {
-            return 0;
+        if (! $isLiability->has($transaction->account_id)) {
+            return;
         }
 
-        return $transaction->type === TransactionType::Income
-            ? $amount
-            : -$amount;
+        $signed = $transaction->type === TransactionType::Income ? $amount : -$amount;
+
+        $isLiability[$transaction->account_id]
+            ? $liabilities -= $signed
+            : $assets += $signed;
     }
 }
