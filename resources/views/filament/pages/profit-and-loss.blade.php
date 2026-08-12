@@ -175,6 +175,7 @@
         .pl-table { width: 100%; border-collapse: collapse; font-size: 13px; max-width: 1000px; }
         .pl-table th { text-align: left; font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--pl-faint); font-weight: 600; padding: 4px 10px; border-bottom: 1px solid var(--pl-border); }
         .pl-table td { padding: 6px 10px; }
+        .pl-table tbody tr:not(.pl-section):hover td { background: var(--pl-surface-2); }
         .pl-num { text-align: right; }
         .pl-prev { color: var(--pl-muted); }
         .pl-dot { display: inline-block; width: 9px; height: 9px; border-radius: 3px; margin-right: 8px; vertical-align: -1px; }
