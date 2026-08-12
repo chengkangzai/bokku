@@ -179,6 +179,42 @@ class SpendingAnalysisService
         ];
     }
 
+    /**
+     * Income and expense category lines for a P&L statement, comparing the month
+     * against the previous one. Categories active in either month appear, so a
+     * category that dropped to zero still shows its decline.
+     *
+     * @return array{
+     *     income: array<int, array{name: string, color: ?string, current: float, previous: float}>,
+     *     expense: array<int, array{name: string, color: ?string, current: float, previous: float}>
+     * }
+     */
+    public function statement(int $userId, CarbonImmutable $month): array
+    {
+        $build = function (TransactionType $type) use ($userId, $month): array {
+            $current = $this->categoryTotals($userId, $month, $type)->keyBy('name');
+            $previous = $this->categoryTotals($userId, $month->subMonth(), $type)->keyBy('name');
+
+            return $current->keys()
+                ->merge($previous->keys())
+                ->unique()
+                ->map(fn (string $name): array => [
+                    'name' => $name,
+                    'color' => $current->get($name)->color ?? $previous->get($name)->color ?? null,
+                    'current' => (float) ($current->get($name)->total ?? 0.0),
+                    'previous' => (float) ($previous->get($name)->total ?? 0.0),
+                ])
+                ->sortByDesc('current')
+                ->values()
+                ->all();
+        };
+
+        return [
+            'income' => $build(TransactionType::Income),
+            'expense' => $build(TransactionType::Expense),
+        ];
+    }
+
     public function hasTaggedTransactions(int $userId): bool
     {
         return Transaction::query()
