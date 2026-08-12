@@ -8,7 +8,7 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Account>
+ * @extends Factory<Account>
  */
 class AccountFactory extends Factory
 {
@@ -30,7 +30,7 @@ class AccountFactory extends Factory
             'currency' => fake()->randomElement($currencies),
             'account_number' => fake()->numerify('****####'),
             'notes' => fake()->optional()->sentence(),
-            'is_active' => fake()->boolean(90),
+            'is_active' => true,
         ];
     }
 

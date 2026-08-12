@@ -219,6 +219,37 @@ describe('AccountResource Table Functionality', function () {
             ->assertCountTableRecords(2);
     });
 
+    it('hides inactive accounts by default', function () {
+        $activeAccounts = Account::factory()->count(2)->create([
+            'user_id' => $this->user->id,
+            'is_active' => true,
+        ]);
+        $inactiveAccounts = Account::factory()->count(2)->create([
+            'user_id' => $this->user->id,
+            'is_active' => false,
+        ]);
+
+        livewire(ListAccounts::class)
+            ->assertCanSeeTableRecords($activeAccounts)
+            ->assertCanNotSeeTableRecords($inactiveAccounts)
+            ->assertCountTableRecords(2);
+    });
+
+    it('can show all accounts when active filter cleared', function () {
+        Account::factory()->count(2)->create([
+            'user_id' => $this->user->id,
+            'is_active' => true,
+        ]);
+        Account::factory()->count(2)->create([
+            'user_id' => $this->user->id,
+            'is_active' => false,
+        ]);
+
+        livewire(ListAccounts::class)
+            ->filterTable('is_active', null)
+            ->assertCountTableRecords(4);
+    });
+
     it('can sort accounts by name', function () {
         $accountA = Account::factory()->create([
             'user_id' => $this->user->id,

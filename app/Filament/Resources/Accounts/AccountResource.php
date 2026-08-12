@@ -237,7 +237,8 @@ class AccountResource extends Resource
                     ->label('Active')
                     ->placeholder('All accounts')
                     ->trueLabel('Active only')
-                    ->falseLabel('Inactive only'),
+                    ->falseLabel('Inactive only')
+                    ->default(true),
             ])
             ->recordActions([
                 EditAction::make(),
