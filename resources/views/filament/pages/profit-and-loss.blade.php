@@ -56,8 +56,8 @@
                     <thead>
                         <tr>
                             <th></th>
-                            <th class="pl-num">{{ $monthLabel }}</th>
                             <th class="pl-num pl-prev">{{ $previousLabel }}</th>
+                            <th class="pl-num">{{ $monthLabel }}</th>
                             <th class="pl-num">Δ</th>
                         </tr>
                     </thead>
@@ -66,8 +66,8 @@
                         @forelse ($statement['income'] as $row)
                             <tr>
                                 <td><span class="pl-dot" style="background: {{ $row['color'] ?? '#565d68' }}"></span>{{ $row['name'] }}</td>
-                                <td class="pl-num">{{ $fmt($row['current']) }}</td>
                                 <td class="pl-num pl-prev">{{ $fmt($row['previous']) }}</td>
+                                <td class="pl-num">{{ $fmt($row['current']) }}</td>
                                 <td class="pl-num">{!! $chip($row['current'], $row['previous'], moreIsBad: false) !!} <a href="{{ $drillUrl($row['id'], 'income') }}" target="_blank" rel="noopener" class="pl-drill" title="View transactions" aria-label="View {{ $row['name'] }} income transactions">↗</a></td>
                             </tr>
                         @empty
@@ -75,8 +75,8 @@
                         @endforelse
                         <tr class="pl-subtotal">
                             <td>Total Income</td>
-                            <td class="pl-num pl-good">{{ $fmt($totals['income']['current']) }}</td>
                             <td class="pl-num pl-prev">{{ $fmt($totals['income']['previous']) }}</td>
+                            <td class="pl-num pl-good">{{ $fmt($totals['income']['current']) }}</td>
                             <td class="pl-num">{!! $chip($totals['income']['current'], $totals['income']['previous'], moreIsBad: false) !!}</td>
                         </tr>
 
@@ -84,8 +84,8 @@
                         @forelse ($statement['expense'] as $row)
                             <tr>
                                 <td><span class="pl-dot" style="background: {{ $row['color'] ?? '#565d68' }}"></span>{{ $row['name'] }}</td>
-                                <td class="pl-num">{{ $fmt($row['current']) }}</td>
                                 <td class="pl-num pl-prev">{{ $fmt($row['previous']) }}</td>
+                                <td class="pl-num">{{ $fmt($row['current']) }}</td>
                                 <td class="pl-num">{!! $chip($row['current'], $row['previous'], moreIsBad: true) !!} <a href="{{ $drillUrl($row['id'], 'expense') }}" target="_blank" rel="noopener" class="pl-drill" title="View transactions" aria-label="View {{ $row['name'] }} expense transactions">↗</a></td>
                             </tr>
                         @empty
@@ -93,15 +93,15 @@
                         @endforelse
                         <tr class="pl-subtotal">
                             <td>Total Expenses</td>
-                            <td class="pl-num pl-bad">{{ $fmt($totals['expense']['current']) }}</td>
                             <td class="pl-num pl-prev">{{ $fmt($totals['expense']['previous']) }}</td>
+                            <td class="pl-num pl-bad">{{ $fmt($totals['expense']['current']) }}</td>
                             <td class="pl-num">{!! $chip($totals['expense']['current'], $totals['expense']['previous'], moreIsBad: true) !!}</td>
                         </tr>
 
                         <tr class="pl-net-row">
                             <td>Net {{ $net['current'] < 0 ? 'Loss' : 'Income' }}</td>
-                            <td class="pl-num {{ $net['current'] < 0 ? 'pl-bad' : 'pl-net' }}">{{ $net['current'] < 0 ? '−' : '+' }}{{ $fmt(abs($net['current'])) }}</td>
                             <td class="pl-num pl-prev">{{ $net['previous'] < 0 ? '−' : '+' }}{{ $fmt(abs($net['previous'])) }}</td>
+                            <td class="pl-num {{ $net['current'] < 0 ? 'pl-bad' : 'pl-net' }}">{{ $net['current'] < 0 ? '−' : '+' }}{{ $fmt(abs($net['current'])) }}</td>
                             <td class="pl-num">{!! $chip($net['current'], $net['previous'], moreIsBad: false) !!}</td>
                         </tr>
                     </tbody>
