@@ -105,6 +105,7 @@ class SpendingAnalysis extends Page
             'monthLabel' => $month->format('M Y'),
             'drillUrl' => function (?int $categoryId) use ($month): string {
                 $filters = [
+                    'type' => ['value' => 'expense'],
                     'date' => [
                         'from' => $month->startOfMonth()->toDateString(),
                         'until' => $month->endOfMonth()->toDateString(),
@@ -113,7 +114,6 @@ class SpendingAnalysis extends Page
 
                 if ($categoryId === null) {
                     $filters['uncategorized'] = ['isActive' => true];
-                    $filters['type'] = ['value' => 'expense'];
                 } else {
                     $filters['category_id'] = ['value' => $categoryId];
                 }
