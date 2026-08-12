@@ -152,6 +152,42 @@ describe('AccountResource CRUD Operations', function () {
             ->notes->toBe($newData->notes)
             ->is_active->toBe($newData->is_active);
     });
+
+    it('can edit a liability account with a zero initial balance', function () {
+        $account = Account::factory()->creditCard()->create([
+            'user_id' => $this->user->id,
+            'initial_balance' => 0,
+        ]);
+
+        livewire(EditAccount::class, ['record' => $account->getRouteKey()])
+            ->fillForm([
+                'name' => 'Renamed Credit Card',
+            ])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        expect($account->refresh())
+            ->name->toBe('Renamed Credit Card')
+            ->initial_balance->toBe(0.0);
+    });
+
+    it('can create an account with a positive initial balance', function () {
+        livewire(CreateAccount::class)
+            ->fillForm([
+                'name' => 'New Savings',
+                'type' => 'bank',
+                'initial_balance' => 5000,
+                'currency' => 'MYR',
+            ])
+            ->call('create')
+            ->assertHasNoFormErrors();
+
+        $this->assertDatabaseHas(Account::class, [
+            'name' => 'New Savings',
+            'user_id' => $this->user->id,
+            'initial_balance' => 500000,
+        ]);
+    });
 });
 
 describe('AccountResource Table Functionality', function () {
