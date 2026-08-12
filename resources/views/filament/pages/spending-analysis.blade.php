@@ -33,11 +33,6 @@
                 <span class="sa-month">{{ $monthLabel }}</span>
                 <button type="button" wire:click="nextMonth" @disabled(! $this->canGoToNextMonth()) aria-label="Next month">›</button>
             </div>
-            <div class="sa-toggle" role="group" aria-label="Trend period">
-                @foreach ([1 => '1M', 3 => '3M', 6 => '6M', 12 => '12M'] as $value => $label)
-                    <button type="button" wire:click="setTrendMonths({{ $value }})" aria-pressed="{{ $trendMonths === $value ? 'true' : 'false' }}">{{ $label }}</button>
-                @endforeach
-            </div>
             <div class="sa-stats">
                 <div class="sa-stat">
                     <div class="sa-stat-label">Income</div>
@@ -123,7 +118,17 @@
         @endif
 
         <section class="sa-card">
-            <h2 class="sa-h2">Cashflow Trends <span class="sa-hint">{{ $trendMonths }} months · hover for values</span></h2>
+            <h2 class="sa-h2">
+                Cashflow Trends
+                <span class="sa-hint">
+                    hover for values ·
+                    <span class="sa-toggle sa-toggle-inline" role="group" aria-label="Trend period">
+                        @foreach ([1 => '1M', 3 => '3M', 6 => '6M', 12 => '12M'] as $value => $label)
+                            <button type="button" wire:click="setTrendMonths({{ $value }})" aria-pressed="{{ $trendMonths === $value ? 'true' : 'false' }}">{{ $label }}</button>
+                        @endforeach
+                    </span>
+                </span>
+            </h2>
             <div
                 wire:key="sa-trends-{{ $month }}-{{ $trendMonths }}"
                 x-data
@@ -344,7 +349,7 @@
                             : '<span class="sa-chip ' + (pct > 0 ? 'sa-chip-bad' : 'sa-chip-good') + '">' + (pct > 0 ? '+' : '') + pct + '%</span>';
                     }
                     var drill = r.drillUrl
-                        ? ' <a href="' + r.drillUrl + '" class="sa-drill" title="View transactions" aria-label="View ' + r.name + ' transactions">&#8599;</a>'
+                        ? ' <a href="' + r.drillUrl + '" target="_blank" rel="noopener" class="sa-drill" title="View transactions" aria-label="View ' + r.name + ' transactions">&#8599;</a>'
                         : '';
                     tr.innerHTML =
                         '<td><span class="sa-dot" style="background:' + r.color + '"></span><span class="sa-name">' + r.name + '</span></td>' +
