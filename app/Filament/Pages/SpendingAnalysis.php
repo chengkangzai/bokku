@@ -46,7 +46,7 @@ class SpendingAnalysis extends Page
 
     public function setTrendMonths(int $months): void
     {
-        if (! in_array($months, [3, 6, 12], true)) {
+        if (! in_array($months, [1, 3, 6, 12], true)) {
             return;
         }
 

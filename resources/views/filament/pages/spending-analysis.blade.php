@@ -34,7 +34,7 @@
                 <button type="button" wire:click="nextMonth" @disabled(! $this->canGoToNextMonth()) aria-label="Next month">›</button>
             </div>
             <div class="sa-toggle" role="group" aria-label="Trend period">
-                @foreach ([3 => '3M', 6 => '6M', 12 => '12M'] as $value => $label)
+                @foreach ([1 => '1M', 3 => '3M', 6 => '6M', 12 => '12M'] as $value => $label)
                     <button type="button" wire:click="setTrendMonths({{ $value }})" aria-pressed="{{ $trendMonths === $value ? 'true' : 'false' }}">{{ $label }}</button>
                 @endforeach
             </div>
