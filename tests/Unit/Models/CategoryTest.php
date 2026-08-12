@@ -1,8 +1,11 @@
 <?php
 
+use App\Models\Account;
+use App\Models\Budget;
 use App\Models\Category;
 use App\Models\Transaction;
 use App\Models\User;
+use Carbon\Carbon;
 
 describe('Category Model', function () {
     it('can be created with factory', function () {
@@ -61,7 +64,7 @@ describe('Category Model', function () {
         $user = User::factory()->create();
         $category = Category::factory()->create(['user_id' => $user->id]);
 
-        $specificDate = \Carbon\Carbon::create(2023, 6, 1);
+        $specificDate = Carbon::create(2023, 6, 1);
 
         Transaction::factory()->create([
             'user_id' => $user->id,
@@ -195,7 +198,7 @@ describe('Category Model', function () {
         $user = User::factory()->create();
         $category = Category::factory()->expense()->create(['user_id' => $user->id]);
 
-        $budget = \App\Models\Budget::factory()->create([
+        $budget = Budget::factory()->create([
             'user_id' => $user->id,
             'category_id' => $category->id,
         ]);
@@ -211,7 +214,7 @@ describe('Category Budget Integration', function () {
         $user = User::factory()->create();
         $category = Category::factory()->expense()->create(['user_id' => $user->id]);
 
-        $activeBudget = \App\Models\Budget::factory()->create([
+        $activeBudget = Budget::factory()->create([
             'user_id' => $user->id,
             'category_id' => $category->id,
             'is_active' => true,
@@ -225,7 +228,7 @@ describe('Category Budget Integration', function () {
         $user = User::factory()->create();
         $category = Category::factory()->expense()->create(['user_id' => $user->id]);
 
-        \App\Models\Budget::factory()->create([
+        Budget::factory()->create([
             'user_id' => $user->id,
             'category_id' => $category->id,
             'is_active' => false,
@@ -239,7 +242,7 @@ describe('Category Budget Integration', function () {
         $user2 = User::factory()->create();
         $category = Category::factory()->expense()->create(['user_id' => $user1->id]);
 
-        \App\Models\Budget::factory()->create([
+        Budget::factory()->create([
             'user_id' => $user2->id,
             'category_id' => $category->id,
             'is_active' => true,
@@ -259,7 +262,7 @@ describe('Category Budget Integration', function () {
             'name' => 'Category Without Budget',
         ]);
 
-        \App\Models\Budget::factory()->create([
+        Budget::factory()->create([
             'user_id' => $user->id,
             'category_id' => $categoryWithBudget->id,
             'is_active' => true,
@@ -275,9 +278,9 @@ describe('Category Budget Integration', function () {
             'user_id' => $user->id,
             'name' => 'Budget Status Category',
         ]);
-        $account = \App\Models\Account::factory()->create(['user_id' => $user->id]);
+        $account = Account::factory()->create(['user_id' => $user->id]);
 
-        $budget = \App\Models\Budget::factory()->monthly()->create([
+        $budget = Budget::factory()->monthly()->create([
             'user_id' => $user->id,
             'category_id' => $category->id,
             'amount' => 500.00,
@@ -311,9 +314,9 @@ describe('Category Budget Integration', function () {
             'user_id' => $user->id,
             'name' => 'Budget Progress Category',
         ]);
-        $account = \App\Models\Account::factory()->create(['user_id' => $user->id]);
+        $account = Account::factory()->create(['user_id' => $user->id]);
 
-        \App\Models\Budget::factory()->monthly()->create([
+        Budget::factory()->monthly()->create([
             'user_id' => $user->id,
             'category_id' => $category->id,
             'amount' => 500.00,
@@ -347,9 +350,9 @@ describe('Category Budget Warnings', function () {
             'user_id' => $user->id,
             'name' => 'Groceries',
         ]);
-        $account = \App\Models\Account::factory()->create(['user_id' => $user->id]);
+        $account = Account::factory()->create(['user_id' => $user->id]);
 
-        \App\Models\Budget::factory()->monthly()->create([
+        Budget::factory()->monthly()->create([
             'user_id' => $user->id,
             'category_id' => $category->id,
             'amount' => 500.00,
@@ -379,9 +382,9 @@ describe('Category Budget Warnings', function () {
             'user_id' => $user->id,
             'name' => 'Entertainment',
         ]);
-        $account = \App\Models\Account::factory()->create(['user_id' => $user->id]);
+        $account = Account::factory()->create(['user_id' => $user->id]);
 
-        \App\Models\Budget::factory()->monthly()->create([
+        Budget::factory()->monthly()->create([
             'user_id' => $user->id,
             'category_id' => $category->id,
             'amount' => 400.00,
@@ -408,9 +411,9 @@ describe('Category Budget Warnings', function () {
     it('returns null when transaction is well within budget', function () {
         $user = User::factory()->create();
         $category = Category::factory()->expense()->create(['user_id' => $user->id]);
-        $account = \App\Models\Account::factory()->create(['user_id' => $user->id]);
+        $account = Account::factory()->create(['user_id' => $user->id]);
 
-        \App\Models\Budget::factory()->create([
+        Budget::factory()->create([
             'user_id' => $user->id,
             'category_id' => $category->id,
             'amount' => 500.00,
@@ -447,9 +450,9 @@ describe('Category Budget Warnings', function () {
             'user_id' => $user->id,
             'name' => 'Zero Amount Category',
         ]);
-        $account = \App\Models\Account::factory()->create(['user_id' => $user->id]);
+        $account = Account::factory()->create(['user_id' => $user->id]);
 
-        \App\Models\Budget::factory()->monthly()->create([
+        Budget::factory()->monthly()->create([
             'user_id' => $user->id,
             'category_id' => $category->id,
             'amount' => 400.00,
@@ -479,9 +482,9 @@ describe('Category Budget Warnings', function () {
             'user_id' => $user->id,
             'name' => 'Food',
         ]);
-        $account = \App\Models\Account::factory()->create(['user_id' => $user->id]);
+        $account = Account::factory()->create(['user_id' => $user->id]);
 
-        \App\Models\Budget::factory()->monthly()->create([
+        Budget::factory()->monthly()->create([
             'user_id' => $user->id,
             'category_id' => $category->id,
             'amount' => 300.00,
@@ -511,5 +514,38 @@ describe('Category Budget Warnings', function () {
         $warning = $category->getBudgetWarning(50.00);
 
         expect($warning)->toBeNull(); // Should be well within budget
+    });
+});
+
+describe('Default Colors', function () {
+    it('assigns the first unused palette color to a new user', function () {
+        $user = User::factory()->create();
+
+        expect(Category::nextDefaultColor($user->id))->toBe(Category::DEFAULT_COLORS[0]);
+    });
+
+    it('skips palette colors already used by the user', function () {
+        $user = User::factory()->create();
+
+        Category::factory()->create([
+            'user_id' => $user->id,
+            'color' => Category::DEFAULT_COLORS[0],
+        ]);
+
+        expect(Category::nextDefaultColor($user->id))->toBe(Category::DEFAULT_COLORS[1]);
+    });
+
+    it('cycles the palette when every color is taken', function () {
+        $user = User::factory()->create();
+
+        foreach (Category::DEFAULT_COLORS as $index => $color) {
+            Category::factory()->create([
+                'user_id' => $user->id,
+                'name' => "Category {$index}",
+                'color' => $color,
+            ]);
+        }
+
+        expect(Category::nextDefaultColor($user->id))->toBe(Category::DEFAULT_COLORS[0]);
     });
 });

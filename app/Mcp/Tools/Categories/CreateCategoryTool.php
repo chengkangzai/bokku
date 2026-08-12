@@ -41,7 +41,7 @@ class CreateCategoryTool extends Tool
             'user_id' => $request->user()->id,
             'name' => $validated['name'],
             'type' => $validated['type'],
-            'color' => $validated['color'] ?? '#808080',
+            'color' => $validated['color'] ?? Category::nextDefaultColor($request->user()->id),
             'icon' => $validated['icon'] ?? null,
             'sort_order' => $validated['sort_order'] ?? 0,
         ]);
@@ -59,7 +59,7 @@ class CreateCategoryTool extends Tool
     }
 
     /**
-     * @return array<string, \Illuminate\Contracts\JsonSchema\JsonSchema>
+     * @return array<string, JsonSchema>
      */
     public function schema(JsonSchema $schema): array
     {

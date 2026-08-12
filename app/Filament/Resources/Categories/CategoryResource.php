@@ -60,7 +60,7 @@ class CategoryResource extends Resource
 
                         ColorPicker::make('color')
                             ->required()
-                            ->default('#6b7280'),
+                            ->default(fn () => Category::nextDefaultColor(auth()->id())),
 
                         TextInput::make('sort_order')
                             ->numeric()

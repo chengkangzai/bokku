@@ -22,6 +22,14 @@ it('can render the spending analysis page', function () {
         ->assertSuccessful();
 });
 
+it('renders each widget only once', function () {
+    $html = $this->get(SpendingAnalysis::getUrl())->getContent();
+
+    expect(substr_count($html, 'wire:name="App\Filament\Widgets\TopExpensesWidget"'))->toBe(1)
+        ->and(substr_count($html, 'wire:name="App\Filament\Widgets\IncomeSourcesWidget"'))->toBe(1)
+        ->and(substr_count($html, 'wire:name="App\Filament\Widgets\SpendingTrendsChart"'))->toBe(1);
+});
+
 it('has correct navigation properties', function () {
     $reflectionClass = new ReflectionClass(SpendingAnalysis::class);
 
