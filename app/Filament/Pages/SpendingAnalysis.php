@@ -2,14 +2,9 @@
 
 namespace App\Filament\Pages;
 
-use App\Filament\Widgets\IncomeSourcesWidget;
-use App\Filament\Widgets\SpendingByCategoryChart;
-use App\Filament\Widgets\SpendingByCategoryTable;
-use App\Filament\Widgets\SpendingByTagsChart;
-use App\Filament\Widgets\SpendingByTagsTable;
-use App\Filament\Widgets\SpendingTrendsChart;
-use App\Filament\Widgets\TopExpensesWidget;
-use App\Models\Transaction;
+use App\Filament\Resources\Transactions\TransactionResource;
+use App\Services\SpendingAnalysisService;
+use Carbon\CarbonImmutable;
 use Filament\Pages\Page;
 
 class SpendingAnalysis extends Page
@@ -24,38 +19,99 @@ class SpendingAnalysis extends Page
 
     protected string $view = 'filament.pages.spending-analysis';
 
-    protected function getHeaderWidgets(): array
-    {
-        $widgets = [
-            TopExpensesWidget::class,
-            IncomeSourcesWidget::class,
-            SpendingByCategoryChart::class,
-            SpendingByCategoryTable::class,
-        ];
+    public string $month = '';
 
-        if ($this->userHasTags()) {
-            $widgets[] = SpendingByTagsChart::class;
-            $widgets[] = SpendingByTagsTable::class;
+    public int $trendMonths = 6;
+
+    public string $groupBy = 'category';
+
+    public function mount(): void
+    {
+        $this->month = now()->format('Y-m');
+    }
+
+    public function previousMonth(): void
+    {
+        $this->month = $this->monthDate()->subMonth()->format('Y-m');
+    }
+
+    public function nextMonth(): void
+    {
+        if (! $this->canGoToNextMonth()) {
+            return;
         }
 
-        $widgets[] = SpendingTrendsChart::class;
-
-        return $widgets;
+        $this->month = $this->monthDate()->addMonth()->format('Y-m');
     }
 
-    protected function userHasTags(): bool
+    public function setTrendMonths(int $months): void
     {
-        return Transaction::query()
-            ->where('user_id', auth()->id())
-            ->has('tags')
-            ->exists();
+        if (! in_array($months, [3, 6, 12], true)) {
+            return;
+        }
+
+        $this->trendMonths = $months;
     }
 
-    public function getHeaderWidgetsColumns(): int|array
+    public function setGroupBy(string $groupBy): void
     {
+        if (! in_array($groupBy, ['category', 'tag'], true)) {
+            return;
+        }
+
+        $this->groupBy = $groupBy;
+    }
+
+    public function canGoToNextMonth(): bool
+    {
+        return $this->monthDate()->startOfMonth()->lt(CarbonImmutable::now()->startOfMonth());
+    }
+
+    protected function monthDate(): CarbonImmutable
+    {
+        try {
+            return CarbonImmutable::createFromFormat('Y-m', $this->month)->startOfMonth();
+        } catch (\Throwable) {
+            return CarbonImmutable::now()->startOfMonth();
+        }
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    protected function getViewData(): array
+    {
+        $service = app(SpendingAnalysisService::class);
+        $userId = auth()->id();
+        $month = $this->monthDate();
+
+        $hasTags = $service->hasTaggedTransactions($userId);
+
+        if (! $hasTags && $this->groupBy === 'tag') {
+            $this->groupBy = 'category';
+        }
+
+        $breakdown = $this->groupBy === 'tag'
+            ? $service->tagBreakdown($userId, $month)
+            : $service->breakdown($userId, $month);
+
         return [
-            'md' => 2,
-            'xl' => 2,
+            'summary' => $service->summary($userId, $month),
+            'breakdown' => $breakdown,
+            'movers' => $service->topMovers($userId, $month),
+            'incomeSources' => $service->incomeSources($userId, $month),
+            'trends' => $service->trends($userId, $month, $this->trendMonths),
+            'hasTags' => $hasTags,
+            'monthLabel' => $month->format('M Y'),
+            'drillUrl' => fn (?int $categoryId): ?string => $categoryId === null ? null : TransactionResource::getUrl().'?'.http_build_query([
+                'filters' => [
+                    'category_id' => ['value' => $categoryId],
+                    'date' => [
+                        'from' => $month->startOfMonth()->toDateString(),
+                        'until' => $month->endOfMonth()->toDateString(),
+                    ],
+                ],
+            ]),
         ];
     }
 }

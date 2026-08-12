@@ -39,6 +39,7 @@ use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\SpatieMediaLibraryImageColumn;
 use Filament\Tables\Columns\SpatieTagsColumn;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
@@ -443,6 +444,15 @@ class TransactionResource extends Resource
                         'name',
                         fn (Builder $query) => $query->where('user_id', auth()->id())
                     ),
+
+                Filter::make('date')
+                    ->schema([
+                        DatePicker::make('from'),
+                        DatePicker::make('until'),
+                    ])
+                    ->query(fn (Builder $query, array $data): Builder => $query
+                        ->when($data['from'] ?? null, fn (Builder $query, string $date) => $query->whereDate('date', '>=', $date))
+                        ->when($data['until'] ?? null, fn (Builder $query, string $date) => $query->whereDate('date', '<=', $date))),
 
                 TernaryFilter::make('is_reconciled')
                     ->label('Reconciled')

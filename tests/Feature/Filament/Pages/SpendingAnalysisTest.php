@@ -22,33 +22,80 @@ it('can render the spending analysis page', function () {
         ->assertSuccessful();
 });
 
-it('hides tag widgets when the user has no tagged transactions', function () {
+it('renders no filament widgets on the page', function () {
     $html = $this->get(SpendingAnalysis::getUrl())->getContent();
 
-    expect(substr_count($html, 'wire:name="App\Filament\Widgets\SpendingByTagsChart"'))->toBe(0)
-        ->and(substr_count($html, 'wire:name="App\Filament\Widgets\SpendingByTagsTable"'))->toBe(0);
+    expect(substr_count($html, 'wire:name="App\Filament\Widgets'))->toBe(0);
 });
 
-it('shows tag widgets when the user has tagged transactions', function () {
-    $category = Category::factory()->create(['user_id' => $this->user->id, 'type' => 'expense']);
+it('defaults to the current month and navigates with the pager', function () {
+    livewire(SpendingAnalysis::class)
+        ->assertSet('month', now()->format('Y-m'))
+        ->call('previousMonth')
+        ->assertSet('month', now()->subMonth()->format('Y-m'))
+        ->call('nextMonth')
+        ->assertSet('month', now()->format('Y-m'))
+        ->call('nextMonth')
+        ->assertSet('month', now()->format('Y-m'));
+});
+
+it('shows the month summary with figures', function () {
+    $category = Category::factory()->expense()->create(['user_id' => $this->user->id]);
+
+    Transaction::factory()->income()->withAmount(5000.00)->create([
+        'user_id' => $this->user->id,
+        'date' => now()->startOfMonth(),
+    ]);
+    Transaction::factory()->expense()->withAmount(1234.56)->create([
+        'user_id' => $this->user->id,
+        'category_id' => $category->id,
+        'date' => now()->startOfMonth(),
+    ]);
+
+    livewire(SpendingAnalysis::class)
+        ->assertSee('MYR 5,000.00')
+        ->assertSee('MYR 1,234.56')
+        ->assertSee($category->name);
+});
+
+it('validates the trend months and group by setters', function () {
+    $category = Category::factory()->expense()->create(['user_id' => $this->user->id]);
     $transaction = Transaction::factory()->expense()->create([
         'user_id' => $this->user->id,
         'category_id' => $category->id,
     ]);
     $transaction->attachTag('holiday', 'user_'.$this->user->id);
 
-    $html = $this->get(SpendingAnalysis::getUrl())->getContent();
-
-    expect(substr_count($html, 'wire:name="App\Filament\Widgets\SpendingByTagsChart"'))->toBe(1)
-        ->and(substr_count($html, 'wire:name="App\Filament\Widgets\SpendingByTagsTable"'))->toBe(1);
+    livewire(SpendingAnalysis::class)
+        ->call('setTrendMonths', 12)
+        ->assertSet('trendMonths', 12)
+        ->call('setTrendMonths', 7)
+        ->assertSet('trendMonths', 12)
+        ->call('setGroupBy', 'tag')
+        ->assertSet('groupBy', 'tag')
+        ->call('setGroupBy', 'bogus')
+        ->assertSet('groupBy', 'tag');
 });
 
-it('renders each widget only once', function () {
-    $html = $this->get(SpendingAnalysis::getUrl())->getContent();
+it('falls back to category grouping when the user has no tags', function () {
+    livewire(SpendingAnalysis::class)
+        ->call('setGroupBy', 'tag')
+        ->assertSet('groupBy', 'category');
+});
 
-    expect(substr_count($html, 'wire:name="App\Filament\Widgets\TopExpensesWidget"'))->toBe(1)
-        ->and(substr_count($html, 'wire:name="App\Filament\Widgets\IncomeSourcesWidget"'))->toBe(1)
-        ->and(substr_count($html, 'wire:name="App\Filament\Widgets\SpendingTrendsChart"'))->toBe(1);
+it('shows the group-by toggle only when tagged transactions exist', function () {
+    livewire(SpendingAnalysis::class)
+        ->assertDontSeeHtml('setGroupBy');
+
+    $category = Category::factory()->expense()->create(['user_id' => $this->user->id]);
+    $transaction = Transaction::factory()->expense()->create([
+        'user_id' => $this->user->id,
+        'category_id' => $category->id,
+    ]);
+    $transaction->attachTag('holiday', 'user_'.$this->user->id);
+
+    livewire(SpendingAnalysis::class)
+        ->assertSeeHtml('setGroupBy');
 });
 
 it('has correct navigation properties', function () {
