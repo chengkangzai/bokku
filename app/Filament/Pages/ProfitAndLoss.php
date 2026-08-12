@@ -64,7 +64,7 @@ class ProfitAndLoss extends Page
     protected function getViewData(): array
     {
         $month = $this->monthDate();
-        $columns = 3;
+        $columns = 4;
         $statement = app(SpendingAnalysisService::class)->statement(auth()->id(), $month, $columns);
 
         if ($this->excludeCompany) {

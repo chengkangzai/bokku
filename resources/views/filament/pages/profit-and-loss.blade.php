@@ -63,7 +63,7 @@
                         <tr>
                             <th></th>
                             @foreach ($monthLabels as $index => $label)
-                                <th class="pl-num {{ $index === $lastIndex ? '' : 'pl-prev' }}">{{ $label }}</th>
+                                <th class="pl-num pl-c{{ $index }} {{ $index === $lastIndex ? '' : 'pl-prev' }}">{{ $label }}</th>
                             @endforeach
                             <th class="pl-num">Δ</th>
                         </tr>
@@ -74,7 +74,7 @@
                             <tr>
                                 <td><span class="pl-dot" style="background: {{ $row['color'] ?? '#565d68' }}"></span>{{ $row['name'] }}</td>
                                 @foreach ($row['values'] as $index => $value)
-                                    <td class="pl-num {{ $index === $lastIndex ? '' : 'pl-prev' }}">{{ $fmt($value) }}</td>
+                                    <td class="pl-num pl-c{{ $index }} {{ $index === $lastIndex ? '' : 'pl-prev' }}">{{ $fmt($value) }}</td>
                                 @endforeach
                                 <td class="pl-num">{!! $chip($row['values'], moreIsBad: false) !!} <a href="{{ $drillUrl($row['id'], 'income') }}" target="_blank" rel="noopener" class="pl-drill" title="View transactions" aria-label="View {{ $row['name'] }} income transactions">↗</a></td>
                             </tr>
@@ -84,7 +84,7 @@
                         <tr class="pl-subtotal">
                             <td>Total Income</td>
                             @foreach ($totals['income'] as $index => $value)
-                                <td class="pl-num {{ $index === $lastIndex ? 'pl-good' : 'pl-prev' }}">{{ $fmt($value) }}</td>
+                                <td class="pl-num pl-c{{ $index }} {{ $index === $lastIndex ? 'pl-good' : 'pl-prev' }}">{{ $fmt($value) }}</td>
                             @endforeach
                             <td class="pl-num">{!! $chip($totals['income'], moreIsBad: false) !!}</td>
                         </tr>
@@ -94,7 +94,7 @@
                             <tr>
                                 <td><span class="pl-dot" style="background: {{ $row['color'] ?? '#565d68' }}"></span>{{ $row['name'] }}</td>
                                 @foreach ($row['values'] as $index => $value)
-                                    <td class="pl-num {{ $index === $lastIndex ? '' : 'pl-prev' }}">{{ $fmt($value) }}</td>
+                                    <td class="pl-num pl-c{{ $index }} {{ $index === $lastIndex ? '' : 'pl-prev' }}">{{ $fmt($value) }}</td>
                                 @endforeach
                                 <td class="pl-num">{!! $chip($row['values'], moreIsBad: true) !!} <a href="{{ $drillUrl($row['id'], 'expense') }}" target="_blank" rel="noopener" class="pl-drill" title="View transactions" aria-label="View {{ $row['name'] }} expense transactions">↗</a></td>
                             </tr>
@@ -104,7 +104,7 @@
                         <tr class="pl-subtotal">
                             <td>Total Expenses</td>
                             @foreach ($totals['expense'] as $index => $value)
-                                <td class="pl-num {{ $index === $lastIndex ? 'pl-bad' : 'pl-prev' }}">{{ $fmt($value) }}</td>
+                                <td class="pl-num pl-c{{ $index }} {{ $index === $lastIndex ? 'pl-bad' : 'pl-prev' }}">{{ $fmt($value) }}</td>
                             @endforeach
                             <td class="pl-num">{!! $chip($totals['expense'], moreIsBad: true) !!}</td>
                         </tr>
@@ -112,7 +112,7 @@
                         <tr class="pl-net-row">
                             <td>Net {{ $currentNet < 0 ? 'Loss' : 'Income' }}</td>
                             @foreach ($net as $index => $value)
-                                <td class="pl-num {{ $index === $lastIndex ? ($value < 0 ? 'pl-bad' : 'pl-net') : 'pl-prev' }}">{{ $value < 0 ? '−' : '+' }}{{ $fmt(abs($value)) }}</td>
+                                <td class="pl-num pl-c{{ $index }} {{ $index === $lastIndex ? ($value < 0 ? 'pl-bad' : 'pl-net') : 'pl-prev' }}">{{ $value < 0 ? '−' : '+' }}{{ $fmt(abs($value)) }}</td>
                             @endforeach
                             <td class="pl-num">{!! $chip($net, moreIsBad: false) !!}</td>
                         </tr>
@@ -172,7 +172,7 @@
         .pl-bad { color: var(--pl-bad); }
         .pl-net { color: var(--pl-net); }
         .pl-scroll-x { overflow-x: auto; }
-        .pl-table { width: 100%; border-collapse: collapse; font-size: 13px; max-width: 860px; }
+        .pl-table { width: 100%; border-collapse: collapse; font-size: 13px; max-width: 1000px; }
         .pl-table th { text-align: left; font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--pl-faint); font-weight: 600; padding: 4px 10px; border-bottom: 1px solid var(--pl-border); }
         .pl-table td { padding: 6px 10px; }
         .pl-num { text-align: right; }
@@ -189,6 +189,9 @@
         .pl-chip-neutral { background: var(--pl-surface-2); color: var(--pl-muted); }
         .pl-drill { color: var(--pl-faint); text-decoration: none; font-size: 12px; padding: 2px 5px; border-radius: 4px; }
         .pl-drill:hover { color: var(--pl-accent); background: var(--pl-surface-2); }
+        @media (max-width: 1400px) { .pl-c0 { display: none; } }
+        @media (max-width: 1100px) { .pl-c1 { display: none; } }
+        @media (max-width: 700px) { .pl-c2 { display: none; } }
     </style>
     @endassets
 </x-filament-panels::page>
