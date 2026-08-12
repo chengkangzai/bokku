@@ -11,6 +11,7 @@ use Filament\Forms\Components\TextInput;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\IconColumn;
+use Filament\Tables\Columns\Summarizers\Sum;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
@@ -56,6 +57,7 @@ class TransactionsRelationManager extends RelationManager
                 TextColumn::make('amount')
                     ->money('myr')
                     ->sortable()
+                    ->summarize(Sum::make()->money('MYR', divideBy: 100))
                     ->color(fn (Transaction $record) => $record->type->getColor())
                     ->formatStateUsing(function (Transaction $record) {
                         $amount = number_format($record->amount, 2);

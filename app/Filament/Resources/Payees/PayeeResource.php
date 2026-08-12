@@ -19,6 +19,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\IconColumn;
+use Filament\Tables\Columns\Summarizers\Sum;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TernaryFilter;
@@ -99,6 +100,7 @@ class PayeeResource extends Resource
                 TextColumn::make('total_amount')
                     ->label('Total Spent')
                     ->money('MYR')
+                    ->summarize(Sum::make()->money('MYR', divideBy: 100))
                     ->sortable(),
 
                 IconColumn::make('is_active')

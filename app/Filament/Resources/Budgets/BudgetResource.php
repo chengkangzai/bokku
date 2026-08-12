@@ -19,6 +19,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\IconColumn;
+use Filament\Tables\Columns\Summarizers\Sum;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TernaryFilter;
@@ -108,6 +109,7 @@ class BudgetResource extends Resource
                 TextColumn::make('amount')
                     ->label('Budget')
                     ->formatStateUsing(fn ($state) => 'RM '.number_format($state, 2))
+                    ->summarize(Sum::make()->money('MYR', divideBy: 100))
                     ->sortable(),
 
                 TextColumn::make('spent')

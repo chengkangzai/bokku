@@ -193,6 +193,14 @@ describe('TransactionResource Table Functionality', function () {
         expect($transaction->refresh()->category_id)->toBe($this->expenseCategory->id);
     });
 
+    it('shows a sum of the amount column', function () {
+        Transaction::factory()->expense()->withAmount(111.11)->create(['user_id' => $this->user->id]);
+        Transaction::factory()->expense()->withAmount(222.22)->create(['user_id' => $this->user->id]);
+
+        livewire(ListTransactions::class)
+            ->assertSee('333.33');
+    });
+
     it('can search transactions by description', function () {
         $searchableTransaction = Transaction::factory()->create([
             'user_id' => $this->user->id,

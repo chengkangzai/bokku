@@ -39,6 +39,7 @@ use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\SelectColumn;
 use Filament\Tables\Columns\SpatieMediaLibraryImageColumn;
 use Filament\Tables\Columns\SpatieTagsColumn;
+use Filament\Tables\Columns\Summarizers\Sum;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
@@ -367,7 +368,8 @@ class TransactionResource extends Resource
                 TextColumn::make('amount')
                     ->money('myr')
                     ->sortable()
-                    ->color(fn (Transaction $record) => $record->type->getColor()),
+                    ->color(fn (Transaction $record) => $record->type->getColor())
+                    ->summarize(Sum::make()->money('MYR', divideBy: 100)),
 
                 TextColumn::make('account.name')
                     ->label('Account')
