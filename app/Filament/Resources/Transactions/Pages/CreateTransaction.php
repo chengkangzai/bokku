@@ -4,10 +4,16 @@ namespace App\Filament\Resources\Transactions\Pages;
 
 use App\Filament\Resources\Transactions\TransactionResource;
 use Filament\Resources\Pages\CreateRecord;
+use Filament\Support\Enums\Width;
 
 class CreateTransaction extends CreateRecord
 {
     protected static string $resource = TransactionResource::class;
+
+    public function getMaxContentWidth(): Width
+    {
+        return Width::Full;
+    }
 
     protected function mutateFormDataBeforeCreate(array $data): array
     {
