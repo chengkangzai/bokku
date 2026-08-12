@@ -180,32 +180,42 @@ class SpendingAnalysisService
     }
 
     /**
-     * Income and expense category lines for a P&L statement, comparing the month
-     * against the previous one. Categories active in either month appear, so a
-     * category that dropped to zero still shows its decline.
+     * Income and expense category lines for a P&L statement covering the given
+     * month and the ($months - 1) preceding ones, oldest column first. Categories
+     * active in any covered month appear, so a category that dropped to zero
+     * still shows its decline.
      *
      * @return array{
-     *     income: array<int, array{name: string, color: ?string, current: float, previous: float}>,
-     *     expense: array<int, array{name: string, color: ?string, current: float, previous: float}>
+     *     income: array<int, array{id: ?int, name: string, color: ?string, values: array<int, float>}>,
+     *     expense: array<int, array{id: ?int, name: string, color: ?string, values: array<int, float>}>
      * }
      */
-    public function statement(int $userId, CarbonImmutable $month): array
+    public function statement(int $userId, CarbonImmutable $month, int $months = 2): array
     {
-        $build = function (TransactionType $type) use ($userId, $month): array {
-            $current = $this->categoryTotals($userId, $month, $type)->keyBy('name');
-            $previous = $this->categoryTotals($userId, $month->subMonth(), $type)->keyBy('name');
+        $build = function (TransactionType $type) use ($userId, $month, $months): array {
+            $monthly = [];
 
-            return $current->keys()
-                ->merge($previous->keys())
+            for ($i = $months - 1; $i >= 0; $i--) {
+                $monthly[] = $this->categoryTotals($userId, $month->subMonths($i), $type)->keyBy('name');
+            }
+
+            return collect($monthly)
+                ->flatMap(fn (Collection $totals) => $totals->keys())
                 ->unique()
-                ->map(fn (string $name): array => [
-                    'id' => $current->get($name)->id ?? $previous->get($name)->id ?? null,
-                    'name' => $name,
-                    'color' => $current->get($name)->color ?? $previous->get($name)->color ?? null,
-                    'current' => (float) ($current->get($name)->total ?? 0.0),
-                    'previous' => (float) ($previous->get($name)->total ?? 0.0),
-                ])
-                ->sortByDesc('current')
+                ->map(function (string $name) use ($monthly): array {
+                    $latest = collect($monthly)->reverse()->first(fn (Collection $totals) => $totals->has($name))->get($name);
+
+                    return [
+                        'id' => $latest->id,
+                        'name' => $name,
+                        'color' => $latest->color,
+                        'values' => array_map(
+                            fn (Collection $totals): float => (float) ($totals->get($name)->total ?? 0.0),
+                            $monthly
+                        ),
+                    ];
+                })
+                ->sortByDesc(fn (array $row): float => end($row['values']))
                 ->values()
                 ->all();
         };

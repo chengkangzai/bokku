@@ -64,7 +64,8 @@ class ProfitAndLoss extends Page
     protected function getViewData(): array
     {
         $month = $this->monthDate();
-        $statement = app(SpendingAnalysisService::class)->statement(auth()->id(), $month);
+        $columns = 3;
+        $statement = app(SpendingAnalysisService::class)->statement(auth()->id(), $month, $columns);
 
         if ($this->excludeCompany) {
             foreach (['income', 'expense'] as $section) {
@@ -78,16 +79,19 @@ class ProfitAndLoss extends Page
         $totals = [];
 
         foreach (['income', 'expense'] as $section) {
-            $totals[$section] = [
-                'current' => round(array_sum(array_column($statement[$section], 'current')), 2),
-                'previous' => round(array_sum(array_column($statement[$section], 'previous')), 2),
-            ];
+            $totals[$section] = array_map(
+                fn (int $index): float => round(array_sum(array_map(
+                    fn (array $row): float => $row['values'][$index],
+                    $statement[$section]
+                )), 2),
+                range(0, $columns - 1)
+            );
         }
 
-        $net = [
-            'current' => round($totals['income']['current'] - $totals['expense']['current'], 2),
-            'previous' => round($totals['income']['previous'] - $totals['expense']['previous'], 2),
-        ];
+        $net = array_map(
+            fn (int $index): float => round($totals['income'][$index] - $totals['expense'][$index], 2),
+            range(0, $columns - 1)
+        );
 
         return [
             'drillUrl' => function (?int $categoryId, string $type) use ($month): string {
@@ -110,11 +114,14 @@ class ProfitAndLoss extends Page
             'statement' => $statement,
             'totals' => $totals,
             'net' => $net,
-            'savingsRate' => $totals['income']['current'] > 0
-                ? round($net['current'] / $totals['income']['current'] * 100, 1)
+            'savingsRate' => end($totals['income']) > 0
+                ? round(end($net) / end($totals['income']) * 100, 1)
                 : null,
             'monthLabel' => $month->format('M Y'),
-            'previousLabel' => $month->subMonth()->format('M Y'),
+            'monthLabels' => array_map(
+                fn (int $offset): string => $month->subMonths($offset)->format('M Y'),
+                range($columns - 1, 0)
+            ),
         ];
     }
 }

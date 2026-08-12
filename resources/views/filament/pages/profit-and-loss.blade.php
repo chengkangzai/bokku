@@ -1,7 +1,9 @@
 <x-filament-panels::page>
     @php
         $fmt = fn (float $n): string => number_format($n, 2);
-        $chip = function (float $current, float $previous, bool $moreIsBad): string {
+        $chip = function (array $values, bool $moreIsBad): string {
+            $current = end($values);
+            $previous = $values[count($values) - 2] ?? 0.0;
             if ($previous == 0.0) {
                 return $current == 0.0
                     ? '<span class="pl-chip pl-chip-neutral">—</span>'
@@ -15,6 +17,10 @@
 
             return '<span class="pl-chip '.($bad ? 'pl-chip-bad' : 'pl-chip-good').'">'.($pct > 0 ? '+' : '').$pct.'%</span>';
         };
+        $lastIndex = count($monthLabels) - 1;
+        $currentIncome = end($totals['income']);
+        $currentExpense = end($totals['expense']);
+        $currentNet = end($net);
     @endphp
 
     <div class="pl-root">
@@ -31,15 +37,15 @@
             <div class="pl-stats">
                 <div class="pl-stat">
                     <div class="pl-stat-label">Income</div>
-                    <div class="pl-stat-value pl-good">MYR {{ $fmt($totals['income']['current']) }}</div>
+                    <div class="pl-stat-value pl-good">MYR {{ $fmt($currentIncome) }}</div>
                 </div>
                 <div class="pl-stat">
                     <div class="pl-stat-label">Expenses</div>
-                    <div class="pl-stat-value pl-bad">MYR {{ $fmt($totals['expense']['current']) }}</div>
+                    <div class="pl-stat-value pl-bad">MYR {{ $fmt($currentExpense) }}</div>
                 </div>
                 <div class="pl-stat">
                     <div class="pl-stat-label">Net</div>
-                    <div class="pl-stat-value {{ $net['current'] < 0 ? 'pl-bad' : 'pl-net' }}">{{ $net['current'] < 0 ? '−' : '+' }}MYR {{ $fmt(abs($net['current'])) }}</div>
+                    <div class="pl-stat-value {{ $currentNet < 0 ? 'pl-bad' : 'pl-net' }}">{{ $currentNet < 0 ? '−' : '+' }}MYR {{ $fmt(abs($currentNet)) }}</div>
                 </div>
                 @if ($savingsRate !== null)
                     <div class="pl-stat">
@@ -56,58 +62,64 @@
                     <thead>
                         <tr>
                             <th></th>
-                            <th class="pl-num pl-prev">{{ $previousLabel }}</th>
-                            <th class="pl-num">{{ $monthLabel }}</th>
+                            @foreach ($monthLabels as $index => $label)
+                                <th class="pl-num {{ $index === $lastIndex ? '' : 'pl-prev' }}">{{ $label }}</th>
+                            @endforeach
                             <th class="pl-num">Δ</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr class="pl-section"><td colspan="4">Income</td></tr>
+                        <tr class="pl-section"><td colspan="{{ $lastIndex + 3 }}">Income</td></tr>
                         @forelse ($statement['income'] as $row)
                             <tr>
                                 <td><span class="pl-dot" style="background: {{ $row['color'] ?? '#565d68' }}"></span>{{ $row['name'] }}</td>
-                                <td class="pl-num pl-prev">{{ $fmt($row['previous']) }}</td>
-                                <td class="pl-num">{{ $fmt($row['current']) }}</td>
-                                <td class="pl-num">{!! $chip($row['current'], $row['previous'], moreIsBad: false) !!} <a href="{{ $drillUrl($row['id'], 'income') }}" target="_blank" rel="noopener" class="pl-drill" title="View transactions" aria-label="View {{ $row['name'] }} income transactions">↗</a></td>
+                                @foreach ($row['values'] as $index => $value)
+                                    <td class="pl-num {{ $index === $lastIndex ? '' : 'pl-prev' }}">{{ $fmt($value) }}</td>
+                                @endforeach
+                                <td class="pl-num">{!! $chip($row['values'], moreIsBad: false) !!} <a href="{{ $drillUrl($row['id'], 'income') }}" target="_blank" rel="noopener" class="pl-drill" title="View transactions" aria-label="View {{ $row['name'] }} income transactions">↗</a></td>
                             </tr>
                         @empty
-                            <tr><td colspan="4" class="pl-empty">No income recorded.</td></tr>
+                            <tr><td colspan="{{ $lastIndex + 3 }}" class="pl-empty">No income recorded.</td></tr>
                         @endforelse
                         <tr class="pl-subtotal">
                             <td>Total Income</td>
-                            <td class="pl-num pl-prev">{{ $fmt($totals['income']['previous']) }}</td>
-                            <td class="pl-num pl-good">{{ $fmt($totals['income']['current']) }}</td>
-                            <td class="pl-num">{!! $chip($totals['income']['current'], $totals['income']['previous'], moreIsBad: false) !!}</td>
+                            @foreach ($totals['income'] as $index => $value)
+                                <td class="pl-num {{ $index === $lastIndex ? 'pl-good' : 'pl-prev' }}">{{ $fmt($value) }}</td>
+                            @endforeach
+                            <td class="pl-num">{!! $chip($totals['income'], moreIsBad: false) !!}</td>
                         </tr>
 
-                        <tr class="pl-section"><td colspan="4">Expenses</td></tr>
+                        <tr class="pl-section"><td colspan="{{ $lastIndex + 3 }}">Expenses</td></tr>
                         @forelse ($statement['expense'] as $row)
                             <tr>
                                 <td><span class="pl-dot" style="background: {{ $row['color'] ?? '#565d68' }}"></span>{{ $row['name'] }}</td>
-                                <td class="pl-num pl-prev">{{ $fmt($row['previous']) }}</td>
-                                <td class="pl-num">{{ $fmt($row['current']) }}</td>
-                                <td class="pl-num">{!! $chip($row['current'], $row['previous'], moreIsBad: true) !!} <a href="{{ $drillUrl($row['id'], 'expense') }}" target="_blank" rel="noopener" class="pl-drill" title="View transactions" aria-label="View {{ $row['name'] }} expense transactions">↗</a></td>
+                                @foreach ($row['values'] as $index => $value)
+                                    <td class="pl-num {{ $index === $lastIndex ? '' : 'pl-prev' }}">{{ $fmt($value) }}</td>
+                                @endforeach
+                                <td class="pl-num">{!! $chip($row['values'], moreIsBad: true) !!} <a href="{{ $drillUrl($row['id'], 'expense') }}" target="_blank" rel="noopener" class="pl-drill" title="View transactions" aria-label="View {{ $row['name'] }} expense transactions">↗</a></td>
                             </tr>
                         @empty
-                            <tr><td colspan="4" class="pl-empty">No expenses recorded.</td></tr>
+                            <tr><td colspan="{{ $lastIndex + 3 }}" class="pl-empty">No expenses recorded.</td></tr>
                         @endforelse
                         <tr class="pl-subtotal">
                             <td>Total Expenses</td>
-                            <td class="pl-num pl-prev">{{ $fmt($totals['expense']['previous']) }}</td>
-                            <td class="pl-num pl-bad">{{ $fmt($totals['expense']['current']) }}</td>
-                            <td class="pl-num">{!! $chip($totals['expense']['current'], $totals['expense']['previous'], moreIsBad: true) !!}</td>
+                            @foreach ($totals['expense'] as $index => $value)
+                                <td class="pl-num {{ $index === $lastIndex ? 'pl-bad' : 'pl-prev' }}">{{ $fmt($value) }}</td>
+                            @endforeach
+                            <td class="pl-num">{!! $chip($totals['expense'], moreIsBad: true) !!}</td>
                         </tr>
 
                         <tr class="pl-net-row">
-                            <td>Net {{ $net['current'] < 0 ? 'Loss' : 'Income' }}</td>
-                            <td class="pl-num pl-prev">{{ $net['previous'] < 0 ? '−' : '+' }}{{ $fmt(abs($net['previous'])) }}</td>
-                            <td class="pl-num {{ $net['current'] < 0 ? 'pl-bad' : 'pl-net' }}">{{ $net['current'] < 0 ? '−' : '+' }}{{ $fmt(abs($net['current'])) }}</td>
-                            <td class="pl-num">{!! $chip($net['current'], $net['previous'], moreIsBad: false) !!}</td>
+                            <td>Net {{ $currentNet < 0 ? 'Loss' : 'Income' }}</td>
+                            @foreach ($net as $index => $value)
+                                <td class="pl-num {{ $index === $lastIndex ? ($value < 0 ? 'pl-bad' : 'pl-net') : 'pl-prev' }}">{{ $value < 0 ? '−' : '+' }}{{ $fmt(abs($value)) }}</td>
+                            @endforeach
+                            <td class="pl-num">{!! $chip($net, moreIsBad: false) !!}</td>
                         </tr>
                     </tbody>
                 </table>
             </div>
-            <p class="pl-note">All figures in MYR. Transfers (loan repayments, savings moves, relayed money) are not income or expenses and never appear here.</p>
+            <p class="pl-note">All figures in MYR. Δ compares the two most recent months. Transfers (loan repayments, savings moves, relayed money) are not income or expenses and never appear here.</p>
         </section>
     </div>
 
@@ -160,7 +172,7 @@
         .pl-bad { color: var(--pl-bad); }
         .pl-net { color: var(--pl-net); }
         .pl-scroll-x { overflow-x: auto; }
-        .pl-table { width: 100%; border-collapse: collapse; font-size: 13px; max-width: 720px; }
+        .pl-table { width: 100%; border-collapse: collapse; font-size: 13px; max-width: 860px; }
         .pl-table th { text-align: left; font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--pl-faint); font-weight: 600; padding: 4px 10px; border-bottom: 1px solid var(--pl-border); }
         .pl-table td { padding: 6px 10px; }
         .pl-num { text-align: right; }
