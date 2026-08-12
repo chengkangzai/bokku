@@ -68,7 +68,7 @@
                                 <td><span class="pl-dot" style="background: {{ $row['color'] ?? '#565d68' }}"></span>{{ $row['name'] }}</td>
                                 <td class="pl-num">{{ $fmt($row['current']) }}</td>
                                 <td class="pl-num pl-prev">{{ $fmt($row['previous']) }}</td>
-                                <td class="pl-num">{!! $chip($row['current'], $row['previous'], moreIsBad: false) !!}</td>
+                                <td class="pl-num">{!! $chip($row['current'], $row['previous'], moreIsBad: false) !!} <a href="{{ $drillUrl($row['id'], 'income') }}" target="_blank" rel="noopener" class="pl-drill" title="View transactions" aria-label="View {{ $row['name'] }} income transactions">↗</a></td>
                             </tr>
                         @empty
                             <tr><td colspan="4" class="pl-empty">No income recorded.</td></tr>
@@ -86,7 +86,7 @@
                                 <td><span class="pl-dot" style="background: {{ $row['color'] ?? '#565d68' }}"></span>{{ $row['name'] }}</td>
                                 <td class="pl-num">{{ $fmt($row['current']) }}</td>
                                 <td class="pl-num pl-prev">{{ $fmt($row['previous']) }}</td>
-                                <td class="pl-num">{!! $chip($row['current'], $row['previous'], moreIsBad: true) !!}</td>
+                                <td class="pl-num">{!! $chip($row['current'], $row['previous'], moreIsBad: true) !!} <a href="{{ $drillUrl($row['id'], 'expense') }}" target="_blank" rel="noopener" class="pl-drill" title="View transactions" aria-label="View {{ $row['name'] }} expense transactions">↗</a></td>
                             </tr>
                         @empty
                             <tr><td colspan="4" class="pl-empty">No expenses recorded.</td></tr>
@@ -175,6 +175,8 @@
         .pl-chip-bad { background: var(--pl-chip-bad-bg); color: var(--pl-bad); }
         .pl-chip-good { background: var(--pl-chip-good-bg); color: var(--pl-good); }
         .pl-chip-neutral { background: var(--pl-surface-2); color: var(--pl-muted); }
+        .pl-drill { color: var(--pl-faint); text-decoration: none; font-size: 12px; padding: 2px 5px; border-radius: 4px; }
+        .pl-drill:hover { color: var(--pl-accent); background: var(--pl-surface-2); }
     </style>
     @endassets
 </x-filament-panels::page>

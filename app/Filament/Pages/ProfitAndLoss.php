@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 
+use App\Filament\Resources\Transactions\TransactionResource;
 use App\Services\SpendingAnalysisService;
 use Carbon\CarbonImmutable;
 use Filament\Pages\Page;
@@ -89,6 +90,23 @@ class ProfitAndLoss extends Page
         ];
 
         return [
+            'drillUrl' => function (?int $categoryId, string $type) use ($month): string {
+                $filters = [
+                    'type' => ['value' => $type],
+                    'date' => [
+                        'from' => $month->startOfMonth()->toDateString(),
+                        'until' => $month->endOfMonth()->toDateString(),
+                    ],
+                ];
+
+                if ($categoryId === null) {
+                    $filters['uncategorized'] = ['isActive' => true];
+                } else {
+                    $filters['category_id'] = ['value' => $categoryId];
+                }
+
+                return TransactionResource::getUrl().'?'.http_build_query(['filters' => $filters]);
+            },
             'statement' => $statement,
             'totals' => $totals,
             'net' => $net,

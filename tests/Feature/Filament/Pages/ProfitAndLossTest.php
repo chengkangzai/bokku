@@ -44,6 +44,8 @@ it('shows income and expense lines with totals and savings rate', function () {
     livewire(ProfitAndLoss::class)
         ->assertSee('Salary')
         ->assertSee('Food')
+        ->assertSeeHtml('target="_blank"')
+        ->assertSeeHtml('filters%5Bcategory_id%5D%5Bvalue%5D='.$food->id)
         ->assertSee('4,000.00')
         ->assertSee('1,000.00')
         ->assertSee('+MYR 3,000.00')

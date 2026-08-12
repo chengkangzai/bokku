@@ -199,6 +199,7 @@ class SpendingAnalysisService
                 ->merge($previous->keys())
                 ->unique()
                 ->map(fn (string $name): array => [
+                    'id' => $current->get($name)->id ?? $previous->get($name)->id ?? null,
                     'name' => $name,
                     'color' => $current->get($name)->color ?? $previous->get($name)->color ?? null,
                     'current' => (float) ($current->get($name)->total ?? 0.0),
