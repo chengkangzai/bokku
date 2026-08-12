@@ -6,9 +6,10 @@ use App\Mcp\Tools\Transactions\ListAttachmentsTool;
 use App\Models\Account;
 use App\Models\Transaction;
 use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
 
-uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
+uses(RefreshDatabase::class);
 
 // Minimal valid 1x1 PNG image (base64)
 const VALID_PNG_BASE64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
@@ -40,7 +41,7 @@ describe('ListAttachmentsTool', function () {
 
         $response->assertOk()
             ->assertSee('attachments')
-            ->assertSee('"count": 0');
+            ->assertSee('"count":0');
     });
 
     it('returns attachments for transaction', function () {
@@ -54,7 +55,7 @@ describe('ListAttachmentsTool', function () {
 
         $response->assertOk()
             ->assertSee('receipt.png')
-            ->assertSee('"count": 1');
+            ->assertSee('"count":1');
     });
 
     it('returns error for non-existent transaction', function () {

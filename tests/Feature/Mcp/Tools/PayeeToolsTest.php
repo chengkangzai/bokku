@@ -11,8 +11,9 @@ use App\Models\Category;
 use App\Models\Payee;
 use App\Models\Transaction;
 use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
-uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
+uses(RefreshDatabase::class);
 
 beforeEach(function () {
     $this->user = User::factory()->create();
@@ -27,7 +28,7 @@ describe('ListPayeesTool', function () {
         $response = BokkuServer::actingAs($this->user)->tool(ListPayeesTool::class);
 
         $response->assertOk()
-            ->assertSee('"count": 3');
+            ->assertSee('"count":3');
     });
 
     it('does not return other users payees', function () {
@@ -100,7 +101,7 @@ describe('ListPayeesTool', function () {
         $response = BokkuServer::actingAs($this->user)->tool(ListPayeesTool::class);
 
         $response->assertOk()
-            ->assertSee('"transaction_count": 3');
+            ->assertSee('"transaction_count":3');
     });
 });
 

@@ -11,8 +11,9 @@ use App\Models\Budget;
 use App\Models\Category;
 use App\Models\Transaction;
 use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
-uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
+uses(RefreshDatabase::class);
 
 beforeEach(function () {
     $this->user = User::factory()->create();
@@ -32,7 +33,7 @@ describe('ListBudgetsTool', function () {
         $response = BokkuServer::actingAs($this->user)->tool(ListBudgetsTool::class);
 
         $response->assertOk()
-            ->assertSee('"count": 2');
+            ->assertSee('"count":2');
     });
 
     it('does not return other users budgets', function () {

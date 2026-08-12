@@ -117,7 +117,7 @@ describe('AccountResource CRUD Operations', function () {
             ->assertFormSet([
                 'name' => $account->name,
                 'type' => $account->type,
-                'initial_balance' => $account->initial_balance,
+                'initial_balance' => number_format($account->initial_balance, 2),
                 'currency' => $account->currency,
                 'account_number' => $account->account_number,
                 'color' => $account->color,
