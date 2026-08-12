@@ -46,6 +46,7 @@ it('shows income and expense lines with totals and savings rate', function () {
         ->assertSee('Food')
         ->assertSeeHtml('target="_blank"')
         ->assertSeeHtml('filters%5Bcategory_id%5D%5Bvalue%5D='.$food->id)
+        ->assertSeeHtml('filters%5Bdate%5D%5Bfrom%5D='.now()->subMonths(3)->startOfMonth()->toDateString())
         ->assertSee('4,000.00')
         ->assertSee('1,000.00')
         ->assertSee('+MYR 3,000.00')
