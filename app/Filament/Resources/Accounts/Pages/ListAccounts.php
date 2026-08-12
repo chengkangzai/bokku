@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Accounts\Pages;
 
 use App\Enums\AccountType;
 use App\Filament\Resources\Accounts\AccountResource;
+use App\Filament\Resources\Accounts\Widgets\NetWorthOverview;
 use App\Models\Account;
 use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ListRecords;
@@ -18,6 +19,13 @@ class ListAccounts extends ListRecords
     {
         return [
             CreateAction::make(),
+        ];
+    }
+
+    protected function getHeaderWidgets(): array
+    {
+        return [
+            NetWorthOverview::class,
         ];
     }
 

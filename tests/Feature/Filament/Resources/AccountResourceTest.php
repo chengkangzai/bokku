@@ -4,8 +4,12 @@ use App\Filament\Resources\Accounts\AccountResource;
 use App\Filament\Resources\Accounts\Pages\CreateAccount;
 use App\Filament\Resources\Accounts\Pages\EditAccount;
 use App\Filament\Resources\Accounts\Pages\ListAccounts;
+use App\Filament\Resources\Accounts\RelationManagers\TransactionsRelationManager;
+use App\Filament\Resources\Accounts\Widgets\NetWorthOverview;
 use App\Models\Account;
+use App\Models\Transaction;
 use App\Models\User;
+use Filament\Actions\Testing\TestAction;
 
 use function Pest\Livewire\livewire;
 
@@ -27,6 +31,14 @@ describe('AccountResource Page Rendering', function () {
         $account = Account::factory()->create(['user_id' => $this->user->id]);
 
         $this->get(AccountResource::getUrl('edit', ['record' => $account]))->assertSuccessful();
+    });
+
+    it('registers the net worth widget as a list page header widget', function () {
+        expect(AccountResource::getWidgets())->toContain(NetWorthOverview::class);
+
+        livewire(ListAccounts::class)
+            ->assertSuccessful()
+            ->assertSeeLivewire(NetWorthOverview::class);
     });
 });
 
@@ -293,7 +305,7 @@ describe('AccountResource Balance Adjustment', function () {
 
         livewire(EditAccount::class, ['record' => $account->getRouteKey()])
             ->callAction(
-                \Filament\Actions\Testing\TestAction::make('adjustBalance')->schemaComponent('initial_balance'),
+                TestAction::make('adjustBalance')->schemaComponent('initial_balance'),
                 data: [
                     'new_balance' => $newBalance,
                     'adjustment_note' => $adjustmentNote,
@@ -327,7 +339,7 @@ describe('AccountResource Balance Adjustment', function () {
 
         livewire(EditAccount::class, ['record' => $account->getRouteKey()])
             ->callAction(
-                \Filament\Actions\Testing\TestAction::make('adjustBalance')->schemaComponent('initial_balance'),
+                TestAction::make('adjustBalance')->schemaComponent('initial_balance'),
                 data: [
                     'new_balance' => $newBalance,
                     'adjustment_note' => $adjustmentNote,
@@ -358,7 +370,7 @@ describe('AccountResource Balance Adjustment', function () {
 
         livewire(EditAccount::class, ['record' => $account->getRouteKey()])
             ->callAction(
-                \Filament\Actions\Testing\TestAction::make('adjustBalance')->schemaComponent('initial_balance'),
+                TestAction::make('adjustBalance')->schemaComponent('initial_balance'),
                 data: [
                     'new_balance' => 1000.00, // Same as current balance
                     'adjustment_note' => 'No change needed',
@@ -386,7 +398,7 @@ describe('AccountResource Balance Adjustment', function () {
 
         livewire(EditAccount::class, ['record' => $account->getRouteKey()])
             ->callAction(
-                \Filament\Actions\Testing\TestAction::make('adjustBalance')->schemaComponent('initial_balance'),
+                TestAction::make('adjustBalance')->schemaComponent('initial_balance'),
                 data: [
                     'new_balance' => 1200.00,
                     'adjustment_note' => '', // Empty note
@@ -418,7 +430,7 @@ describe('AccountResource Balance Adjustment', function () {
 
         livewire(EditAccount::class, ['record' => $account->getRouteKey()])
             ->callAction(
-                \Filament\Actions\Testing\TestAction::make('adjustBalance')->schemaComponent('initial_balance'),
+                TestAction::make('adjustBalance')->schemaComponent('initial_balance'),
                 data: [
                     'new_balance' => 1300.00,
                     'adjustment_note' => 'Test adjustment',
@@ -434,21 +446,21 @@ describe('AccountResource TransactionsRelationManager', function () {
     it('shows regular transactions for the account', function () {
         $account = Account::factory()->create(['user_id' => $this->user->id]);
 
-        $incomeTransaction = \App\Models\Transaction::factory()->income()->create([
+        $incomeTransaction = Transaction::factory()->income()->create([
             'user_id' => $this->user->id,
             'account_id' => $account->id,
             'description' => 'Salary',
         ]);
 
-        $expenseTransaction = \App\Models\Transaction::factory()->expense()->create([
+        $expenseTransaction = Transaction::factory()->expense()->create([
             'user_id' => $this->user->id,
             'account_id' => $account->id,
             'description' => 'Groceries',
         ]);
 
-        livewire(\App\Filament\Resources\Accounts\RelationManagers\TransactionsRelationManager::class, [
+        livewire(TransactionsRelationManager::class, [
             'ownerRecord' => $account,
-            'pageClass' => \App\Filament\Resources\Accounts\Pages\EditAccount::class,
+            'pageClass' => EditAccount::class,
         ])
             ->assertCanSeeTableRecords([$incomeTransaction, $expenseTransaction])
             ->assertCountTableRecords(2);
@@ -458,7 +470,7 @@ describe('AccountResource TransactionsRelationManager', function () {
         $fromAccount = Account::factory()->create(['user_id' => $this->user->id, 'name' => 'Checking']);
         $toAccount = Account::factory()->create(['user_id' => $this->user->id, 'name' => 'Savings']);
 
-        $transferTransaction = \App\Models\Transaction::factory()->transfer()->create([
+        $transferTransaction = Transaction::factory()->transfer()->create([
             'user_id' => $this->user->id,
             'account_id' => $fromAccount->id,
             'from_account_id' => $fromAccount->id,
@@ -466,9 +478,9 @@ describe('AccountResource TransactionsRelationManager', function () {
             'description' => 'Transfer to savings',
         ]);
 
-        livewire(\App\Filament\Resources\Accounts\RelationManagers\TransactionsRelationManager::class, [
+        livewire(TransactionsRelationManager::class, [
             'ownerRecord' => $fromAccount,
-            'pageClass' => \App\Filament\Resources\Accounts\Pages\EditAccount::class,
+            'pageClass' => EditAccount::class,
         ])
             ->assertCanSeeTableRecords([$transferTransaction])
             ->assertCountTableRecords(1);
@@ -478,7 +490,7 @@ describe('AccountResource TransactionsRelationManager', function () {
         $fromAccount = Account::factory()->create(['user_id' => $this->user->id, 'name' => 'Checking']);
         $toAccount = Account::factory()->create(['user_id' => $this->user->id, 'name' => 'Savings']);
 
-        $transferTransaction = \App\Models\Transaction::factory()->transfer()->create([
+        $transferTransaction = Transaction::factory()->transfer()->create([
             'user_id' => $this->user->id,
             'account_id' => $fromAccount->id,
             'from_account_id' => $fromAccount->id,
@@ -486,9 +498,9 @@ describe('AccountResource TransactionsRelationManager', function () {
             'description' => 'Transfer from checking',
         ]);
 
-        livewire(\App\Filament\Resources\Accounts\RelationManagers\TransactionsRelationManager::class, [
+        livewire(TransactionsRelationManager::class, [
             'ownerRecord' => $toAccount,
-            'pageClass' => \App\Filament\Resources\Accounts\Pages\EditAccount::class,
+            'pageClass' => EditAccount::class,
         ])
             ->assertCanSeeTableRecords([$transferTransaction])
             ->assertCountTableRecords(1);
@@ -499,14 +511,14 @@ describe('AccountResource TransactionsRelationManager', function () {
         $otherAccount = Account::factory()->create(['user_id' => $this->user->id, 'name' => 'Secondary Account']);
 
         // Regular transaction
-        $expense = \App\Models\Transaction::factory()->expense()->create([
+        $expense = Transaction::factory()->expense()->create([
             'user_id' => $this->user->id,
             'account_id' => $account->id,
             'description' => 'Purchase',
         ]);
 
         // Outgoing transfer
-        $transferOut = \App\Models\Transaction::factory()->transfer()->create([
+        $transferOut = Transaction::factory()->transfer()->create([
             'user_id' => $this->user->id,
             'account_id' => $account->id,
             'from_account_id' => $account->id,
@@ -515,7 +527,7 @@ describe('AccountResource TransactionsRelationManager', function () {
         ]);
 
         // Incoming transfer
-        $transferIn = \App\Models\Transaction::factory()->transfer()->create([
+        $transferIn = Transaction::factory()->transfer()->create([
             'user_id' => $this->user->id,
             'account_id' => $otherAccount->id,
             'from_account_id' => $otherAccount->id,
@@ -523,9 +535,9 @@ describe('AccountResource TransactionsRelationManager', function () {
             'description' => 'Transfer in',
         ]);
 
-        livewire(\App\Filament\Resources\Accounts\RelationManagers\TransactionsRelationManager::class, [
+        livewire(TransactionsRelationManager::class, [
             'ownerRecord' => $account,
-            'pageClass' => \App\Filament\Resources\Accounts\Pages\EditAccount::class,
+            'pageClass' => EditAccount::class,
         ])
             ->assertCanSeeTableRecords([$expense, $transferOut, $transferIn])
             ->assertCountTableRecords(3);
@@ -535,21 +547,21 @@ describe('AccountResource TransactionsRelationManager', function () {
         $account = Account::factory()->create(['user_id' => $this->user->id]);
         $otherAccount = Account::factory()->create(['user_id' => $this->user->id]);
 
-        $accountTransaction = \App\Models\Transaction::factory()->expense()->create([
+        $accountTransaction = Transaction::factory()->expense()->create([
             'user_id' => $this->user->id,
             'account_id' => $account->id,
             'description' => 'My transaction',
         ]);
 
-        $otherTransaction = \App\Models\Transaction::factory()->expense()->create([
+        $otherTransaction = Transaction::factory()->expense()->create([
             'user_id' => $this->user->id,
             'account_id' => $otherAccount->id,
             'description' => 'Other transaction',
         ]);
 
-        livewire(\App\Filament\Resources\Accounts\RelationManagers\TransactionsRelationManager::class, [
+        livewire(TransactionsRelationManager::class, [
             'ownerRecord' => $account,
-            'pageClass' => \App\Filament\Resources\Accounts\Pages\EditAccount::class,
+            'pageClass' => EditAccount::class,
         ])
             ->assertCanSeeTableRecords([$accountTransaction])
             ->assertCanNotSeeTableRecords([$otherTransaction])

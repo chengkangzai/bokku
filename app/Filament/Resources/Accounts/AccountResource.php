@@ -8,6 +8,7 @@ use App\Filament\Resources\Accounts\Pages\CreateAccount;
 use App\Filament\Resources\Accounts\Pages\EditAccount;
 use App\Filament\Resources\Accounts\Pages\ListAccounts;
 use App\Filament\Resources\Accounts\RelationManagers\TransactionsRelationManager;
+use App\Filament\Resources\Accounts\Widgets\NetWorthOverview;
 use App\Models\Account;
 use App\Models\Transaction;
 use Filament\Actions\Action;
@@ -77,7 +78,7 @@ class AccountResource extends Resource
                                         default => 'Starting balance for this account'
                                     }
                             )
-                            ->formatStateUsing(fn (?string $state) => $state ?  number_format($state,2) : null)
+                            ->formatStateUsing(fn (?string $state) => $state ? number_format($state, 2) : null)
                             ->disabled(fn (Component $livewire) => $livewire instanceof EditAccount)
                             ->afterContent(
                                 Action::make('adjustBalance')
@@ -259,6 +260,13 @@ class AccountResource extends Resource
     {
         return [
             TransactionsRelationManager::class,
+        ];
+    }
+
+    public static function getWidgets(): array
+    {
+        return [
+            NetWorthOverview::class,
         ];
     }
 
