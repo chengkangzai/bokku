@@ -13,6 +13,8 @@ class SpendingAnalysis extends Page
 
     protected static ?string $navigationLabel = 'Spending Analysis';
 
+    protected static string|\UnitEnum|null $navigationGroup = 'Insights';
+
     protected static ?string $title = 'Spending Analysis';
 
     protected static ?int $navigationSort = 2;

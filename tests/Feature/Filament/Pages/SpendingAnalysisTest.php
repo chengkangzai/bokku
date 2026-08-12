@@ -114,6 +114,10 @@ it('has correct navigation properties', function () {
     $sortProperty = $reflectionClass->getProperty('navigationSort');
     $sortProperty->setAccessible(true);
     expect($sortProperty->getValue())->toBe(2);
+
+    $groupProperty = $reflectionClass->getProperty('navigationGroup');
+    $groupProperty->setAccessible(true);
+    expect($groupProperty->getValue())->toBe('Insights');
 });
 
 it('only accessible by authenticated users', function () {
