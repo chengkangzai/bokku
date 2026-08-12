@@ -190,6 +190,10 @@ class AccountResource extends Resource
                                 ? 'e.g., Monthly payment: RM 1,200, Due on 15th of each month, Loan ref: HP123456'
                                 : 'Additional notes about this account'),
 
+                        Toggle::make('exclude_from_net_worth')
+                            ->label('Held for someone else')
+                            ->helperText('Balances still track normally, but the "Own only" view on Net Worth History skips this account (e.g. family loans you relay).'),
+
                         Toggle::make('is_active')
                             ->required()
                             ->default(true)

@@ -25,17 +25,25 @@
                     <div class="nw-stat-value {{ $last['change'] < 0 ? 'nw-bad' : 'nw-good' }}">{{ $signedFmt($last['change']) }}</div>
                 </div>
             @endif
-            <div class="nw-toggle" role="group" aria-label="History period">
-                @foreach ([6 => '6M', 12 => '12M', 24 => '24M'] as $value => $label)
-                    <button type="button" wire:click="setMonths({{ $value }})" aria-pressed="{{ $months === $value ? 'true' : 'false' }}">{{ $label }}</button>
-                @endforeach
+            <div class="nw-toggles">
+                @if ($excludedCount > 0)
+                    <div class="nw-toggle" role="group" aria-label="Net worth lens">
+                        <button type="button" wire:click="$set('ownOnly', false)" aria-pressed="{{ $ownOnly ? 'false' : 'true' }}">All</button>
+                        <button type="button" wire:click="$set('ownOnly', true)" aria-pressed="{{ $ownOnly ? 'true' : 'false' }}" title="Excludes {{ $excludedCount }} account(s) held for someone else">Own only</button>
+                    </div>
+                @endif
+                <div class="nw-toggle" role="group" aria-label="History period">
+                    @foreach ([6 => '6M', 12 => '12M', 24 => '24M'] as $value => $label)
+                        <button type="button" wire:click="setMonths({{ $value }})" aria-pressed="{{ $months === $value ? 'true' : 'false' }}">{{ $label }}</button>
+                    @endforeach
+                </div>
             </div>
         </div>
 
         <section class="nw-card">
-            <h2 class="nw-h2">Net Worth Over Time <span class="nw-hint">{{ $months }} months · hover for values</span></h2>
+            <h2 class="nw-h2">Net Worth Over Time <span class="nw-hint">{{ $ownOnly ? 'own accounts only · ' : '' }}{{ $months }} months · hover for values</span></h2>
             <div
-                wire:key="nw-chart-{{ $months }}"
+                wire:key="nw-chart-{{ $months }}-{{ $ownOnly ? 'own' : 'all' }}"
                 x-data
                 x-init="window.bokkuNetWorthChart($el)"
                 data-config="{{ json_encode(['chart' => $chart, 'currency' => 'MYR']) }}"
@@ -141,7 +149,8 @@
         .nw-good { color: var(--nw-good); }
         .nw-bad { color: var(--nw-bad); }
         .nw-net { color: var(--nw-net); }
-        .nw-toggle { display: inline-flex; border: 1px solid var(--nw-border); border-radius: 7px; overflow: hidden; margin-left: auto; }
+        .nw-toggles { display: flex; gap: 10px; margin-left: auto; flex-wrap: wrap; }
+        .nw-toggle { display: inline-flex; border: 1px solid var(--nw-border); border-radius: 7px; overflow: hidden; }
         .nw-toggle button { background: transparent; border: 0; color: var(--nw-muted); font-size: 11px; padding: 6px 12px; cursor: pointer; }
         .nw-toggle button[aria-pressed="true"] { background: var(--nw-accent-soft); color: var(--nw-accent); font-weight: 700; }
         .nw-h2 { font-size: 11px; text-transform: uppercase; letter-spacing: 0.14em; color: var(--nw-muted); margin: 0 0 14px; font-weight: 700; }

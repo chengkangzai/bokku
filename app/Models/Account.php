@@ -27,6 +27,7 @@ class Account extends Model
         'account_number',
         'notes',
         'is_active',
+        'exclude_from_net_worth',
         'sort_order',
     ];
 
@@ -35,6 +36,7 @@ class Account extends Model
         'balance' => MoneyCast::class,
         'initial_balance' => MoneyCast::class,
         'is_active' => 'boolean',
+        'exclude_from_net_worth' => 'boolean',
     ];
 
     public function user(): BelongsTo

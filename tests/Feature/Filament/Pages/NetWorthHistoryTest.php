@@ -59,6 +59,40 @@ it('shows current net worth figures and monthly history', function () {
         ->assertSee(now()->format('M Y'));
 });
 
+it('toggles to an own-only lens that skips excluded accounts', function () {
+    Account::factory()->bank()->create([
+        'user_id' => $this->user->id,
+        'initial_balance' => 3000.00,
+        'balance' => 3000.00,
+    ]);
+    Account::factory()->loan()->create([
+        'user_id' => $this->user->id,
+        'initial_balance' => 8000.00,
+        'balance' => 8000.00,
+        'exclude_from_net_worth' => true,
+    ]);
+
+    livewire(NetWorthHistory::class)
+        ->assertSee('Own only')
+        ->assertSee('MYR 8,000.00')
+        ->set('ownOnly', true)
+        ->assertSee('MYR 0.00')
+        ->assertSee('MYR 3,000.00');
+});
+
+it('keeps the all lens when no accounts are excluded', function () {
+    Account::factory()->bank()->create([
+        'user_id' => $this->user->id,
+        'initial_balance' => 1000.00,
+        'balance' => 1000.00,
+    ]);
+
+    livewire(NetWorthHistory::class)
+        ->assertDontSee('Own only')
+        ->set('ownOnly', true)
+        ->assertSet('ownOnly', false);
+});
+
 it('validates the months setter', function () {
     livewire(NetWorthHistory::class)
         ->call('setMonths', 24)

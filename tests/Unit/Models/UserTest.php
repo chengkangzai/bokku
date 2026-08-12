@@ -355,6 +355,46 @@ describe('User Net Worth History', function () {
             ->and($latest)->toBe(['assets' => 2500.0, 'liabilities' => 1500.0, 'net' => 1000.0]);
     });
 
+    it('drops excluded accounts in the own-only lens', function () {
+        $user = User::factory()->create();
+
+        $bank = Account::factory()->bank()->create([
+            'user_id' => $user->id,
+            'initial_balance' => 3000.00,
+            'balance' => 3000.00,
+        ]);
+        $receivable = Account::factory()->create([
+            'user_id' => $user->id,
+            'type' => 'cash',
+            'initial_balance' => 10000.00,
+            'balance' => 10000.00,
+            'exclude_from_net_worth' => true,
+        ]);
+        Account::factory()->loan()->create([
+            'user_id' => $user->id,
+            'initial_balance' => 8000.00,
+            'balance' => 8000.00,
+            'exclude_from_net_worth' => true,
+        ]);
+
+        Transaction::factory()->transfer()->withAmount(400.00)->create([
+            'user_id' => $user->id,
+            'account_id' => $receivable->id,
+            'category_id' => null,
+            'from_account_id' => $receivable->id,
+            'to_account_id' => $bank->id,
+            'date' => now()->startOfMonth(),
+        ]);
+
+        $all = $user->netWorthBreakdownHistory();
+        $own = $user->netWorthBreakdownHistory(ownOnly: true);
+
+        // All lens: receivable-to-bank transfer is net-worth neutral.
+        expect(end($all))->toBe(['assets' => 13000.0, 'liabilities' => 8000.0, 'net' => 5000.0])
+            // Own lens: excluded accounts vanish; the transfer in counts as external money arriving.
+            ->and(end($own))->toBe(['assets' => 3400.0, 'liabilities' => 0.0, 'net' => 3400.0]);
+    });
+
     it('only includes the user own accounts and transactions', function () {
         $user = User::factory()->create();
         $other = User::factory()->create();

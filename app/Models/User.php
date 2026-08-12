@@ -132,6 +132,11 @@ class User extends Authenticatable implements FilamentUser
      * Reconstruct total assets, total liabilities and net worth at the end of each
      * of the last $months months.
      *
+     * When $ownOnly is true, accounts flagged exclude_from_net_worth (e.g. money held
+     * or owed on someone else's behalf) are dropped from the replay entirely: their
+     * balances don't count, and transfers touching them behave like external money
+     * entering or leaving the user's own wealth.
+     *
      * Replays every transaction on top of each account's initial_balance using the
      * same formula as Account::updateBalance(), so the series always reconciles with
      * the stored balances. The final bucket applies every transaction regardless of
@@ -145,9 +150,11 @@ class User extends Authenticatable implements FilamentUser
      *     net: float
      * }> Keyed by 'Y-m', oldest first
      */
-    public function netWorthBreakdownHistory(int $months = 12): array
+    public function netWorthBreakdownHistory(int $months = 12, bool $ownOnly = false): array
     {
-        $accounts = $this->accounts()->get(['id', 'type', 'initial_balance']);
+        $accounts = $this->accounts()
+            ->when($ownOnly, fn ($query) => $query->where('exclude_from_net_worth', false))
+            ->get(['id', 'type', 'initial_balance']);
 
         $isLiability = $accounts->mapWithKeys(
             fn (Account $account): array => [$account->id => $account->isLiability()]

@@ -22,6 +22,8 @@ class NetWorthHistory extends Page
 
     public int $months = 12;
 
+    public bool $ownOnly = false;
+
     public function setMonths(int $months): void
     {
         if (! in_array($months, [6, 12, 24], true)) {
@@ -39,7 +41,13 @@ class NetWorthHistory extends Page
         /** @var User $user */
         $user = auth()->user();
 
-        $history = $user->netWorthBreakdownHistory($this->months);
+        $excludedCount = $user->accounts()->where('exclude_from_net_worth', true)->count();
+
+        if ($excludedCount === 0) {
+            $this->ownOnly = false;
+        }
+
+        $history = $user->netWorthBreakdownHistory($this->months, $this->ownOnly);
 
         $rows = [];
         $previous = null;
@@ -62,11 +70,14 @@ class NetWorthHistory extends Page
             $previous = $value;
         }
 
+        $latest = end($rows);
+
         return [
             'rows' => $rows,
-            'netWorth' => $user->net_worth,
-            'totalAssets' => $user->total_assets,
-            'totalLiabilities' => $user->total_liabilities,
+            'netWorth' => $latest === false ? 0.0 : $latest['value'],
+            'totalAssets' => $latest === false ? 0.0 : $latest['assets'],
+            'totalLiabilities' => $latest === false ? 0.0 : $latest['liabilities'],
+            'excludedCount' => $excludedCount,
             'chart' => [
                 'labels' => array_column($rows, 'label'),
                 'values' => array_column($rows, 'value'),
