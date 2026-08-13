@@ -308,6 +308,149 @@ class SpendingAnalysisService
         ];
     }
 
+    /**
+     * Per-account balances as at each month end, grouped into balance sheet sections.
+     *
+     * Balances are reconstructed with the same per-transaction semantics as
+     * Account::updateBalance() (liabilities as positive outstanding). The final
+     * column additionally applies any future-dated transactions, so it always
+     * equals the live stored balances, and the net worth row ties to
+     * User::netWorthBreakdownHistory(). Accounts that are zero across the whole
+     * window are omitted.
+     *
+     * @return array{
+     *     labels: array<int, string>,
+     *     assets: array<int, array{name: string, group: string, values: array<int, float>}>,
+     *     liabilities: array<int, array{name: string, group: string, values: array<int, float>}>,
+     *     asset_total: array<int, float>,
+     *     liability_total: array<int, float>,
+     *     net_worth: array<int, float>
+     * }
+     */
+    public function balanceSheet(int $userId, CarbonImmutable $month, int $months = 4): array
+    {
+        $accounts = Account::query()
+            ->where('user_id', $userId)
+            ->orderBy('name')
+            ->get(['id', 'name', 'type', 'initial_balance', 'exclude_from_net_worth']);
+
+        $running = $accounts->mapWithKeys(
+            fn (Account $account): array => [$account->id => (int) $account->getRawOriginal('initial_balance')]
+        )->all();
+
+        $isLiability = $accounts->mapWithKeys(
+            fn (Account $account): array => [$account->id => $account->isLiability()]
+        )->all();
+
+        $apply = function (Transaction $transaction) use (&$running, $isLiability): void {
+            $amount = (int) $transaction->getRawOriginal('amount');
+
+            if ($transaction->type === TransactionType::Transfer) {
+                if (isset($running[$transaction->from_account_id])) {
+                    $running[$transaction->from_account_id] += $isLiability[$transaction->from_account_id] ? $amount : -$amount;
+                }
+
+                if (isset($running[$transaction->to_account_id])) {
+                    $running[$transaction->to_account_id] += $isLiability[$transaction->to_account_id] ? -$amount : $amount;
+                }
+
+                return;
+            }
+
+            if (! isset($running[$transaction->account_id])) {
+                return;
+            }
+
+            $signed = $transaction->type === TransactionType::Income ? $amount : -$amount;
+            $running[$transaction->account_id] += $isLiability[$transaction->account_id] ? -$signed : $signed;
+        };
+
+        $transactions = Transaction::query()
+            ->where('user_id', $userId)
+            ->orderBy('date')
+            ->get(['type', 'date', 'amount', 'account_id', 'from_account_id', 'to_account_id']);
+
+        $labels = [];
+        $snapshots = [];
+        $index = 0;
+
+        for ($i = $months - 1; $i >= 0; $i--) {
+            $target = $month->subMonths($i);
+            $labels[] = $target->format('M Y');
+            $cutoff = $target->endOfMonth();
+
+            while ($index < $transactions->count() && $transactions[$index]->date->lte($cutoff)) {
+                $apply($transactions[$index]);
+                $index++;
+            }
+
+            $snapshots[] = $running;
+        }
+
+        while ($index < $transactions->count()) {
+            $apply($transactions[$index]);
+            $index++;
+        }
+
+        $snapshots[count($snapshots) - 1] = $running;
+
+        $group = function (Account $account): string {
+            if ($account->exclude_from_net_worth) {
+                return $account->isLiability() ? 'Held for family' : 'Receivables';
+            }
+
+            return match ($account->type) {
+                AccountType::Investment => 'Investments',
+                AccountType::CreditCard => 'Credit Cards',
+                AccountType::Loan => 'Loans',
+                default => 'Cash & Bank',
+            };
+        };
+
+        $rows = $accounts
+            ->map(fn (Account $account): array => [
+                'name' => $account->name,
+                'group' => $group($account),
+                'liability' => $account->isLiability(),
+                'values' => array_map(
+                    fn (array $snapshot): float => round($snapshot[$account->id] / 100, 2),
+                    $snapshots
+                ),
+            ])
+            ->filter(fn (array $row): bool => array_filter($row['values']) !== []);
+
+        $groupOrder = ['Cash & Bank', 'Investments', 'Receivables', 'Credit Cards', 'Loans', 'Held for family'];
+
+        $section = fn (bool $liability): array => $rows
+            ->filter(fn (array $row): bool => $row['liability'] === $liability)
+            ->sortBy(fn (array $row): int => array_search($row['group'], $groupOrder, true))
+            ->map(fn (array $row): array => ['name' => $row['name'], 'group' => $row['group'], 'values' => $row['values']])
+            ->values()
+            ->all();
+
+        $sum = fn (bool $liability): array => array_map(
+            fn (int $columnIndex): float => round($rows
+                ->filter(fn (array $row): bool => $row['liability'] === $liability)
+                ->sum(fn (array $row): float => $row['values'][$columnIndex]), 2),
+            range(0, $months - 1)
+        );
+
+        $assetTotals = $sum(false);
+        $liabilityTotals = $sum(true);
+
+        return [
+            'labels' => $labels,
+            'assets' => $section(false),
+            'liabilities' => $section(true),
+            'asset_total' => $assetTotals,
+            'liability_total' => $liabilityTotals,
+            'net_worth' => array_map(
+                fn (int $columnIndex): float => round($assetTotals[$columnIndex] - $liabilityTotals[$columnIndex], 2),
+                range(0, $months - 1)
+            ),
+        ];
+    }
+
     public function hasTaggedTransactions(int $userId): bool
     {
         return Transaction::query()
