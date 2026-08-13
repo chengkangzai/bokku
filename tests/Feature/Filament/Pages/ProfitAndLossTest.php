@@ -83,11 +83,12 @@ it('can exclude company expenses', function () {
     ]);
 
     livewire(ProfitAndLoss::class)
-        ->assertSee('Company Expenses')
-        ->assertSee('MYR 1,000.00')
-        ->set('excludeCompany', true)
+        ->assertSet('excludeCompany', true) // excluded by default
         ->assertDontSee('Company Expenses')
-        ->assertSee('MYR 100.00');
+        ->assertSee('MYR 100.00')
+        ->set('excludeCompany', false)
+        ->assertSee('Company Expenses')
+        ->assertSee('MYR 1,000.00');
 });
 
 it('navigates months with the pager', function () {

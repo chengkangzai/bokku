@@ -6,6 +6,7 @@ use App\Filament\Resources\Transactions\TransactionResource;
 use App\Services\SpendingAnalysisService;
 use Carbon\CarbonImmutable;
 use Filament\Pages\Page;
+use Livewire\Attributes\Url;
 
 class ProfitAndLoss extends Page
 {
@@ -23,7 +24,8 @@ class ProfitAndLoss extends Page
 
     public string $month = '';
 
-    public bool $excludeCompany = false;
+    #[Url]
+    public bool $excludeCompany = true;
 
     public function mount(): void
     {
