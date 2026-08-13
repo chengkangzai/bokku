@@ -1,12 +1,26 @@
 <x-filament-panels::page>
     @php
         $fmt = fn (float $n): string => number_format($n, 2);
-        $signed = fn (float $n): string => ($n < 0 ? '−' : '+').number_format(abs($n), 2);
-        $lastIndex = count($cashflow['labels']) - 1;
-        $currentFree = end($cashflow['free']);
-        $currentNet = end($cashflow['net']);
-        $currentDebt = end($cashflow['debt_total']);
-        $currentIncome = end($cashflow['income']);
+        $flow = function (float $n): string {
+            if ($n == 0.0) {
+                return '<span class="cf-prev">—</span>';
+            }
+            $class = $n < 0 ? 'cf-bad' : 'cf-good';
+
+            return '<span class="'.$class.'">'.($n < 0 ? '−' : '+').number_format(abs($n), 2).'</span>';
+        };
+        $lastIndex = count($cash['labels']) - 1;
+        $currentClosing = end($cash['closing']);
+        $currentOpening = $cash['opening'][$lastIndex];
+        $netChange = round($currentClosing - $currentOpening, 2);
+        $rows = [
+            ['label' => 'Income received', 'key' => 'income'],
+            ['label' => 'Expenses (cash & wallet)', 'key' => 'expenses'],
+            ['label' => 'Card bill payments', 'key' => 'card_payments'],
+            ['label' => 'Loan repayments', 'key' => 'loan_payments'],
+            ['label' => 'Family / relay (net)', 'key' => 'relay'],
+            ['label' => 'Other (net)', 'key' => 'other'],
+        ];
     @endphp
 
     <div class="cf-root">
@@ -18,23 +32,17 @@
             </div>
             <div class="cf-stats">
                 <div class="cf-stat">
-                    <div class="cf-stat-label">Net Income</div>
-                    <div class="cf-stat-value {{ $currentNet < 0 ? 'cf-bad' : 'cf-net' }}">{{ $signed($currentNet) }}</div>
+                    <div class="cf-stat-label">Opening Cash</div>
+                    <div class="cf-stat-value">MYR {{ $fmt($currentOpening) }}</div>
                 </div>
                 <div class="cf-stat">
-                    <div class="cf-stat-label">Debt Service</div>
-                    <div class="cf-stat-value cf-bad">−{{ $fmt($currentDebt) }}</div>
+                    <div class="cf-stat-label">Net Change</div>
+                    <div class="cf-stat-value {{ $netChange < 0 ? 'cf-bad' : 'cf-good' }}">{{ $netChange < 0 ? '−' : '+' }}MYR {{ $fmt(abs($netChange)) }}</div>
                 </div>
                 <div class="cf-stat">
-                    <div class="cf-stat-label">Free Cashflow</div>
-                    <div class="cf-stat-value {{ $currentFree < 0 ? 'cf-bad' : 'cf-good' }}">{{ $signed($currentFree) }}</div>
+                    <div class="cf-stat-label">Closing Cash</div>
+                    <div class="cf-stat-value cf-net">MYR {{ $fmt($currentClosing) }}</div>
                 </div>
-                @if ($currentIncome > 0)
-                    <div class="cf-stat">
-                        <div class="cf-stat-label">Free Cash Rate</div>
-                        <div class="cf-stat-value {{ $currentFree < 0 ? 'cf-bad' : 'cf-good' }}">{{ round($currentFree / $currentIncome * 100, 1) }}%</div>
-                    </div>
-                @endif
             </div>
         </div>
 
@@ -44,59 +52,36 @@
                     <thead>
                         <tr>
                             <th></th>
-                            @foreach ($cashflow['labels'] as $index => $label)
+                            @foreach ($cash['labels'] as $index => $label)
                                 <th class="cf-num cf-c{{ $index }} {{ $index === $lastIndex ? '' : 'cf-prev' }}">{{ $label }}</th>
                             @endforeach
                         </tr>
                     </thead>
                     <tbody>
-                        <tr>
-                            <td>Income</td>
-                            @foreach ($cashflow['income'] as $index => $value)
-                                <td class="cf-num cf-c{{ $index }} {{ $index === $lastIndex ? 'cf-good' : 'cf-prev' }}">{{ $fmt($value) }}</td>
+                        <tr class="cf-opening">
+                            <td>Opening Cash</td>
+                            @foreach ($cash['opening'] as $index => $value)
+                                <td class="cf-num cf-c{{ $index }} cf-prev">{{ $fmt($value) }}</td>
                             @endforeach
                         </tr>
-                        <tr>
-                            <td>Expenses</td>
-                            @foreach ($cashflow['expense'] as $index => $value)
-                                <td class="cf-num cf-c{{ $index }} {{ $index === $lastIndex ? 'cf-bad' : 'cf-prev' }}">−{{ $fmt($value) }}</td>
-                            @endforeach
-                        </tr>
-                        <tr class="cf-subtotal">
-                            <td>Net Income</td>
-                            @foreach ($cashflow['net'] as $index => $value)
-                                <td class="cf-num cf-c{{ $index }} {{ $index === $lastIndex ? ($value < 0 ? 'cf-bad' : 'cf-net') : 'cf-prev' }}">{{ $signed($value) }}</td>
-                            @endforeach
-                        </tr>
-
-                        <tr class="cf-section"><td colspan="{{ $lastIndex + 2 }}">Debt Service</td></tr>
-                        @forelse ($cashflow['debt_service'] as $row)
+                        @foreach ($rows as $row)
                             <tr>
-                                <td>{{ $row['name'] }}</td>
-                                @foreach ($row['values'] as $index => $value)
-                                    <td class="cf-num cf-c{{ $index }} {{ $index === $lastIndex ? '' : 'cf-prev' }}">{{ $value == 0.0 ? '—' : '−'.$fmt($value) }}</td>
+                                <td>{{ $row['label'] }}</td>
+                                @foreach ($cash[$row['key']] as $index => $value)
+                                    <td class="cf-num cf-c{{ $index }} {{ $index === $lastIndex ? '' : 'cf-dim' }}">{!! $flow($value) !!}</td>
                                 @endforeach
                             </tr>
-                        @empty
-                            <tr><td colspan="{{ $lastIndex + 2 }}" class="cf-empty">No loan repayments recorded.</td></tr>
-                        @endforelse
-                        <tr class="cf-subtotal">
-                            <td>Total Debt Service</td>
-                            @foreach ($cashflow['debt_total'] as $index => $value)
-                                <td class="cf-num cf-c{{ $index }} {{ $index === $lastIndex ? 'cf-bad' : 'cf-prev' }}">−{{ $fmt($value) }}</td>
-                            @endforeach
-                        </tr>
-
+                        @endforeach
                         <tr class="cf-net-row">
-                            <td>Free Cashflow</td>
-                            @foreach ($cashflow['free'] as $index => $value)
-                                <td class="cf-num cf-c{{ $index }} {{ $index === $lastIndex ? ($value < 0 ? 'cf-bad' : 'cf-good') : 'cf-prev' }}">{{ $signed($value) }}</td>
+                            <td>Closing Cash</td>
+                            @foreach ($cash['closing'] as $index => $value)
+                                <td class="cf-num cf-c{{ $index }} {{ $index === $lastIndex ? 'cf-net' : 'cf-prev' }}">{{ $fmt($value) }}</td>
                             @endforeach
                         </tr>
                     </tbody>
                 </table>
             </div>
-            <p class="cf-note">All figures in MYR. Debt service counts transfers into your own loan accounts (loans held for someone else are excluded). Credit card bill payments are not listed - card spending is already counted in expenses when charged. Free cashflow is what remains after living costs and loan commitments.</p>
+            <p class="cf-note">Cash = your bank and wallet accounts (accounts held for someone else and investments excluded). Card charges hit Expenses on the P&L when spent; here only the actual bill payment moves cash. "Family / relay" is money exchanged with held-for-others accounts, e.g. mum's loans. Opening + flows always equals closing, and the latest closing equals your live account balances.</p>
         </section>
     </div>
 
@@ -146,13 +131,12 @@
         .cf-table { width: 100%; border-collapse: collapse; font-size: 13px; max-width: 900px; }
         .cf-table th { text-align: left; font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--cf-faint); font-weight: 600; padding: 4px 10px; border-bottom: 1px solid var(--cf-border); }
         .cf-table td { padding: 6px 10px; }
-        .cf-table tbody tr:not(.cf-section):hover td { background: var(--cf-surface-2); }
+        .cf-table tbody tr:hover td { background: var(--cf-surface-2); }
         .cf-num { text-align: right; }
         .cf-prev { color: var(--cf-muted); }
-        .cf-section td { font-size: 10px; text-transform: uppercase; letter-spacing: 0.14em; color: var(--cf-accent); font-weight: 700; padding-top: 18px; border-bottom: 1px solid var(--cf-border); }
-        .cf-subtotal td { border-top: 1px solid var(--cf-border); font-weight: 700; }
+        .cf-dim { opacity: 0.65; }
+        .cf-opening td { border-bottom: 1px solid var(--cf-border); color: var(--cf-muted); }
         .cf-net-row td { border-top: 2px solid var(--cf-text); font-weight: 700; font-size: 14px; padding-top: 10px; }
-        .cf-empty { color: var(--cf-muted); }
         .cf-note { font-size: 11px; color: var(--cf-faint); margin: 14px 0 0; }
         @media (max-width: 1400px) { .cf-c0 { display: none; } }
         @media (max-width: 1100px) { .cf-c1 { display: none; } }

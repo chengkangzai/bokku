@@ -308,6 +308,147 @@ class SpendingAnalysisService
         ];
     }
 
+    /**
+     * Reconcile liquid cash (bank + cash accounts, excluding accounts held for someone
+     * else) month by month: opening balance, the flows that moved it, closing balance.
+     *
+     * Flow buckets partition every cash movement, so opening + flows always equals
+     * closing, and the latest closing equals the live sum of liquid balances:
+     * - income:        income received into cash accounts
+     * - expenses:      expenses paid from cash accounts (card charges are NOT cash)
+     * - card_payments: cash sent to settle own credit cards
+     * - loan_payments: cash sent into own loan accounts
+     * - relay:         net cash exchanged with held-for-someone-else accounts
+     * - other:         net of everything else (investment purchases, card cash advances)
+     *
+     * @return array{
+     *     labels: array<int, string>,
+     *     opening: array<int, float>,
+     *     income: array<int, float>,
+     *     expenses: array<int, float>,
+     *     card_payments: array<int, float>,
+     *     loan_payments: array<int, float>,
+     *     relay: array<int, float>,
+     *     other: array<int, float>,
+     *     closing: array<int, float>
+     * }
+     */
+    public function cashReconciliation(int $userId, CarbonImmutable $month, int $months = 4): array
+    {
+        $accounts = Account::query()
+            ->where('user_id', $userId)
+            ->get(['id', 'type', 'initial_balance', 'exclude_from_net_worth']);
+
+        $liquid = $accounts
+            ->filter(fn (Account $account): bool => in_array($account->type, [AccountType::Bank, AccountType::Cash], true)
+                && ! $account->exclude_from_net_worth)
+            ->keyBy('id');
+
+        $excluded = $accounts->filter(fn (Account $account): bool => (bool) $account->exclude_from_net_worth)->keyBy('id');
+        $types = $accounts->keyBy('id')->map(fn (Account $account): AccountType => $account->type);
+
+        $running = (int) $liquid->sum(fn (Account $account): int => (int) $account->getRawOriginal('initial_balance'));
+
+        $windowStart = $month->subMonths($months - 1)->startOfMonth();
+        $buckets = [];
+        $labels = [];
+        $opening = [];
+
+        for ($i = $months - 1; $i >= 0; $i--) {
+            $labels[] = $month->subMonths($i)->format('M Y');
+            $buckets[] = ['income' => 0, 'expenses' => 0, 'card_payments' => 0, 'loan_payments' => 0, 'relay' => 0, 'other' => 0];
+        }
+
+        $transactions = Transaction::query()
+            ->where('user_id', $userId)
+            ->orderBy('date')
+            ->get(['type', 'date', 'amount', 'account_id', 'from_account_id', 'to_account_id']);
+
+        $openingCaptured = false;
+
+        foreach ($transactions as $transaction) {
+            if (! $openingCaptured && $transaction->date->gte($windowStart)) {
+                $opening[0] = $running;
+                $openingCaptured = true;
+            }
+
+            $index = $openingCaptured
+                ? min($months - 1, max(0, (int) $windowStart->diffInMonths($transaction->date->startOfMonth())))
+                : null;
+
+            $amount = (int) $transaction->getRawOriginal('amount');
+
+            if ($transaction->type === TransactionType::Transfer) {
+                $fromLiquid = $liquid->has($transaction->from_account_id);
+                $toLiquid = $liquid->has($transaction->to_account_id);
+
+                if ($fromLiquid === $toLiquid) {
+                    continue;
+                }
+
+                $running += $toLiquid ? $amount : -$amount;
+
+                if ($index !== null && $transaction->date->lte($month->endOfMonth())) {
+                    $counterparty = $toLiquid ? $transaction->from_account_id : $transaction->to_account_id;
+                    $signed = $toLiquid ? $amount : -$amount;
+
+                    $bucket = match (true) {
+                        $excluded->has($counterparty) => 'relay',
+                        ! $toLiquid && ($types[$counterparty] ?? null) === AccountType::CreditCard => 'card_payments',
+                        ! $toLiquid && ($types[$counterparty] ?? null) === AccountType::Loan => 'loan_payments',
+                        default => 'other',
+                    };
+
+                    $buckets[$index][$bucket] += $signed;
+                }
+
+                continue;
+            }
+
+            if (! $liquid->has($transaction->account_id)) {
+                continue;
+            }
+
+            $signed = $transaction->type === TransactionType::Income ? $amount : -$amount;
+            $running += $signed;
+
+            if ($index !== null && $transaction->date->lte($month->endOfMonth())) {
+                $buckets[$index][$transaction->type === TransactionType::Income ? 'income' : 'expenses'] += $signed;
+            }
+        }
+
+        if (! $openingCaptured) {
+            $opening[0] = $running;
+        }
+
+        $result = [
+            'labels' => $labels,
+            'opening' => [],
+            'income' => [],
+            'expenses' => [],
+            'card_payments' => [],
+            'loan_payments' => [],
+            'relay' => [],
+            'other' => [],
+            'closing' => [],
+        ];
+
+        $carry = $opening[0];
+
+        foreach ($buckets as $bucket) {
+            $result['opening'][] = round($carry / 100, 2);
+
+            foreach (['income', 'expenses', 'card_payments', 'loan_payments', 'relay', 'other'] as $key) {
+                $result[$key][] = round($bucket[$key] / 100, 2);
+            }
+
+            $carry += array_sum($bucket);
+            $result['closing'][] = round($carry / 100, 2);
+        }
+
+        return $result;
+    }
+
     public function hasTaggedTransactions(int $userId): bool
     {
         return Transaction::query()

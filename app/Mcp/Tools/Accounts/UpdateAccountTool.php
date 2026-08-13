@@ -78,7 +78,7 @@ class UpdateAccountTool extends Tool
     }
 
     /**
-     * @return array<string, \Illuminate\Contracts\JsonSchema\JsonSchema>
+     * @return array<string, JsonSchema>
      */
     public function schema(JsonSchema $schema): array
     {
@@ -89,7 +89,7 @@ class UpdateAccountTool extends Tool
             'name' => $schema->string()
                 ->description('The new account name'),
             'type' => $schema->string()
-                ->enum(['bank', 'cash', 'credit_card', 'loan'])
+                ->enum(['bank', 'cash', 'credit_card', 'loan', 'investment'])
                 ->description('The new account type'),
             'currency' => $schema->string()
                 ->description('The new 3-letter currency code'),

@@ -61,10 +61,10 @@ class CashflowStatement extends Page
     protected function getViewData(): array
     {
         $month = $this->monthDate();
-        $cashflow = app(SpendingAnalysisService::class)->cashflow(auth()->id(), $month, 4);
+        $cash = app(SpendingAnalysisService::class)->cashReconciliation(auth()->id(), $month, 4);
 
         return [
-            'cashflow' => $cashflow,
+            'cash' => $cash,
             'monthLabel' => $month->format('M Y'),
         ];
     }

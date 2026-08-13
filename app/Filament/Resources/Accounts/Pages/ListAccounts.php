@@ -39,8 +39,8 @@ class ListAccounts extends ListRecords
                 ->badgeColor('gray'),
             'assets' => Tab::make('Assets')
                 ->icon('heroicon-o-arrow-trending-up')
-                ->modifyQueryUsing(fn (Builder $query) => $query->whereIn('type', [AccountType::Bank, AccountType::Cash]))
-                ->badge(Account::where('user_id', $userId)->whereIn('type', [AccountType::Bank, AccountType::Cash])->count())
+                ->modifyQueryUsing(fn (Builder $query) => $query->whereIn('type', AccountType::assetTypes()))
+                ->badge(Account::where('user_id', $userId)->whereIn('type', AccountType::assetTypes())->count())
                 ->badgeColor('success'),
             'liabilities' => Tab::make('Liabilities')
                 ->icon('heroicon-o-arrow-trending-down')

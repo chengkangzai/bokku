@@ -59,7 +59,7 @@ class CreateAccountTool extends Tool
     }
 
     /**
-     * @return array<string, \Illuminate\Contracts\JsonSchema\JsonSchema>
+     * @return array<string, JsonSchema>
      */
     public function schema(JsonSchema $schema): array
     {
@@ -68,7 +68,7 @@ class CreateAccountTool extends Tool
                 ->description('The account name')
                 ->required(),
             'type' => $schema->string()
-                ->enum(['bank', 'cash', 'credit_card', 'loan'])
+                ->enum(['bank', 'cash', 'credit_card', 'loan', 'investment'])
                 ->description('The account type')
                 ->required(),
             'currency' => $schema->string()

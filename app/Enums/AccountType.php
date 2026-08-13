@@ -11,6 +11,7 @@ enum AccountType: string implements HasColor, HasLabel
     case Cash = 'cash';
     case CreditCard = 'credit_card';
     case Loan = 'loan';
+    case Investment = 'investment';
 
     public function getLabel(): string
     {
@@ -19,6 +20,7 @@ enum AccountType: string implements HasColor, HasLabel
             self::Cash => 'Cash',
             self::CreditCard => 'Credit Card',
             self::Loan => 'Loan',
+            self::Investment => 'Investment',
         };
     }
 
@@ -29,6 +31,7 @@ enum AccountType: string implements HasColor, HasLabel
             self::Cash => 'success',
             self::CreditCard => 'warning',
             self::Loan => 'danger',
+            self::Investment => 'info',
         };
     }
 
@@ -39,14 +42,23 @@ enum AccountType: string implements HasColor, HasLabel
             self::Cash => 'heroicon-o-banknotes',
             self::CreditCard => 'heroicon-o-credit-card',
             self::Loan => 'heroicon-o-document-text',
+            self::Investment => 'heroicon-o-arrow-trending-up',
         };
+    }
+
+    /**
+     * @return array<int, self>
+     */
+    public static function assetTypes(): array
+    {
+        return [self::Bank, self::Cash, self::Investment];
     }
 
     public function isLiability(): bool
     {
         return match ($this) {
             self::Loan, self::CreditCard => true,
-            self::Bank, self::Cash => false,
+            self::Bank, self::Cash, self::Investment => false,
         };
     }
 }

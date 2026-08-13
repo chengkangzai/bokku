@@ -20,7 +20,7 @@ class NetWorthOverview extends BaseWidget
         $netWorth = $user->net_worth;
 
         $assetCount = $user->accounts()
-            ->whereIn('type', [AccountType::Bank, AccountType::Cash])
+            ->whereIn('type', AccountType::assetTypes())
             ->count();
 
         $liabilityCount = $user->accounts()

@@ -26,7 +26,7 @@ class AssetAccounts extends BaseWidget
                 Account::query()
                     ->where('user_id', auth()->id())
                     ->where('is_active', true)
-                    ->whereIn('type', [AccountType::Bank, AccountType::Cash])
+                    ->whereIn('type', AccountType::assetTypes())
                     ->orderByDesc('balance')
             )
             ->columns([
