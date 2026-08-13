@@ -2,7 +2,9 @@
 
 namespace App\Services;
 
+use App\Enums\AccountType;
 use App\Enums\TransactionType;
+use App\Models\Account;
 use App\Models\Category;
 use App\Models\Transaction;
 use Carbon\CarbonImmutable;
@@ -223,6 +225,86 @@ class SpendingAnalysisService
         return [
             'income' => $build(TransactionType::Income),
             'expense' => $build(TransactionType::Expense),
+        ];
+    }
+
+    /**
+     * Monthly cashflow: net income from the P&L, minus debt service (transfers into
+     * the user's own loan accounts), giving truly free cash. Credit card payments are
+     * not debt service here - card spending is already expensed when charged, so the
+     * bill payment would double count. Loans flagged exclude_from_net_worth (held for
+     * someone else) are skipped.
+     *
+     * @return array{
+     *     labels: array<int, string>,
+     *     income: array<int, float>,
+     *     expense: array<int, float>,
+     *     net: array<int, float>,
+     *     debt_service: array<int, array{name: string, values: array<int, float>}>,
+     *     debt_total: array<int, float>,
+     *     free: array<int, float>
+     * }
+     */
+    public function cashflow(int $userId, CarbonImmutable $month, int $months = 4): array
+    {
+        $labels = [];
+        $income = [];
+        $expense = [];
+        $net = [];
+        $monthList = [];
+
+        for ($i = $months - 1; $i >= 0; $i--) {
+            $target = $month->subMonths($i);
+            $monthList[] = $target;
+            $labels[] = $target->format('M Y');
+
+            $totals = $this->monthTotals($userId, $target);
+            $income[] = $totals['income'];
+            $expense[] = $totals['expense'];
+            $net[] = round($totals['income'] - $totals['expense'], 2);
+        }
+
+        $debtService = Account::query()
+            ->where('user_id', $userId)
+            ->where('type', AccountType::Loan)
+            ->where('exclude_from_net_worth', false)
+            ->orderBy('name')
+            ->get(['id', 'name'])
+            ->map(fn (Account $loan): array => [
+                'name' => $loan->name,
+                'values' => array_map(
+                    fn (CarbonImmutable $target): float => round(Transaction::query()
+                        ->where('user_id', $userId)
+                        ->where('type', TransactionType::Transfer)
+                        ->where('to_account_id', $loan->id)
+                        ->whereBetween('date', [$target->startOfMonth(), $target->endOfMonth()])
+                        ->sum('amount') / 100, 2),
+                    $monthList
+                ),
+            ])
+            ->filter(fn (array $row): float => array_sum($row['values']) > 0)
+            ->values()
+            ->all();
+
+        $debtTotal = array_map(
+            fn (int $index): float => round(array_sum(array_map(
+                fn (array $row): float => $row['values'][$index],
+                $debtService
+            )), 2),
+            range(0, $months - 1)
+        );
+
+        return [
+            'labels' => $labels,
+            'income' => $income,
+            'expense' => $expense,
+            'net' => $net,
+            'debt_service' => $debtService,
+            'debt_total' => $debtTotal,
+            'free' => array_map(
+                fn (int $index): float => round($net[$index] - $debtTotal[$index], 2),
+                range(0, $months - 1)
+            ),
         ];
     }
 
