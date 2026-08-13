@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 
+use App\Filament\Resources\Transactions\TransactionResource;
 use App\Services\SpendingAnalysisService;
 use Carbon\CarbonImmutable;
 use Filament\Pages\Page;
@@ -61,11 +62,29 @@ class CashflowStatement extends Page
     protected function getViewData(): array
     {
         $month = $this->monthDate();
-        $cash = app(SpendingAnalysisService::class)->cashReconciliation(auth()->id(), $month, 4);
+        $columns = 4;
+        $cash = app(SpendingAnalysisService::class)->cashStatement(auth()->id(), $month, $columns);
 
         return [
             'cash' => $cash,
             'monthLabel' => $month->format('M Y'),
+            'drillUrl' => function (?int $categoryId, string $type) use ($month, $columns): string {
+                $filters = [
+                    'type' => ['value' => $type],
+                    'date' => [
+                        'from' => $month->subMonths($columns - 1)->startOfMonth()->toDateString(),
+                        'until' => $month->endOfMonth()->toDateString(),
+                    ],
+                ];
+
+                if ($categoryId === null) {
+                    $filters['uncategorized'] = ['isActive' => true];
+                } else {
+                    $filters['category_id'] = ['value' => $categoryId];
+                }
+
+                return TransactionResource::getUrl().'?'.http_build_query(['filters' => $filters]);
+            },
         ];
     }
 }

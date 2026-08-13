@@ -309,35 +309,33 @@ class SpendingAnalysisService
     }
 
     /**
-     * Reconcile liquid cash (bank + cash accounts, excluding accounts held for someone
-     * else) month by month: opening balance, the flows that moved it, closing balance.
+     * Cash-basis statement over liquid accounts (bank + cash, excluding accounts held
+     * for someone else), in the same shape as the P&L: category-level rows per month.
      *
-     * Flow buckets partition every cash movement, so opening + flows always equals
-     * closing, and the latest closing equals the live sum of liquid balances:
-     * - income:        income received into cash accounts
-     * - expenses:      expenses paid from cash accounts (card charges are NOT cash)
-     * - card_payments: cash sent to settle own credit cards
-     * - loan_payments: cash sent into own loan accounts
-     * - relay:         net cash exchanged with held-for-someone-else accounts
-     * - other:         net of everything else (investment purchases, card cash advances)
+     * Cash basis: a credit card charge is NOT cash out when charged - the later bill
+     * payment is. Income counts when it lands in a liquid account. Transfers appear as
+     * rows by counterparty: per-card bill payments, per-loan repayments, family/relay
+     * flows with excluded accounts, and investments/other. Liquid-to-liquid transfers
+     * are internal and never shown. All buckets are tallied in cents during a single
+     * full-history walk, so opening + cash in - cash out always equals closing, and
+     * the latest closing equals the live sum of liquid balances.
      *
      * @return array{
      *     labels: array<int, string>,
+     *     cash_in: array<int, array{id: ?int, name: string, color: ?string, drillable: bool, values: array<int, float>}>,
+     *     cash_out: array<int, array{id: ?int, name: string, color: ?string, drillable: bool, values: array<int, float>}>,
+     *     in_total: array<int, float>,
+     *     out_total: array<int, float>,
+     *     net: array<int, float>,
      *     opening: array<int, float>,
-     *     income: array<int, float>,
-     *     expenses: array<int, float>,
-     *     card_payments: array<int, float>,
-     *     loan_payments: array<int, float>,
-     *     relay: array<int, float>,
-     *     other: array<int, float>,
      *     closing: array<int, float>
      * }
      */
-    public function cashReconciliation(int $userId, CarbonImmutable $month, int $months = 4): array
+    public function cashStatement(int $userId, CarbonImmutable $month, int $months = 4): array
     {
         $accounts = Account::query()
             ->where('user_id', $userId)
-            ->get(['id', 'type', 'initial_balance', 'exclude_from_net_worth']);
+            ->get(['id', 'name', 'type', 'initial_balance', 'exclude_from_net_worth']);
 
         $liquid = $accounts
             ->filter(fn (Account $account): bool => in_array($account->type, [AccountType::Bank, AccountType::Cash], true)
@@ -345,35 +343,42 @@ class SpendingAnalysisService
             ->keyBy('id');
 
         $excluded = $accounts->filter(fn (Account $account): bool => (bool) $account->exclude_from_net_worth)->keyBy('id');
-        $types = $accounts->keyBy('id')->map(fn (Account $account): AccountType => $account->type);
+        $byId = $accounts->keyBy('id');
+        $categories = Category::query()->where('user_id', $userId)->get(['id', 'name', 'color'])->keyBy('id');
 
         $running = (int) $liquid->sum(fn (Account $account): int => (int) $account->getRawOriginal('initial_balance'));
 
         $windowStart = $month->subMonths($months - 1)->startOfMonth();
-        $buckets = [];
+        $windowEnd = $month->endOfMonth();
+
         $labels = [];
-        $opening = [];
 
         for ($i = $months - 1; $i >= 0; $i--) {
             $labels[] = $month->subMonths($i)->format('M Y');
-            $buckets[] = ['income' => 0, 'expenses' => 0, 'card_payments' => 0, 'loan_payments' => 0, 'relay' => 0, 'other' => 0];
         }
+
+        /** @var array<string, array<int, int>> $buckets cents, keyed "in|cat|5", "out|acct|14", "in|relay", ... */
+        $buckets = [];
+        $opening = null;
+
+        $tally = function (string $key, int $index, int $cents) use (&$buckets, $months): void {
+            $buckets[$key] ??= array_fill(0, $months, 0);
+            $buckets[$key][$index] += $cents;
+        };
 
         $transactions = Transaction::query()
             ->where('user_id', $userId)
             ->orderBy('date')
-            ->get(['type', 'date', 'amount', 'account_id', 'from_account_id', 'to_account_id']);
-
-        $openingCaptured = false;
+            ->get(['type', 'date', 'amount', 'account_id', 'from_account_id', 'to_account_id', 'category_id']);
 
         foreach ($transactions as $transaction) {
-            if (! $openingCaptured && $transaction->date->gte($windowStart)) {
-                $opening[0] = $running;
-                $openingCaptured = true;
+            if ($opening === null && $transaction->date->gte($windowStart)) {
+                $opening = $running;
             }
 
-            $index = $openingCaptured
-                ? min($months - 1, max(0, (int) $windowStart->diffInMonths($transaction->date->startOfMonth())))
+            $inWindow = $opening !== null && $transaction->date->lte($windowEnd);
+            $index = $inWindow
+                ? min($months - 1, max(0, (int) $windowStart->diffInMonths($transaction->date->copy()->startOfMonth())))
                 : null;
 
             $amount = (int) $transaction->getRawOriginal('amount');
@@ -388,19 +393,27 @@ class SpendingAnalysisService
 
                 $running += $toLiquid ? $amount : -$amount;
 
-                if ($index !== null && $transaction->date->lte($month->endOfMonth())) {
-                    $counterparty = $toLiquid ? $transaction->from_account_id : $transaction->to_account_id;
-                    $signed = $toLiquid ? $amount : -$amount;
-
-                    $bucket = match (true) {
-                        $excluded->has($counterparty) => 'relay',
-                        ! $toLiquid && ($types[$counterparty] ?? null) === AccountType::CreditCard => 'card_payments',
-                        ! $toLiquid && ($types[$counterparty] ?? null) === AccountType::Loan => 'loan_payments',
-                        default => 'other',
-                    };
-
-                    $buckets[$index][$bucket] += $signed;
+                if ($index === null) {
+                    continue;
                 }
+
+                if ($toLiquid) {
+                    $tally($excluded->has($transaction->from_account_id) ? 'in|relay' : 'in|other', $index, $amount);
+
+                    continue;
+                }
+
+                $counterparty = $transaction->to_account_id;
+                $counterpartyType = $byId->get($counterparty)?->type;
+
+                $key = match (true) {
+                    $excluded->has($counterparty) => 'out|relay',
+                    $counterpartyType === AccountType::CreditCard,
+                    $counterpartyType === AccountType::Loan => "out|acct|{$counterparty}",
+                    default => 'out|other',
+                };
+
+                $tally($key, $index, $amount);
 
                 continue;
             }
@@ -409,44 +422,82 @@ class SpendingAnalysisService
                 continue;
             }
 
-            $signed = $transaction->type === TransactionType::Income ? $amount : -$amount;
-            $running += $signed;
+            $isIncome = $transaction->type === TransactionType::Income;
+            $running += $isIncome ? $amount : -$amount;
 
-            if ($index !== null && $transaction->date->lte($month->endOfMonth())) {
-                $buckets[$index][$transaction->type === TransactionType::Income ? 'income' : 'expenses'] += $signed;
+            if ($index !== null) {
+                $tally(($isIncome ? 'in' : 'out').'|cat|'.($transaction->category_id ?? 0), $index, $amount);
             }
         }
 
-        if (! $openingCaptured) {
-            $opening[0] = $running;
+        $opening ??= $running;
+
+        $buildRow = function (string $key, array $cents) use ($categories, $byId): array {
+            [$direction, $kind, $id] = array_pad(explode('|', $key), 3, null);
+
+            $row = match (true) {
+                $kind === 'cat' && (int) $id === 0 => ['id' => null, 'name' => 'Uncategorized', 'color' => null, 'drillable' => true],
+                $kind === 'cat' => [
+                    'id' => (int) $id,
+                    'name' => $categories->get((int) $id)?->name ?? 'Unknown',
+                    'color' => $categories->get((int) $id)?->color,
+                    'drillable' => true,
+                ],
+                $kind === 'acct' => [
+                    'id' => null,
+                    'name' => $byId->get((int) $id)->name.($byId->get((int) $id)->type === AccountType::CreditCard ? ' — bill payment' : ' — repayment'),
+                    'color' => null,
+                    'drillable' => false,
+                ],
+                $kind === 'relay' => ['id' => null, 'name' => $direction === 'in' ? 'Family / relay in' : 'Family / relay out', 'color' => null, 'drillable' => false],
+                default => ['id' => null, 'name' => $direction === 'in' ? 'Other in' : 'Investments / other', 'color' => null, 'drillable' => false],
+            };
+
+            $row['values'] = array_map(fn (int $value): float => round($value / 100, 2), $cents);
+
+            return $row;
+        };
+
+        $section = fn (string $direction): array => collect($buckets)
+            ->filter(fn (array $cents, string $key): bool => str_starts_with($key, "{$direction}|"))
+            ->map(fn (array $cents, string $key): array => $buildRow($key, $cents))
+            ->sortByDesc(fn (array $row): float => end($row['values']))
+            ->values()
+            ->all();
+
+        $sumSection = fn (string $direction): array => array_map(
+            fn (int $index): int => (int) collect($buckets)
+                ->filter(fn (array $cents, string $key): bool => str_starts_with($key, "{$direction}|"))
+                ->sum(fn (array $cents): int => $cents[$index]),
+            range(0, $months - 1)
+        );
+
+        $inTotals = $sumSection('in');
+        $outTotals = $sumSection('out');
+
+        $openings = [];
+        $closings = [];
+        $carry = $opening;
+
+        foreach (range(0, $months - 1) as $index) {
+            $openings[] = round($carry / 100, 2);
+            $carry += $inTotals[$index] - $outTotals[$index];
+            $closings[] = round($carry / 100, 2);
         }
 
-        $result = [
+        return [
             'labels' => $labels,
-            'opening' => [],
-            'income' => [],
-            'expenses' => [],
-            'card_payments' => [],
-            'loan_payments' => [],
-            'relay' => [],
-            'other' => [],
-            'closing' => [],
+            'cash_in' => $section('in'),
+            'cash_out' => $section('out'),
+            'in_total' => array_map(fn (int $cents): float => round($cents / 100, 2), $inTotals),
+            'out_total' => array_map(fn (int $cents): float => round($cents / 100, 2), $outTotals),
+            'net' => array_map(
+                fn (int $index): float => round(($inTotals[$index] - $outTotals[$index]) / 100, 2),
+                range(0, $months - 1)
+            ),
+            'opening' => $openings,
+            'closing' => $closings,
         ];
-
-        $carry = $opening[0];
-
-        foreach ($buckets as $bucket) {
-            $result['opening'][] = round($carry / 100, 2);
-
-            foreach (['income', 'expenses', 'card_payments', 'loan_payments', 'relay', 'other'] as $key) {
-                $result[$key][] = round($bucket[$key] / 100, 2);
-            }
-
-            $carry += array_sum($bucket);
-            $result['closing'][] = round($carry / 100, 2);
-        }
-
-        return $result;
     }
 
     public function hasTaggedTransactions(int $userId): bool
