@@ -29,6 +29,7 @@ use App\Mcp\Tools\Payees\DeletePayeeTool;
 use App\Mcp\Tools\Payees\GetPayeeTool;
 use App\Mcp\Tools\Payees\ListPayeesTool;
 use App\Mcp\Tools\Payees\UpdatePayeeTool;
+use App\Mcp\Tools\Transactions\BulkCreateTransactionsTool;
 use App\Mcp\Tools\Transactions\BulkReconcileTool;
 use App\Mcp\Tools\Transactions\ConfirmUploadTool;
 use App\Mcp\Tools\Transactions\CreateTransactionTool;
@@ -41,6 +42,8 @@ use App\Mcp\Tools\Transactions\ReconcileTransactionTool;
 use App\Mcp\Tools\Transactions\RequestUploadUrlTool;
 use App\Mcp\Tools\Transactions\UpdateTransactionTool;
 use Laravel\Mcp\Server;
+use Laravel\Mcp\Server\Prompt;
+use Laravel\Mcp\Server\Tool;
 
 class BokkuServer extends Server
 {
@@ -98,7 +101,7 @@ class BokkuServer extends Server
     /**
      * The tools registered with this MCP server.
      *
-     * @var array<int, class-string<\Laravel\Mcp\Server\Tool>>
+     * @var array<int, class-string<Tool>>
      */
     protected array $tools = [
         // Account Tools
@@ -113,6 +116,7 @@ class BokkuServer extends Server
         ListTransactionsTool::class,
         GetTransactionTool::class,
         CreateTransactionTool::class,
+        BulkCreateTransactionsTool::class,
         UpdateTransactionTool::class,
         DeleteTransactionTool::class,
         ReconcileTransactionTool::class,
@@ -149,7 +153,7 @@ class BokkuServer extends Server
     /**
      * The resources registered with this MCP server.
      *
-     * @var array<int, class-string<\Laravel\Mcp\Server\Resource>>
+     * @var array<int, class-string<Server\Resource>>
      */
     protected array $resources = [
         FinancialOverviewResource::class,
@@ -160,7 +164,7 @@ class BokkuServer extends Server
     /**
      * The prompts registered with this MCP server.
      *
-     * @var array<int, class-string<\Laravel\Mcp\Server\Prompt>>
+     * @var array<int, class-string<Prompt>>
      */
     protected array $prompts = [
         AnalyzeSpendingPrompt::class,

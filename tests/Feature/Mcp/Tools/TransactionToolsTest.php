@@ -1,6 +1,7 @@
 <?php
 
 use App\Mcp\Servers\BokkuServer;
+use App\Mcp\Tools\Transactions\BulkCreateTransactionsTool;
 use App\Mcp\Tools\Transactions\BulkReconcileTool;
 use App\Mcp\Tools\Transactions\CreateTransactionTool;
 use App\Mcp\Tools\Transactions\DeleteTransactionTool;
@@ -12,8 +13,9 @@ use App\Models\Account;
 use App\Models\Category;
 use App\Models\Transaction;
 use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
-uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
+uses(RefreshDatabase::class);
 
 beforeEach(function () {
     $this->user = User::factory()->create();
@@ -921,5 +923,83 @@ describe('ListTransactionsTool with tags', function () {
 
         $response->assertOk()
             ->assertDontSee('Other user transaction');
+    });
+});
+
+describe('BulkCreateTransactionsTool', function () {
+    it('creates multiple transactions in one call', function () {
+        $category = Category::factory()->create(['user_id' => $this->user->id]);
+        $savings = Account::factory()->create(['user_id' => $this->user->id]);
+
+        $response = BokkuServer::actingAs($this->user)->tool(BulkCreateTransactionsTool::class, [
+            'transactions' => [
+                ['type' => 'expense', 'amount' => 25.50, 'description' => 'Bulk coffee', 'date' => '2026-08-01', 'account_id' => $this->account->id, 'category_id' => $category->id, 'tags' => ['bulk']],
+                ['type' => 'income', 'amount' => 1000, 'description' => 'Bulk salary', 'date' => '2026-08-02', 'account_id' => $this->account->id],
+                ['type' => 'transfer', 'amount' => 100, 'description' => 'Bulk transfer', 'date' => '2026-08-03', 'from_account_id' => $this->account->id, 'to_account_id' => $savings->id],
+            ],
+        ]);
+
+        $response->assertOk()
+            ->assertSee('3 transaction(s) created successfully')
+            ->assertSee('Bulk coffee')
+            ->assertSee('Bulk transfer');
+
+        expect(Transaction::where('user_id', $this->user->id)->count())->toBe(3)
+            ->and(Transaction::where('description', 'Bulk coffee')->first()->getUserTags()->pluck('name')->all())->toBe(['bulk'])
+            ->and($this->account->fresh()->balance)->toBe(1874.5);
+    });
+
+    it('creates nothing when one item is invalid', function () {
+        $response = BokkuServer::actingAs($this->user)->tool(BulkCreateTransactionsTool::class, [
+            'transactions' => [
+                ['type' => 'expense', 'amount' => 10, 'description' => 'Valid', 'date' => '2026-08-01', 'account_id' => $this->account->id],
+                ['type' => 'expense', 'amount' => 10, 'description' => 'Wrong account', 'date' => '2026-08-01', 'account_id' => 999999],
+            ],
+        ]);
+
+        $response->assertHasErrors()
+            ->assertSee('Item 1')
+            ->assertSee('No transactions were created');
+
+        expect(Transaction::count())->toBe(0)
+            ->and($this->account->fresh()->balance)->toBe(1000.0);
+    });
+
+    it('rejects other users accounts', function () {
+        $otherAccount = Account::factory()->create(['user_id' => $this->otherUser->id]);
+
+        $response = BokkuServer::actingAs($this->user)->tool(BulkCreateTransactionsTool::class, [
+            'transactions' => [
+                ['type' => 'expense', 'amount' => 10, 'description' => 'Sneaky', 'date' => '2026-08-01', 'account_id' => $otherAccount->id],
+            ],
+        ]);
+
+        $response->assertHasErrors();
+        expect(Transaction::count())->toBe(0);
+    });
+
+    it('validates nested item fields', function () {
+        $response = BokkuServer::actingAs($this->user)->tool(BulkCreateTransactionsTool::class, [
+            'transactions' => [
+                ['type' => 'expense', 'description' => 'Missing amount', 'date' => '2026-08-01', 'account_id' => $this->account->id],
+            ],
+        ]);
+
+        $response->assertHasErrors();
+        expect(Transaction::count())->toBe(0);
+    });
+
+    it('rejects empty and oversized batches', function () {
+        BokkuServer::actingAs($this->user)
+            ->tool(BulkCreateTransactionsTool::class, ['transactions' => []])
+            ->assertHasErrors();
+
+        $items = array_fill(0, 101, ['type' => 'expense', 'amount' => 1, 'description' => 'x', 'date' => '2026-08-01', 'account_id' => $this->account->id]);
+
+        BokkuServer::actingAs($this->user)
+            ->tool(BulkCreateTransactionsTool::class, ['transactions' => $items])
+            ->assertHasErrors();
+
+        expect(Transaction::count())->toBe(0);
     });
 });
