@@ -42,7 +42,6 @@ class ListCategoriesTool extends Tool
                 'type' => $category->type,
                 'color' => $category->color,
                 'icon' => $category->icon,
-                'sort_order' => $category->sort_order,
             ]);
 
         return Response::structured([
@@ -52,7 +51,7 @@ class ListCategoriesTool extends Tool
     }
 
     /**
-     * @return array<string, \Illuminate\Contracts\JsonSchema\JsonSchema>
+     * @return array<string, JsonSchema>
      */
     public function schema(JsonSchema $schema): array
     {
