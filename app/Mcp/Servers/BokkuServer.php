@@ -29,6 +29,22 @@ use App\Mcp\Tools\Payees\DeletePayeeTool;
 use App\Mcp\Tools\Payees\GetPayeeTool;
 use App\Mcp\Tools\Payees\ListPayeesTool;
 use App\Mcp\Tools\Payees\UpdatePayeeTool;
+use App\Mcp\Tools\RecurringTransactions\CreateRecurringTransactionTool;
+use App\Mcp\Tools\RecurringTransactions\DeleteRecurringTransactionTool;
+use App\Mcp\Tools\RecurringTransactions\GetRecurringTransactionTool;
+use App\Mcp\Tools\RecurringTransactions\ListRecurringTransactionsTool;
+use App\Mcp\Tools\RecurringTransactions\PauseRecurringTransactionTool;
+use App\Mcp\Tools\RecurringTransactions\ProcessDueRecurringTransactionsTool;
+use App\Mcp\Tools\RecurringTransactions\ResumeRecurringTransactionTool;
+use App\Mcp\Tools\RecurringTransactions\SkipRecurringTransactionTool;
+use App\Mcp\Tools\RecurringTransactions\UpdateRecurringTransactionTool;
+use App\Mcp\Tools\TransactionRules\ApplyTransactionRulesTool;
+use App\Mcp\Tools\TransactionRules\CreateTransactionRuleTool;
+use App\Mcp\Tools\TransactionRules\DeleteTransactionRuleTool;
+use App\Mcp\Tools\TransactionRules\GetTransactionRuleTool;
+use App\Mcp\Tools\TransactionRules\ListTransactionRulesTool;
+use App\Mcp\Tools\TransactionRules\TestTransactionRuleTool;
+use App\Mcp\Tools\TransactionRules\UpdateTransactionRuleTool;
 use App\Mcp\Tools\Transactions\BulkCreateTransactionsTool;
 use App\Mcp\Tools\Transactions\BulkReconcileTool;
 use App\Mcp\Tools\Transactions\ConfirmUploadTool;
@@ -60,7 +76,7 @@ class BokkuServer extends Server
     /**
      * Return all tools in a single page (default is 15).
      */
-    public int $defaultPaginationLength = 50;
+    public int $defaultPaginationLength = 75;
 
     /**
      * The MCP server's instructions for the LLM.
@@ -90,6 +106,23 @@ class BokkuServer extends Server
         - List, get, create, update, and delete budgets
         - Budgets are linked to categories with weekly, monthly, or annual periods
         - Track spending progress against budget with spent, remaining, and percentage
+
+        ## Recurring Transactions
+        - List, get, create, update, and delete recurring schedules
+        - Frequencies are daily, weekly, monthly, or annual, combined with an interval
+          (interval 2 with frequency 'weekly' means fortnightly)
+        - Pause, resume, or skip a single occurrence without deleting the schedule
+        - A scheduler generates due transactions daily at 01:00 for schedules with
+          auto_process enabled; process them on demand at any time, with a dry run first
+
+        ## Transaction Rules
+        - List, get, create, update, and delete rules that auto-categorize transactions
+        - A rule runs its actions when ALL of its conditions match
+        - Conditions use field, operator, and value; amounts are decimals, dates are YYYY-MM-DD
+        - Actions can set a category, set an account, set notes, or add a tag
+        - Rules run in descending priority order, and stop_processing halts lower ones
+        - Rules apply automatically to newly created transactions only; test a rule
+          against existing transactions, and apply it to them, with the dedicated tools
 
         ## Important Notes
         - All monetary amounts are in decimal format (e.g., 100.50 for $100.50)
@@ -148,6 +181,26 @@ class BokkuServer extends Server
         CreateBudgetTool::class,
         UpdateBudgetTool::class,
         DeleteBudgetTool::class,
+
+        // Recurring Transaction Tools
+        ListRecurringTransactionsTool::class,
+        GetRecurringTransactionTool::class,
+        CreateRecurringTransactionTool::class,
+        UpdateRecurringTransactionTool::class,
+        DeleteRecurringTransactionTool::class,
+        PauseRecurringTransactionTool::class,
+        ResumeRecurringTransactionTool::class,
+        SkipRecurringTransactionTool::class,
+        ProcessDueRecurringTransactionsTool::class,
+
+        // Transaction Rule Tools
+        ListTransactionRulesTool::class,
+        GetTransactionRuleTool::class,
+        CreateTransactionRuleTool::class,
+        UpdateTransactionRuleTool::class,
+        DeleteTransactionRuleTool::class,
+        TestTransactionRuleTool::class,
+        ApplyTransactionRulesTool::class,
     ];
 
     /**
