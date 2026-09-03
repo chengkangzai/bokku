@@ -84,7 +84,7 @@ class TransactionRule extends Model
             'amount' => $transaction->amount,
             'account_id' => $transaction->account_id,
             'category_id' => $transaction->category_id,
-            'date' => $transaction->date,
+            'date' => $transaction->date?->toDateString(),
             default => null,
         };
 

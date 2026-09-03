@@ -473,3 +473,200 @@ describe('ProcessDueRecurringTransactionsTool', function () {
         $this->assertDatabaseMissing('transactions', ['description' => 'Other Bill']);
     });
 });
+
+describe('recurring schedule edge cases', function () {
+    it('switches an expense schedule to a transfer', function () {
+        $destination = Account::factory()->create(['user_id' => $this->user->id]);
+        $recurring = RecurringTransaction::factory()->expense()->create([
+            'user_id' => $this->user->id,
+            'account_id' => $this->account->id,
+            'category_id' => $this->category->id,
+            'to_account_id' => null,
+        ]);
+
+        BokkuServer::actingAs($this->user)->tool(UpdateRecurringTransactionTool::class, [
+            'id' => $recurring->id,
+            'type' => 'transfer',
+            'to_account_id' => $destination->id,
+        ])->assertOk();
+
+        $fresh = $recurring->fresh();
+
+        expect($fresh->type->value)->toBe('transfer');
+        expect($fresh->to_account_id)->toBe($destination->id);
+        expect($fresh->account_id)->toBe($this->account->id);
+    });
+
+    it('rejects switching to a transfer without a destination', function () {
+        $recurring = RecurringTransaction::factory()->expense()->create([
+            'user_id' => $this->user->id,
+            'account_id' => $this->account->id,
+            'category_id' => $this->category->id,
+            'to_account_id' => null,
+        ]);
+
+        BokkuServer::actingAs($this->user)->tool(UpdateRecurringTransactionTool::class, [
+            'id' => $recurring->id,
+            'type' => 'transfer',
+        ])->assertHasErrors();
+
+        expect($recurring->fresh()->type->value)->toBe('expense');
+    });
+
+    it('clears the destination when switching a transfer to an expense', function () {
+        $destination = Account::factory()->create(['user_id' => $this->user->id]);
+        $recurring = RecurringTransaction::factory()->transfer()->create([
+            'user_id' => $this->user->id,
+            'account_id' => $this->account->id,
+            'to_account_id' => $destination->id,
+            'category_id' => null,
+        ]);
+
+        BokkuServer::actingAs($this->user)->tool(UpdateRecurringTransactionTool::class, [
+            'id' => $recurring->id,
+            'type' => 'expense',
+        ])->assertOk();
+
+        expect($recurring->fresh()->to_account_id)->toBeNull();
+    });
+
+    it('rejects a transfer to the same account', function () {
+        $response = BokkuServer::actingAs($this->user)->tool(CreateRecurringTransactionTool::class, [
+            'type' => 'transfer',
+            'amount' => 100,
+            'description' => 'Self Transfer',
+            'frequency' => 'monthly',
+            'from_account_id' => $this->account->id,
+            'to_account_id' => $this->account->id,
+        ]);
+
+        $response->assertHasErrors();
+        $this->assertDatabaseMissing('recurring_transactions', ['description' => 'Self Transfer']);
+    });
+
+    it('rejects a category belonging to another user', function () {
+        $otherCategory = Category::factory()->expense()->create(['user_id' => $this->otherUser->id]);
+
+        BokkuServer::actingAs($this->user)->tool(CreateRecurringTransactionTool::class, [
+            'type' => 'expense',
+            'amount' => 20,
+            'description' => 'Cross Tenant Category',
+            'frequency' => 'daily',
+            'account_id' => $this->account->id,
+            'category_id' => $otherCategory->id,
+        ])->assertHasErrors();
+
+        $this->assertDatabaseMissing('recurring_transactions', ['description' => 'Cross Tenant Category']);
+    });
+
+    it('rejects moving a schedule onto another users account', function () {
+        $otherAccount = Account::factory()->create(['user_id' => $this->otherUser->id]);
+        $recurring = RecurringTransaction::factory()->expense()->create([
+            'user_id' => $this->user->id,
+            'account_id' => $this->account->id,
+            'category_id' => $this->category->id,
+        ]);
+
+        BokkuServer::actingAs($this->user)->tool(UpdateRecurringTransactionTool::class, [
+            'id' => $recurring->id,
+            'account_id' => $otherAccount->id,
+        ])->assertHasErrors();
+
+        expect($recurring->fresh()->account_id)->toBe($this->account->id);
+    });
+
+    it('requires an account when creating a schedule', function () {
+        BokkuServer::actingAs($this->user)->tool(CreateRecurringTransactionTool::class, [
+            'type' => 'expense',
+            'amount' => 20,
+            'description' => 'No Account',
+            'frequency' => 'daily',
+        ])->assertHasErrors();
+
+        $this->assertDatabaseMissing('recurring_transactions', ['description' => 'No Account']);
+    });
+
+    it('rejects an end date before the start date on create', function () {
+        BokkuServer::actingAs($this->user)->tool(CreateRecurringTransactionTool::class, [
+            'type' => 'expense',
+            'amount' => 20,
+            'description' => 'Backwards Dates',
+            'frequency' => 'monthly',
+            'account_id' => $this->account->id,
+            'start_date' => '2026-06-01',
+            'end_date' => '2026-01-01',
+        ])->assertHasErrors();
+
+        $this->assertDatabaseMissing('recurring_transactions', ['description' => 'Backwards Dates']);
+    });
+
+    it('processes only the schedules named in ids', function () {
+        $wanted = RecurringTransaction::factory()->due()->expense()->withDescription('Wanted Bill')->create([
+            'user_id' => $this->user->id,
+            'account_id' => $this->account->id,
+            'category_id' => $this->category->id,
+            'frequency' => 'monthly',
+            'interval' => 1,
+        ]);
+        RecurringTransaction::factory()->due()->expense()->withDescription('Unwanted Bill')->create([
+            'user_id' => $this->user->id,
+            'account_id' => $this->account->id,
+            'category_id' => $this->category->id,
+            'frequency' => 'monthly',
+            'interval' => 1,
+        ]);
+
+        BokkuServer::actingAs($this->user)->tool(ProcessDueRecurringTransactionsTool::class, [
+            'ids' => [$wanted->id],
+        ])->assertOk()->assertSee('"processed_count":1');
+
+        $this->assertDatabaseHas('transactions', ['description' => 'Wanted Bill']);
+        $this->assertDatabaseMissing('transactions', ['description' => 'Unwanted Bill']);
+    });
+
+    it('does not treat an ended schedule as due', function () {
+        RecurringTransaction::factory()->expense()->withDescription('Expired Bill')->create([
+            'user_id' => $this->user->id,
+            'account_id' => $this->account->id,
+            'category_id' => $this->category->id,
+            'next_date' => now()->subDays(5)->toDateString(),
+            'start_date' => now()->subYear()->toDateString(),
+            'end_date' => now()->subDay()->toDateString(),
+        ]);
+
+        BokkuServer::actingAs($this->user)->tool(ProcessDueRecurringTransactionsTool::class)
+            ->assertOk()
+            ->assertSee('"processed_count":0');
+
+        $this->assertDatabaseMissing('transactions', ['description' => 'Expired Bill']);
+    });
+
+    it('does not process a paused schedule that is past due', function () {
+        RecurringTransaction::factory()->inactive()->expense()->withDescription('Paused Bill')->create([
+            'user_id' => $this->user->id,
+            'account_id' => $this->account->id,
+            'category_id' => $this->category->id,
+            'next_date' => now()->subDay()->toDateString(),
+        ]);
+
+        BokkuServer::actingAs($this->user)->tool(ProcessDueRecurringTransactionsTool::class)
+            ->assertOk()
+            ->assertSee('"processed_count":0');
+
+        $this->assertDatabaseMissing('transactions', ['description' => 'Paused Bill']);
+    });
+
+    it('matches an account filter against the transfer destination', function () {
+        $destination = Account::factory()->create(['user_id' => $this->user->id]);
+        RecurringTransaction::factory()->transfer()->withDescription('Savings Transfer')->create([
+            'user_id' => $this->user->id,
+            'account_id' => $this->account->id,
+            'to_account_id' => $destination->id,
+            'category_id' => null,
+        ]);
+
+        BokkuServer::actingAs($this->user)->tool(ListRecurringTransactionsTool::class, [
+            'account_id' => $destination->id,
+        ])->assertOk()->assertSee('Savings Transfer');
+    });
+});

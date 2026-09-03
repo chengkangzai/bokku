@@ -7,6 +7,7 @@ use App\Models\Account;
 use App\Models\Category;
 use App\Models\RecurringTransaction;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Validation\Rule;
 use InvalidArgumentException;
 
@@ -55,6 +56,7 @@ class RecurringTransactionService
         $this->assertOwnsCategory($user, $data['category_id'] ?? null);
 
         $startDate = $data['start_date'] ?? now()->toDateString();
+        $this->assertValidDateRange($startDate, $data['end_date'] ?? null);
 
         return RecurringTransaction::create([
             'user_id' => $user->id,
@@ -112,7 +114,7 @@ class RecurringTransactionService
             $recurring->fill($accounts);
         }
 
-        $this->assertEndDateAfterStart($recurring);
+        $this->assertValidDateRange($recurring->start_date, $recurring->end_date);
 
         $recurring->save();
 
@@ -209,13 +211,13 @@ class RecurringTransactionService
         return ['account_id' => $source->id, 'to_account_id' => $destination->id];
     }
 
-    private function assertEndDateAfterStart(RecurringTransaction $recurring): void
+    private function assertValidDateRange(mixed $startDate, mixed $endDate): void
     {
-        if (! $recurring->end_date || ! $recurring->start_date) {
+        if (! $startDate || ! $endDate) {
             return;
         }
 
-        if ($recurring->end_date->lessThan($recurring->start_date)) {
+        if (Carbon::parse($endDate)->lessThan(Carbon::parse($startDate))) {
             throw new InvalidArgumentException('The end_date must be on or after the start_date.');
         }
     }

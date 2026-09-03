@@ -399,3 +399,367 @@ describe('ApplyTransactionRulesTool', function () {
         BokkuServer::actingAs($this->user)->tool(ApplyTransactionRulesTool::class)->assertHasErrors();
     });
 });
+
+describe('condition field coverage', function () {
+    it('matches on an exact date', function () {
+        Transaction::factory()->expense()->create([
+            'user_id' => $this->user->id,
+            'account_id' => $this->account->id,
+            'description' => 'On The Day',
+            'date' => '2026-06-15',
+        ]);
+        Transaction::factory()->expense()->create([
+            'user_id' => $this->user->id,
+            'account_id' => $this->account->id,
+            'description' => 'Another Day',
+            'date' => '2026-06-16',
+        ]);
+
+        BokkuServer::actingAs($this->user)->tool(TestTransactionRuleTool::class, [
+            'conditions' => [['field' => 'date', 'operator' => 'equals', 'value' => '2026-06-15']],
+        ])->assertOk()
+            ->assertSee('On The Day')
+            ->assertDontSee('Another Day');
+    });
+
+    it('matches on a date range', function () {
+        Transaction::factory()->expense()->create([
+            'user_id' => $this->user->id,
+            'account_id' => $this->account->id,
+            'description' => 'Recent One',
+            'date' => '2026-06-15',
+        ]);
+        Transaction::factory()->expense()->create([
+            'user_id' => $this->user->id,
+            'account_id' => $this->account->id,
+            'description' => 'Ancient One',
+            'date' => '2020-01-01',
+        ]);
+
+        BokkuServer::actingAs($this->user)->tool(TestTransactionRuleTool::class, [
+            'conditions' => [['field' => 'date', 'operator' => 'greater_than', 'value' => '2026-01-01']],
+        ])->assertOk()
+            ->assertSee('Recent One')
+            ->assertDontSee('Ancient One');
+    });
+
+    it('matches on the account', function () {
+        $otherAccount = Account::factory()->create(['user_id' => $this->user->id]);
+
+        Transaction::factory()->expense()->create([
+            'user_id' => $this->user->id,
+            'account_id' => $this->account->id,
+            'description' => 'Right Account',
+        ]);
+        Transaction::factory()->expense()->create([
+            'user_id' => $this->user->id,
+            'account_id' => $otherAccount->id,
+            'description' => 'Wrong Account',
+        ]);
+
+        BokkuServer::actingAs($this->user)->tool(TestTransactionRuleTool::class, [
+            'conditions' => [['field' => 'account_id', 'operator' => 'equals', 'value' => $this->account->id]],
+        ])->assertOk()
+            ->assertSee('Right Account')
+            ->assertDontSee('Wrong Account');
+    });
+
+    it('compares amounts as decimals, not cents', function () {
+        Transaction::factory()->expense()->create([
+            'user_id' => $this->user->id,
+            'account_id' => $this->account->id,
+            'description' => 'Big Spend',
+            'amount' => 300.00,
+        ]);
+        Transaction::factory()->expense()->create([
+            'user_id' => $this->user->id,
+            'account_id' => $this->account->id,
+            'description' => 'Small Spend',
+            'amount' => 12.00,
+        ]);
+
+        BokkuServer::actingAs($this->user)->tool(TestTransactionRuleTool::class, [
+            'conditions' => [['field' => 'amount', 'operator' => 'greater_than', 'value' => 100]],
+        ])->assertOk()
+            ->assertSee('Big Spend')
+            ->assertDontSee('Small Spend');
+    });
+
+    it('requires all conditions to match', function () {
+        Transaction::factory()->expense()->create([
+            'user_id' => $this->user->id,
+            'account_id' => $this->account->id,
+            'description' => 'Starbucks Small',
+            'amount' => 8.00,
+        ]);
+        Transaction::factory()->expense()->create([
+            'user_id' => $this->user->id,
+            'account_id' => $this->account->id,
+            'description' => 'Starbucks Large',
+            'amount' => 80.00,
+        ]);
+
+        BokkuServer::actingAs($this->user)->tool(TestTransactionRuleTool::class, [
+            'conditions' => [
+                ['field' => 'description', 'operator' => 'contains', 'value' => 'Starbucks'],
+                ['field' => 'amount', 'operator' => 'greater_than', 'value' => 50],
+            ],
+        ])->assertOk()
+            ->assertSee('Starbucks Large')
+            ->assertDontSee('Starbucks Small');
+    });
+
+    it('rejects a non-numeric amount condition', function () {
+        BokkuServer::actingAs($this->user)->tool(CreateTransactionRuleTool::class, [
+            'name' => 'Bad Amount',
+            'conditions' => [['field' => 'amount', 'operator' => 'greater_than', 'value' => 'lots']],
+            'actions' => [['type' => 'add_tag', 'tag' => 'x']],
+        ])->assertHasErrors();
+
+        $this->assertDatabaseMissing('transaction_rules', ['name' => 'Bad Amount']);
+    });
+
+    it('rejects a category condition for another users category', function () {
+        $otherCategory = Category::factory()->expense()->create(['user_id' => $this->otherUser->id]);
+
+        BokkuServer::actingAs($this->user)->tool(CreateTransactionRuleTool::class, [
+            'name' => 'Cross Tenant Condition',
+            'conditions' => [['field' => 'category_id', 'operator' => 'equals', 'value' => $otherCategory->id]],
+            'actions' => [['type' => 'add_tag', 'tag' => 'x']],
+        ])->assertHasErrors();
+
+        $this->assertDatabaseMissing('transaction_rules', ['name' => 'Cross Tenant Condition']);
+    });
+
+    it('rejects an account condition for another users account', function () {
+        $otherAccount = Account::factory()->create(['user_id' => $this->otherUser->id]);
+
+        BokkuServer::actingAs($this->user)->tool(CreateTransactionRuleTool::class, [
+            'name' => 'Cross Tenant Account',
+            'conditions' => [['field' => 'account_id', 'operator' => 'equals', 'value' => $otherAccount->id]],
+            'actions' => [['type' => 'add_tag', 'tag' => 'x']],
+        ])->assertHasErrors();
+    });
+
+    it('rejects a set_account action for another users account', function () {
+        $otherAccount = Account::factory()->create(['user_id' => $this->otherUser->id]);
+
+        BokkuServer::actingAs($this->user)->tool(CreateTransactionRuleTool::class, [
+            'name' => 'Cross Tenant Set Account',
+            'conditions' => [['field' => 'description', 'operator' => 'contains', 'value' => 'x']],
+            'actions' => [['type' => 'set_account', 'account_id' => $otherAccount->id]],
+        ])->assertHasErrors();
+    });
+});
+
+describe('rule action coverage', function () {
+    it('applies a tag action to existing transactions', function () {
+        $transaction = Transaction::factory()->expense()->create([
+            'user_id' => $this->user->id,
+            'account_id' => $this->account->id,
+            'description' => 'Netflix Monthly',
+        ]);
+
+        $rule = TransactionRule::factory()->create([
+            'user_id' => $this->user->id,
+            'apply_to' => 'expense',
+            'conditions' => [['field' => 'description', 'operator' => 'contains', 'value' => 'Netflix']],
+            'actions' => [['type' => 'add_tag', 'tag' => 'subscription']],
+        ]);
+
+        BokkuServer::actingAs($this->user)->tool(ApplyTransactionRulesTool::class, ['rule_id' => $rule->id])
+            ->assertOk();
+
+        expect($transaction->fresh()->getUserTags()->pluck('name')->toArray())->toContain('subscription');
+    });
+
+    it('applies a notes action to existing transactions', function () {
+        $transaction = Transaction::factory()->expense()->create([
+            'user_id' => $this->user->id,
+            'account_id' => $this->account->id,
+            'description' => 'Toll Charge',
+            'notes' => null,
+        ]);
+
+        $rule = TransactionRule::factory()->create([
+            'user_id' => $this->user->id,
+            'apply_to' => 'expense',
+            'conditions' => [['field' => 'description', 'operator' => 'contains', 'value' => 'Toll']],
+            'actions' => [['type' => 'set_notes', 'notes' => 'Reimbursable']],
+        ]);
+
+        BokkuServer::actingAs($this->user)->tool(ApplyTransactionRulesTool::class, ['rule_id' => $rule->id])
+            ->assertOk();
+
+        expect($transaction->fresh()->notes)->toBe('Reimbursable');
+    });
+
+    it('increments the applied counter on the rule', function () {
+        Transaction::factory()->expense()->create([
+            'user_id' => $this->user->id,
+            'account_id' => $this->account->id,
+            'description' => 'Starbucks One',
+        ]);
+
+        $rule = TransactionRule::factory()->create([
+            'user_id' => $this->user->id,
+            'apply_to' => 'expense',
+            'conditions' => [['field' => 'description', 'operator' => 'contains', 'value' => 'Starbucks']],
+            'actions' => [['type' => 'set_category', 'category_id' => $this->category->id]],
+        ]);
+
+        BokkuServer::actingAs($this->user)->tool(ApplyTransactionRulesTool::class, ['rule_id' => $rule->id])
+            ->assertOk();
+
+        expect($rule->fresh()->times_applied)->toBe(1);
+        expect($rule->fresh()->last_applied_at)->not->toBeNull();
+    });
+});
+
+describe('applying every active rule', function () {
+    it('honours priority order and stop_processing', function () {
+        $transaction = Transaction::factory()->expense()->create([
+            'user_id' => $this->user->id,
+            'account_id' => $this->account->id,
+            'description' => 'Starbucks KLCC',
+            'category_id' => null,
+        ]);
+
+        $winning = Category::factory()->expense()->create(['user_id' => $this->user->id, 'name' => 'Winner']);
+        $losing = Category::factory()->expense()->create(['user_id' => $this->user->id, 'name' => 'Loser']);
+
+        $high = TransactionRule::factory()->stopsProcessing()->create([
+            'user_id' => $this->user->id,
+            'priority' => 100,
+            'apply_to' => 'expense',
+            'conditions' => [['field' => 'description', 'operator' => 'contains', 'value' => 'Starbucks']],
+            'actions' => [['type' => 'set_category', 'category_id' => $winning->id]],
+        ]);
+
+        $low = TransactionRule::factory()->create([
+            'user_id' => $this->user->id,
+            'priority' => 1,
+            'apply_to' => 'expense',
+            'conditions' => [['field' => 'description', 'operator' => 'contains', 'value' => 'Starbucks']],
+            'actions' => [['type' => 'set_category', 'category_id' => $losing->id]],
+        ]);
+
+        BokkuServer::actingAs($this->user)->tool(ApplyTransactionRulesTool::class)->assertOk();
+
+        expect($transaction->fresh()->category_id)->toBe($winning->id);
+        expect($transaction->fresh()->applied_rule_id)->toBe($high->id);
+        expect($low->fresh()->times_applied)->toBe(0);
+    });
+
+    it('skips inactive rules when applying all', function () {
+        $transaction = Transaction::factory()->expense()->create([
+            'user_id' => $this->user->id,
+            'account_id' => $this->account->id,
+            'description' => 'Starbucks KLCC',
+            'category_id' => null,
+        ]);
+
+        TransactionRule::factory()->inactive()->create([
+            'user_id' => $this->user->id,
+            'apply_to' => 'expense',
+            'conditions' => [['field' => 'description', 'operator' => 'contains', 'value' => 'Starbucks']],
+            'actions' => [['type' => 'set_category', 'category_id' => $this->category->id]],
+        ]);
+        TransactionRule::factory()->create([
+            'user_id' => $this->user->id,
+            'apply_to' => 'expense',
+            'conditions' => [['field' => 'description', 'operator' => 'contains', 'value' => 'NoMatch']],
+            'actions' => [['type' => 'add_tag', 'tag' => 'x']],
+        ]);
+
+        BokkuServer::actingAs($this->user)->tool(ApplyTransactionRulesTool::class)
+            ->assertOk()
+            ->assertSee('"affected_count":0');
+
+        expect($transaction->fresh()->category_id)->toBeNull();
+    });
+
+    it('limits the run to uncategorized transactions when asked', function () {
+        $categorized = Transaction::factory()->expense()->create([
+            'user_id' => $this->user->id,
+            'account_id' => $this->account->id,
+            'description' => 'Starbucks Already Sorted',
+            'category_id' => $this->category->id,
+        ]);
+        $uncategorized = Transaction::factory()->expense()->create([
+            'user_id' => $this->user->id,
+            'account_id' => $this->account->id,
+            'description' => 'Starbucks Unsorted',
+            'category_id' => null,
+        ]);
+
+        $target = Category::factory()->expense()->create(['user_id' => $this->user->id, 'name' => 'Cafes']);
+
+        $rule = TransactionRule::factory()->create([
+            'user_id' => $this->user->id,
+            'apply_to' => 'expense',
+            'conditions' => [['field' => 'description', 'operator' => 'contains', 'value' => 'Starbucks']],
+            'actions' => [['type' => 'set_category', 'category_id' => $target->id]],
+        ]);
+
+        BokkuServer::actingAs($this->user)->tool(ApplyTransactionRulesTool::class, [
+            'rule_id' => $rule->id,
+            'only_uncategorized' => true,
+        ])->assertOk()->assertSee('"affected_count":1');
+
+        expect($uncategorized->fresh()->category_id)->toBe($target->id);
+        expect($categorized->fresh()->category_id)->toBe($this->category->id);
+    });
+
+    it('restricts the run to the given transaction ids', function () {
+        $wanted = Transaction::factory()->expense()->create([
+            'user_id' => $this->user->id,
+            'account_id' => $this->account->id,
+            'description' => 'Starbucks Wanted',
+            'category_id' => null,
+        ]);
+        $skipped = Transaction::factory()->expense()->create([
+            'user_id' => $this->user->id,
+            'account_id' => $this->account->id,
+            'description' => 'Starbucks Skipped',
+            'category_id' => null,
+        ]);
+
+        $rule = TransactionRule::factory()->create([
+            'user_id' => $this->user->id,
+            'apply_to' => 'expense',
+            'conditions' => [['field' => 'description', 'operator' => 'contains', 'value' => 'Starbucks']],
+            'actions' => [['type' => 'set_category', 'category_id' => $this->category->id]],
+        ]);
+
+        BokkuServer::actingAs($this->user)->tool(ApplyTransactionRulesTool::class, [
+            'rule_id' => $rule->id,
+            'transaction_ids' => [$wanted->id],
+        ])->assertOk();
+
+        expect($wanted->fresh()->category_id)->toBe($this->category->id);
+        expect($skipped->fresh()->category_id)->toBeNull();
+    });
+
+    it('does not apply an expense rule to income transactions', function () {
+        $income = Transaction::factory()->income()->create([
+            'user_id' => $this->user->id,
+            'account_id' => $this->account->id,
+            'description' => 'Starbucks Refund',
+            'category_id' => null,
+        ]);
+
+        $rule = TransactionRule::factory()->create([
+            'user_id' => $this->user->id,
+            'apply_to' => 'expense',
+            'conditions' => [['field' => 'description', 'operator' => 'contains', 'value' => 'Starbucks']],
+            'actions' => [['type' => 'set_category', 'category_id' => $this->category->id]],
+        ]);
+
+        BokkuServer::actingAs($this->user)->tool(ApplyTransactionRulesTool::class, ['rule_id' => $rule->id])
+            ->assertOk()
+            ->assertSee('"affected_count":0');
+
+        expect($income->fresh()->category_id)->toBeNull();
+    });
+});
