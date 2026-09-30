@@ -62,7 +62,7 @@ class BudgetResource extends Resource
 
                         TextInput::make('amount')
                             ->required()
-                            ->numeric()
+                            ->money()
                             ->prefix('RM')
                             ->minValue(0.01)
                             ->helperText('Budget amount for the selected period'),

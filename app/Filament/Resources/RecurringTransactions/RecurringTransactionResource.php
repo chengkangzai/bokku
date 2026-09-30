@@ -58,7 +58,7 @@ class RecurringTransactionResource extends Resource
 
                         TextInput::make('amount')
                             ->required()
-                            ->numeric()
+                            ->money()
                             ->prefix('RM')
                             ->minValue(0.01),
 

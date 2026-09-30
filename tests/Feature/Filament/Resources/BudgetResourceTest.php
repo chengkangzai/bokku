@@ -65,6 +65,25 @@ describe('BudgetResource CRUD Operations', function () {
         ]);
     });
 
+    it('accepts an amount typed with thousands separators', function () {
+        livewire(CreateBudget::class)
+            ->fillForm([
+                'category_id' => $this->expenseCategory1->id,
+                'amount' => '4,300.50',
+                'period' => 'monthly',
+                'start_date' => now()->startOfMonth()->format('Y-m-d'),
+                'is_active' => true,
+                'auto_rollover' => false,
+            ])
+            ->call('create')
+            ->assertHasNoFormErrors();
+
+        $this->assertDatabaseHas(Budget::class, [
+            'category_id' => $this->expenseCategory1->id,
+            'amount' => 430050,
+        ]);
+    });
+
     it('can create weekly budget', function () {
         livewire(CreateBudget::class)
             ->fillForm([
